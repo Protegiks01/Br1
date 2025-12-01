@@ -748,5 +748,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d569f094-31be-46dd-88a9-b50ce66b6c24",
     "timestamp": "2025-12-01 22:08:07.844259",
     "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [constructor, lines 90-113] Does the constructor properly validate that _initialTargetPercentageBPS and _minimumExpectedBalance are compatible values that won't cause immediate rebalancing issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c30bc72a-c49a-4ca1-92d8-8c18cfab5c01",
+    "timestamp": "2025-12-01 22:09:18.862314",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Can an attacker exploit transaction ordering within a block to drain the vault by having their processTransfer execute before legitimate rebalancing top-ups complete?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea43ea4e-c829-4eba-83c0-a0904aad4a68",
+    "timestamp": "2025-12-01 22:09:32.011004",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_calculateTargetBufferBalance, lines 241-244] Does the calculation properly handle the case where referenceAUM is less than minimumExpectedBalance, potentially causing the entire AUM to be pulled into the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5e5ac265-8612-4ac4-85c2-304aab76fdaa",
+    "timestamp": "2025-12-01 22:09:46.065767",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 165-181] Can the function be used as a price oracle manipulation tool by observing TopUpRequestedFromCustodian events to infer redemption pressure and protocol health?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49435b24-0269-4850-8206-a2a55228f8c4",
+    "timestamp": "2025-12-01 22:10:00.092871",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setCustodian, lines 260-266] Does the function emit events with both old and new custodian addresses in a way that could leak information to MEV bots about upcoming fund movements?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1dbc5dee-da99-42b7-9dc2-45a962b21ffb",
+    "timestamp": "2025-12-01 22:10:14.940172",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rescueToken, lines 215-229] Can the owner bypass the nonReentrant modifier by calling rescueToken through a malicious token's transfer that reenters via a different function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76167b66-fa14-4aec-aa98-5f13c3d5bb83",
+    "timestamp": "2025-12-01 22:10:31.202375",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Does the function properly validate that iTryIssuer's msg.sender is the actual issuer contract and not a malicious contract that somehow spoofed the address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_09090ca0-9eab-4dc9-8d08-2a47450c3f78",
+    "timestamp": "2025-12-01 22:10:48.758871",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [integration] Can the vault's balance tracking become permanently desynchronized if iTryIssuer undergoes an emergency shutdown or upgrade mid-redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea341e5a-18c9-4f2b-afc0-3976032237fd",
+    "timestamp": "2025-12-01 22:11:08.549947",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 165-181] If targetBalance is calculated to be exactly equal to currentBalance, does the function return early without events, or does it emit unnecessary events causing off-chain confusion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43734fc6-0e55-4043-88a0-e33589cb7213",
+    "timestamp": "2025-12-01 22:11:29.906500",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setMinimumBufferBalance, lines 197-201] Can setting minimumExpectedBalance to an extremely high value cause rebalanceFunds to request more DLF than exists, creating impossible top-up requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_80a1a148-6d77-45b4-adad-0602acbe74dd",
+    "timestamp": "2025-12-01 22:11:51.328381",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Does the function properly handle edge cases where _amount is 1 wei, and could accumulated rounding errors from many small transfers cause accounting issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0dccec5b-033d-4250-868a-64c0bc5cc587",
+    "timestamp": "2025-12-01 22:12:14.941413",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_validateBufferPercentageBPS, lines 251-253] Can the MAX_BUFFER_PCT_BPS constant be exceeded through unchecked arithmetic in other parts of the code that don't call this validation function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ed052bc4-50e7-4fbc-be5d-99d64f6ed88f",
+    "timestamp": "2025-12-01 22:12:40.582507",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 165-181] Does the function properly handle the case where custodian has insufficient balance to fulfill top-up requests, causing perpetual under-buffering?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f11e777b-cfd8-4f7a-83a3-9f6e88ed00bc",
+    "timestamp": "2025-12-01 22:13:06.457407",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [constructor, lines 90-113] Can the ownership transfer to _initialAdmin be exploited if _initialAdmin is a contract that rejects ownership, leaving the vault in an ownerless state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05e9ae81-478d-49a4-9640-5d0502cdb23c",
+    "timestamp": "2025-12-01 22:13:32.262033",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rescueToken, lines 215-229] Can the owner use rescueToken to extract DLF immediately before a large redemption, causing the redemption to fail and creating a griefing attack vector?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1547ae40-ab45-4056-acb4-3d249c5c25b6",
+    "timestamp": "2025-12-01 22:13:57.393355",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Does the function coordinate with iTryIssuer's pause mechanism, or can redemptions continue even when the protocol should be emergency-stopped?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48be8f95-dc9b-4874-aabf-ad96cd2fe626",
+    "timestamp": "2025-12-01 22:14:21.324824",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [integration] Can the immutable issuer reference prevent protocol upgrades where a new iTryIssuer needs to be deployed, forcing redeployment of the entire vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0f391d5b-267d-4d39-8857-0590bbf812e5",
+    "timestamp": "2025-12-01 22:14:46.608071",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [getAvailableBalance, lines 120-122] Can this view function be manipulated through reentrancy if called during a transfer operation, returning inconsistent balance values?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_17e87f0b-f0fa-4adc-ba7d-ba232dc32d36",
+    "timestamp": "2025-12-01 22:15:11.961243",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 165-181] Does the function verify that neither TopUpRequestedFromCustodian nor ExcessFundsTransferredToCustodian events are emitted when currentBalance == targetBalance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f063d815-7c9f-45ed-b6e1-0126145f128b",
+    "timestamp": "2025-12-01 22:15:38.046233",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setCustodian, lines 260-266] Can the custodian address be changed atomically during a rebalanceFunds transaction, causing funds to be transferred to an unintended recipient?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_25543907-a685-44cd-ad9a-7dd9494b2446",
+    "timestamp": "2025-12-01 22:16:04.300781",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Does the function properly handle situations where the vault token has a transfer tax, causing less DLF to reach the receiver than _amount specifies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_09f2bdcb-c94e-4171-9243-2c3781a0a609",
+    "timestamp": "2025-12-01 22:16:28.159887",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_calculateTargetBufferBalance, lines 241-244] Can the ternary operator's condition (targetBufferBalance < minimumExpecte",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2d6de08e-ee27-46bc-b77c-4fff25b1e815",
+    "timestamp": "2025-12-01 22:16:51.585450",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield function, line 97] The processNewYield() function has no access control modifier - can any unprivileged attacker call this function to drain the contract's yieldToken balance to the yieldRecipient address, even if iTryIssuer hasn't minted new yield yet?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e6fc9693-082d-48ab-b91b-8b0983c6f736",
+    "timestamp": "2025-12-01 22:17:16.142694",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield function, line 102] The function uses yieldToken.transfer() instead of SafeERC20.safeTransfer() - can this cause silent failures with non-standard ERC20 tokens that don't return a boolean, leading to yield being stuck in the contract while emitting YieldForwarded events incorrectly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_01d67938-c4b9-4312-8db2-8befae834781",
+    "timestamp": "2025-12-01 22:17:40.647360",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield function, line 97-107] If processNewYield() is called with _newYieldAmount greater than the contract's actual yieldToken balance, will the transfer fail and revert, or could it succeed partially, causing accounting discrepancies between emitted events and actual transferred amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7b38d5c4-62ec-458d-8575-2dea24309af6",
+    "timestamp": "2025-12-01 22:18:06.582422",
+    "report_generated": false
   }
 ]
