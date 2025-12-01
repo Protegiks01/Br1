@@ -1048,5 +1048,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b6a7689-8fed-4a82-abb9-8f9e5e657e91",
     "timestamp": "2025-12-01 22:29:00.121445",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and integration flow] If the intended flow is iTryIssuer mints → YieldForwarder forwards → StakediTry receives, but someone with REWARDER_ROLE forgets to call transferInRewards() after processNewYield(), will the yield tokens sit idle in StakediTry's address without updating totalAssets(), breaking the share price appreciation mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f9a36c51-d0f0-4b3c-8f0f-f98c95dd54f2",
+    "timestamp": "2025-12-01 22:30:07.583070",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [constructor and ownership, line 69] The constructor doesn't explicitly set msg.sender as owner (relies on Ownable inheritance) - if the deployment transaction is sent from an EOA that immediately loses its private key, will the YieldForwarder be permanently locked without an owner to call setYieldRecipient() or rescueToken()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00bd1cd3-9873-4f44-9d26-d416d805545a",
+    "timestamp": "2025-12-01 22:30:20.710271",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and balance validation, line 97-107] The function doesn't explicitly check if address(this).balance of yieldToken >= _newYieldAmount before attempting transfer - can this lead to confusing revert messages if an attacker calls processNewYield() with an inflated amount parameter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1780904b-d224-41db-a50c-5881d45732f1",
+    "timestamp": "2025-12-01 22:30:34.015893",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [yieldRecipient state variable, line 38] If yieldRecipient is set to a contract that self-destructs after receiving yield tokens, will those tokens be permanently lost, and can subsequent processNewYield() calls still succeed despite transferring to a non-existent address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a514bfdc-8987-4fcd-b592-a1a472bc5e44",
+    "timestamp": "2025-12-01 22:30:49.864251",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and whitelist interaction] If iTRY is in WHITELIST_ENABLED mode and yieldRecipient is not whitelisted, will processNewYield() permanently fail due to iTRY's _beforeTokenTransfer hook reverting, locking all yield in the YieldForwarder contract with no recovery path?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_19255b92-90bd-43d0-9136-e74b2c5344e7",
+    "timestamp": "2025-12-01 22:31:04.901984",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and reentrancy, line 156] Although rescueToken() has nonReentrant modifier, if called to rescue a malicious ERC20 token that reenters through another YieldForwarder function like processNewYield() (which has no nonReentrant), could this create cross-function reentrancy vulnerabilities?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_450ba868-a8b1-4b92-88f6-9bf537256cc1",
+    "timestamp": "2025-12-01 22:31:21.238054",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and sandwich attacks] Can a MEV bot sandwich the iTryIssuer.processAccumulatedYield() transaction by: (1) front-running to call processNewYield() with any available balance, (2) letting iTryIssuer mint new yield, (3) back-running to call processNewYield() again, disrupting the intended atomic yield distribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d57a2bcc-1ddb-47d1-a299-3c2c6726a1b7",
+    "timestamp": "2025-12-01 22:31:38.301452",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [setYieldRecipient and recipient validation, line 124] The function validates _newRecipient != address(0), but does it validate that the new recipient is capable of receiving ERC20 tokens, or could it be set to a contract without proper token handling, causing yield to be lost on the next processNewYield() call?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7a7e5014-5e8b-4ca8-81d1-e55df640a4ac",
+    "timestamp": "2025-12-01 22:31:57.830028",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and integration timing] If iTryIssuer calls processNewYield() within the same transaction as minting yield, but the recipient's receive logic reverts due to temporary conditions (e.g., StakediTry vesting still active), will this cause the entire processAccumulatedYield() transaction to revert, preventing any yield distribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48f936f2-ee30-4052-ab46-55ad5bed5025",
+    "timestamp": "2025-12-01 22:32:19.157498",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and ETH handling, line 160-163] The rescueToken() function can rescue native ETH, but YieldForwarder has no payable functions - how would ETH arrive at this contract in the first place, and could an attacker force-send ETH via selfdestruct to create a griefing scenario?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7b2fb46d-5951-4d1a-ab6a-f84642504ed9",
+    "timestamp": "2025-12-01 22:32:42.182521",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and zero amount edge case, line 98] The function reverts on _newYieldAmount == 0, but if iTryIssuer.processAccumulatedYield() calculates yield as exactly 0 due to NAV price precision, will this cause iTryIssuer to revert when calling processNewYield(0), blocking the yield distribution function entirely?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8810041c-8e37-45ff-bf40-e2c7c92bb8a7",
+    "timestamp": "2025-12-01 22:33:05.503088",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [yieldToken immutable and interface assumption, line 35] The contract assumes yieldToken implements transfer() that returns a boolean, but if yieldToken is upgraded to a non-standard implementation that reverts instead of returning false, will this break the error handling logic on lines 102-104?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6588d0a5-986d-4497-9fb5-3cff2f654cc9",
+    "timestamp": "2025-12-01 22:33:29.904255",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and gas manipulation] Can an attacker repeatedly call processNewYield() with incrementing amounts (1, 2, 3, ...) to consume gas and potentially front-run the legitimate iTryIssuer call, causing the legitimate transaction to fail due to block gas limit if the block is nearly full?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_22ae76a8-9c36-4a78-a76c-d8f39fc415c4",
+    "timestamp": "2025-12-01 22:33:55.182012",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and access control, line 156] The rescueToken() function is onlyOwner, but if the owner address is a multisig that loses quorum, will all accidentally sent tokens be permanently locked in the contract with no emergency recovery mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_009d6dd6-3777-4c73-a80f-bf69dca8a878",
+    "timestamp": "2025-12-01 22:34:22.301259",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and recipient contract state] If yieldRecipient is StakediTry and it's in a FULL_RESTRICTED_STAKER_ROLE state or has some blacklist applied, could the transfer of iTRY to StakediTry's address succeed but then be unusable, effectively burning the yield tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_189e66a4-5ab1-406d-a76b-a152527d7f57",
+    "timestamp": "2025-12-01 22:34:48.661873",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [setYieldRecipient and event emission, line 130] The YieldRecipientUpdated event is emitted with oldRecipient and newRecipient, but if an attacker monitors this event and immediately calls processNewYield() before the next yield mint, could they exploit the transition window to redirect yield?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5d44976-2100-461e-965e-db457f49f952",
+    "timestamp": "2025-12-01 22:35:15.615286",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and transfer return value, line 102] The code checks if (!yieldToken.transfer(...)) but some ERC20 tokens return true even on failure - could this cause the function to emit YieldForwarded event when the transfer actually failed, creating accounting discrepancies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6551d5e2-6f2c-496c-ae4e-238281df35bd",
+    "timestamp": "2025-12-01 22:35:41.805470",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [constructor and initial state, line 69-77] The constructor emits YieldRecipientUpdated(address(0), _initialRecipient) - could off-chain systems misinterpret this as an actual recipient change from address(0), causing confusion in yield tracking during initial deployment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c8e3caf-1273-49b3-a030-9d277fb34853",
+    "timestamp": "2025-12-01 22:36:06.603953",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and iTryIssuer integration] If iTryIssuer's yieldReceiver address is accidentally set to a different contract instead of this YieldForwarder, will yield be minted to the wrong address, and will this YieldForwarder continue to have stale yieldToken balance that anyone can drain via processNewYield()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c1226322-6cd1-4466-8f74-b24bd05497d8",
+    "timestamp": "2025-12-01 22:36:31.581345",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and token approval, line 156-170] The rescueToken() function uses safeTransfer() for ERC20 tokens, but what if the YieldForwarder had previously given approval to another contract for that token - could those approvals be exploited to drain rescued tokens before they reach the 'to' address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e107041-40f2-4af6-9f21-47b1cf7864e0",
+    "timestamp": "2025-12-01 22:36:56.639409",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and concurrent calls] If multiple transactions call processNewYield() simultaneously in different blocks/transactions, and they all validate successfully with the current balance, will only the first one succeed and the rest fail, potentially causing legitimate iTryIssuer calls to revert unexpectedly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c8858595-db1f-43d7-8e67-8a764b4c40a0",
+    "timestamp": "2025-12-01 22:37:21.054885",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [yieldRecipient and contract deployment] If yieldRecipient is set to a contract address that hasn't been deployed yet (e.g., using CREATE2 prediction), will processNewYield() succeed in sending tokens to that address, and will those tokens be permanently lost if the contract is never deployed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74e34f1f-7796-4eff-9f77-df8d5c97811a",
+    "timestamp": "2025-12-01 22:37:41.893763",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and StakediTry vesting] Since StakediTry.transferInRewards() can only be called when getUnvestedAmount() == 0, if yield is forwarded to StakediTry before the previous vesting completes, will the tokens sit idle without being vested, breaking the gradual yield distribution mechanism and share price updates?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cfcae284-f288-4edf-8efa-90f6d5251ae8",
+    "timestamp": "2025-12-01 22:38:03.239310",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and native ETH, line 160-163] The rescueToken() function uses to.call{value: amount}(\"\") for ETH rescue, but this forwards all remaining gas to the recipient - can a malicious recipient execute expensive operations or reentrancy attacks during this call despite the nonReentrant modifier?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a6ca7738-2f34-4512-a539-36570b2b51df",
+    "timestamp": "2025-12-01 22:38:26.173628",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and amount parameter validation, line 97] The function accepts _newYieldAmount as a parameter but doesn't validate it against the actual balance - could iTryIssuer pass an incorrect amount due to a bug, causing processNewYield() to succeed with wrong event parameters, creating accounting confusion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ec832a05-1f08-492b-91b1-5de8046e75ef",
+    "timestamp": "2025-12-01 22:38:51.188293",
+    "report_generated": false
   }
 ]
