@@ -298,5 +298,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c44a9176-47d8-41e5-8e72-d915fb0a5b37",
     "timestamp": "2025-12-01 21:35:24.719910",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [MIN_SHARES protection] If cooldown operations bring StakediTry.totalSupply() below MIN_SHARES (1 ether), can subsequent operations fail? Does the silo hold enough iTRY to cover the MIN_SHARES requirement, or could this lock the entire vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4e37be94-2f2a-4030-83e1-6a82efd6995c",
+    "timestamp": "2025-12-01 21:36:39.719303",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Yield distribution impact] When YieldForwarder distributes yield via transferInRewards(), does this increase totalAssets including silo-held iTRY? Could incorrect accounting allow users in cooldown to claim more iTRY than they're entitled to?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_58f53ccc-4b80-4999-93b6-c847f0d85859",
+    "timestamp": "2025-12-01 21:36:53.329481",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Fast redeem bypass] StakediTryFastRedeem allows immediate unstaking without cooldown by calling _withdraw() directly to the receiver (line 152, 155 in StakediTryFastRedeem.sol). Does this completely bypass the silo, meaning the silo's security assumptions don't apply to fast redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47ca3511-37dc-4294-a5df-1fbb8ab8b45f",
+    "timestamp": "2025-12-01 21:37:07.003113",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [ERC4626 totalAssets integration] The silo holds iTRY that should be counted in StakediTry.totalAssets() for accurate share pricing. If the silo balance is not properly included, could share price calculations become incorrect, enabling inflation/deflation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ebba6a3-f013-4948-ad93-bd06e5118b91",
+    "timestamp": "2025-12-01 21:37:22.300994",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Silo balance overflow] If an attacker repeatedly deposits and initiates cooldowns with dust amounts, can the accumulated iTRY in the silo exceed uint256 max or cause precision issues that affect ERC4626 totalAssets calculations and share pricing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47840cb7-5e90-4ccd-b69c-3240d3759ffe",
+    "timestamp": "2025-12-01 21:37:37.634320",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Silo balance underflow] If the staking vault's internal cooldown accounting becomes inconsistent with the silo's actual iTRY balance (due to bugs, admin token rescues, or unexpected transfers), can this cause withdraw() to fail when the sum of all cooldown claims exceeds the silo's balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d603c88d-e362-4f17-b475-4f03fe2d8c43",
+    "timestamp": "2025-12-01 21:37:54.465775",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [unstakeThroughComposer validation] In StakediTryCrosschain.unstakeThroughComposer (line 86-92), the function reads cooldowns[receiver] but transfers to msg.sender (composer). If the composer's address is blacklisted between cooldown initiation and completion, can this permanently lock the receiver's iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a84f5fc1-54b4-4d45-97f5-21000ec37477",
+    "timestamp": "2025-12-01 21:38:12.053625",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cross-chain redeemer validation] In _startComposerCooldown (line 177-178), cooldowns[redeemer].underlyingAmount is increased without checking if 'redeemer' already has an active cooldown. Can this allow cooldown balance inflation if the composer repeatedly assigns to the same redeemer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_adbee499-8f20-49ca-bdc5-047212ef3ccf",
+    "timestamp": "2025-12-01 21:38:31.854963",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Composer role privilege] In StakediTryCrosschain._startComposerCooldown (line 177), the composer assigns cooldown entitlement to an arbitrary 'redeemer' address. Can a malicious composer front-run legitimate cross-chain unstake requests by assigning cooldowns to attacker-controlled addresses instead of the real user?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55d85c37-1398-41a6-b3c1-c70189a09c24",
+    "timestamp": "2025-12-01 21:38:53.243919",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown reset] When users call cooldownShares/cooldownAssets multiple times, cooldownEnd gets reset to the current timestamp + cooldownDuration (line 114). Can an attacker force a victim to reset their cooldown by sending them wiTRY shares, triggering a transfer that calls cooldownShares on their behalf?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ec34b98c-81fe-4964-8ad8-7c3e123d9371",
+    "timestamp": "2025-12-01 21:39:15.974848",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown timestamp] In StakediTryCooldown.cooldownShares() (line 114), cooldownEnd is set to uint104(block.timestamp) + cooldownDuration. Can block.timestamp manipulation by miners/validators allow attackers to complete cooldowns earlier than intended and bypass the waiting period?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f537a074-5ccf-42b3-b456-066a55307d63",
+    "timestamp": "2025-12-01 21:39:39.922975",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown accumulation] In StakediTryCooldown.cooldownShares() (line 115), cooldowns[msg.sender].underlyingAmount uses += to accumulate multiple cooldowns. Can this overflow the uint152 type, causing cooldown balances to wrap around and allow users to unstake more iTRY than they deposited?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb8f6e8d-0d2f-4b4c-8579-31475633b7dd",
+    "timestamp": "2025-12-01 21:40:04.554845",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [cooldownDuration changes] In StakediTryCooldown.unstake() (line 84), if cooldownDuration is set to 0, users can unstake immediately regardless of cooldownEnd timestamp. Does this allow bypassing the intended cooldown period and draining the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47513b3b-93c6-4e3d-ae7a-5674454d30ae",
+    "timestamp": "2025-12-01 21:40:30.978015",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Transfer state transitions] If the iTRY admin sets TransferState to FULLY_DISABLED after users have initiated cooldowns, can they ever complete unstake()? Would silo.withdraw() permanently fail, violating the cooldown completion invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_caf769ec-49d2-4e81-8649-9c90f9cdbe28",
+    "timestamp": "2025-12-01 21:40:58.790891",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Whitelist enforcement] During unstake operations, if the 'receiver' address is not whitelisted in WHITELIST_ENABLED state, would silo.withdraw(receiver, assets) revert? Could this be exploited to grief users by removing them from the whitelist during their cooldown period?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_65ae7b31-1e00-497f-8c6f-e04cb1438ab4",
+    "timestamp": "2025-12-01 21:41:27.208536",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Whitelist enforcement] In TransferState.WHITELIST_ENABLED mode, if the silo is not whitelisted, can users still initiate cooldowns? Would _withdraw(msg.sender, address(silo), ...) revert in _beforeTokenTransfer checks, preventing all cooldown operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6d6ae08b-a47d-444a-94b4-4ae96ba1ec3c",
+    "timestamp": "2025-12-01 21:41:58.771831",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Blacklist enforcement] If the iTRY admin blacklists the silo contract address itself, can this create a deadlock where cooldown operations fail to transfer to the silo (line 104, 117 in StakediTryCooldown) and unstake operations fail to withdraw from the silo (line 88), permanently locking all staked funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4c42cc0e-43b7-483e-8a53-2fd7c32773c5",
+    "timestamp": "2025-12-01 21:42:32.434974",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Access control escalation] If the STAKING_VAULT address is ever changed or upgraded (even though it's immutable), the old silo would become orphaned with iTRY locked inside. Is there any recovery mechanism, or would cooldown funds be permanently lost?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c77078e1-ec58-4647-9e66-5dd9b884e28e",
+    "timestamp": "2025-12-01 21:43:06.471833",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [State synchronization] If an attacker directly transfers iTRY to the silo address using iTRY.transfer() (bypassing _withdraw), can this cause a mismatch between the silo's actual balance and the sum of all users' cooldown.underlyingAmount, enabling theft when someone unstakes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_913e6277-1765-4bea-bc08-c65223d19d78",
+    "timestamp": "2025-12-01 21:43:39.414083",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [State synchronization] The silo contract has no internal balance tracking - it relies entirely on iTRY.balanceOf(). If iTRY tokens are accidentally sent directly to the silo (not via _withdraw), could this inflate the silo balance and allow the staking vault to withdraw more than the actual cooldown commitments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99fd5582-f5cf-445f-bf9c-27a9e4f73f2a",
+    "timestamp": "2025-12-01 21:44:09.295650",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Integration with StakediTryCrosschain.unstakeThroughComposer - Line 93] The function calls silo.withdraw(msg.sender, assets) where msg.sender is the composer, not the 'receiver'. Can the composer (a trusted role) be blacklisted, causing all cross-chain unstakes to revert and permanently lock L2 users' funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_23ee3f83-4f53-41f9-a152-f119a440ad92",
+    "timestamp": "2025-12-01 21:44:36.621074",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Integration with StakediTryCrosschain._startComposerCooldown - Line 174] When _withdraw() transfers to address(silo), does the function check if the silo has sufficient allowance or if iTRY transfer restrictions apply to contract addresses? Could this cause cross-chain cooldowns to fail silently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd9ed222-6136-422e-9344-7235a4c809d4",
+    "timestamp": "2025-12-01 21:45:03.669865",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Integration with StakediTryCooldown.cooldownShares - Line 104, 117] When _withdraw() transfers iTRY to address(silo), if the silo itself is blacklisted in the iTRY contract, would cooldown operations always revert, breaking the entire staking mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_18a84c39-5ebb-4a7b-aea2-daf7fa5eabf8",
+    "timestamp": "2025-12-01 21:45:29.213923",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Integration with StakediTryCooldown.unstake - Line 80-92] When unstake() calls silo.withdraw(receiver, assets), if the 'receiver' is blacklisted after cooldown initiation but before unstake completion, does the transfer revert, permanently locking the user's iTRY in the silo?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0ec13e8b-bc03-4c18-bce6-2eee69d27719",
+    "timestamp": "2025-12-01 21:45:55.717390",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] If the silo's iTRY balance is less than the requested amount due to unexpected token behavior or admin rescue operations, will withdraw() revert gracefully or enter an undefined state that blocks all future unstake operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7d539c6c-9e16-485d-ba85-a0d86d28bd15",
+    "timestamp": "2025-12-01 21:46:23.195124",
+    "report_generated": false
   }
 ]
