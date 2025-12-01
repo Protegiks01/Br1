@@ -2098,5 +2098,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a60ce825-6140-424a-a392-55a3044403e6",
     "timestamp": "2025-12-01 23:39:28.879852",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromVault, lines 632-634] If redemptionFeeInBPS > 0, two processTransfer() calls are made (one to receiver, one to treasury). If the first succeeds but the second fails, does the entire transaction revert? What happens to _totalDLFUnderCustody which was already decremented?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da69a827-887d-4550-b335-4b30d5c15c7a",
+    "timestamp": "2025-12-01 23:40:36.228340",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromCustodian, lines 651-657] Multiple events are emitted for custodian transfers. If event emission runs out of gas, does this break the redemption flow? Events shouldn't revert transactions, but what about gas limits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_32170061-8eec-4e41-9329-b273eb2f7004",
+    "timestamp": "2025-12-01 23:40:49.336128",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 280] Zero amount check at line 280 - if dlfAmount == 0, the function reverts. But what if dlfAmount is 1 wei? The fee calculation might round the entire amount to fees, leaving netDlfAmount = 0, which would cause a revert at line 292. Is this a DOS vector?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4ea8fa18-39a6-4175-bcf9-4ea12c3acbc1",
+    "timestamp": "2025-12-01 23:41:02.819345",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 328] Zero amount check at line 328 - if iTRYAmount == 0, the function reverts. But what if iTRYAmount = 1? The NAV conversion might round grossDlfAmount to 0, causing a revert at line 341. Is this a DOS vector for tiny redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1cb20161-2c36-40b1-a09b-07ce697718d1",
+    "timestamp": "2025-12-01 23:41:17.887024",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, lines 407-409] If currentCollateralValue == _totalIssuedITry (exactly equal), the function reverts with NoYieldAvailable. But is it possible that small rounding errors could cause this condition to be hit frequently, preventing yield processing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bdb13573-9bc5-43d4-86b4-8efb9778ca97",
+    "timestamp": "2025-12-01 23:41:32.904842",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, lines 169-170] Redemption and mint fees are initialized to 0. But if the constructor parameters _vaultTargetPercentageBPS or _vaultMinimumBalance are set to extreme values, could this break the FastAccessVault functionality?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5fa97e39-38ef-46d3-99e2-53ad64765138",
+    "timestamp": "2025-12-01 23:41:48.771296",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 300] _transferIntoVault() is called with msg.sender as the 'from' address. This assumes msg.sender has approved the issuer contract to spend their DLF. If approval is insufficient, does the transaction revert cleanly, or could there be side effects?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_97dc3333-96ce-4983-b47c-6ec859254c6f",
+    "timestamp": "2025-12-01 23:42:06.649513",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _credit function] Does the inherited OFT._credit() function (called during cross-chain message receipt) bypass the _beforeTokenTransfer blacklist/whitelist checks by directly minting tokens, allowing blacklisted users to receive iTRY on the spoke chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd06df59-0a49-43d3-a471-59302d5f9220",
+    "timestamp": "2025-12-01 23:42:27.793933",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _debit function] Does the inherited OFT._debit() function (called during cross-chain sends) bypass the _beforeTokenTransfer checks, allowing blacklisted users to burn their tokens and send iTRY cross-chain, violating the blacklist enforcement invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0f8d5416-bbc8-4fd1-8931-2f7c95a657e8",
+    "timestamp": "2025-12-01 23:42:49.013573",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 140-177] In FULLY_ENABLED state (line 142), does the minter check at line 143-144 validate that msg.sender is the minter when burning (to == address(0)), or can a blacklisted user with tokens burn them directly via the standard burn() function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c12a9291-87de-4311-a31e-d834e60a2f2e",
+    "timestamp": "2025-12-01 23:43:12.539176",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 140-177] In FULLY_ENABLED state, does the normal transfer case at line 151 check msg.sender, from, and to are not blacklisted, but fail to validate that the spender (in transferFrom) is also not blacklisted, enabling a blacklisted user to transfer on behalf of a non-blacklisted user?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e4e66d6b-0812-4008-ac8c-bafaab1a8052",
+    "timestamp": "2025-12-01 23:43:35.128497",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 158-172] In WHITELIST_ENABLED state (line 157), does line 166-167 allow any whitelisted user to burn tokens (to == address(0)), but fail to check if the user is also blacklisted, potentially allowing a blacklisted-but-whitelisted user to burn?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b1ffcfb5-fc9e-402f-a8ea-7f053d1b92af",
+    "timestamp": "2025-12-01 23:43:59.155788",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer line 145] When the minter mints tokens (from == address(0)), does the check at line 145 only verify the recipient 'to' is not blacklisted, without checking if the minter itself could be compromised or set to a blacklisted address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a177706-7d56-435c-8277-4bb53de60697",
+    "timestamp": "2025-12-01 23:44:23.726590",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [setMinter function lines 60-64] Can the owner call setMinter() to change the minter address to an attacker-controlled contract, which could then mint unbacked iTRY tokens on the spoke chain without corresponding locked tokens on the hub chain, violating the backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2bfd01b7-ad03-4f8e-ad11-882d7406f860",
+    "timestamp": "2025-12-01 23:44:50.327863",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [minter state variable line 33] If the minter is set to the LayerZero endpoint (line 53), but later updated via setMinter() to a different address, could cross-chain messages still arrive from the endpoint but fail the minter check in _beforeTokenTransfer, causing legitimate bridging operations to revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_043ba261-217c-40ee-836f-498a87522dee",
+    "timestamp": "2025-12-01 23:45:17.337791",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [constructor line 51-54] The constructor sets minter = _lzEndpoint (line 53), but LayerZero messages might come from the OFT contract itself (address(this)) rather than the endpoint directly. Does this mismatch cause _beforeTokenTransfer to reject legitimate cross-chain mints/burns?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cfb5146f-09ca-4024-a443-6cdf773441a6",
+    "timestamp": "2025-12-01 23:45:43.126240",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [addBlacklistAddress lines 70-75] The loop uses uint8 for the index variable (line 71). If the users array has more than 255 addresses, does the uint8 overflow and wrap around, causing only the first 255 users to be processed and leaving remaining addresses unblacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8409643d-919e-4931-bc77-c264a3a39162",
+    "timestamp": "2025-12-01 23:46:10.789528",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [removeBlacklistAddress lines 80-84] The loop uses uint8 (line 81). Can an attacker grief the system by forcing the owner to remove more than 255 blacklisted addresses at once, causing the function to only process 255 and require multiple transactions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_10239eef-3ea6-4638-817d-faee7aa21d1d",
+    "timestamp": "2025-12-01 23:46:39.265430",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [addWhitelistAddress lines 89-93] At line 91, if an address is not blacklisted, it gets whitelisted. But does this check happen atomically with the blacklist state? Can a front-running attack blacklist an address between the check and the whitelist assignment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d8f4635-0b9f-47bb-b0a2-02a234d8e076",
+    "timestamp": "2025-12-01 23:47:07.332408",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [addBlacklistAddress lines 70-75] At line 72, if a user is whitelisted, they get un-whitelisted before being blacklisted. Can this create a window where the user is neither whitelisted nor blacklisted, allowing them to transfer in WHITELIST_ENABLED state before the blacklist takes effect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_37f160f3-ccf3-4c50-a290-70b6b5432faa",
+    "timestamp": "2025-12-01 23:47:34.162706",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [blacklisted mapping line 36] The blacklisted mapping is storage. If a user is blacklisted on one spoke chain but not others, can they transfer iTRY to another spoke chain where they're not blacklisted, then back to the hub, bypassing blacklist restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_50489202-3516-4eb7-8dd2-70fae7175d9d",
+    "timestamp": "2025-12-01 23:48:00.691714",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [whitelisted mapping line 39] Similar to blacklist, if whitelist state is not synchronized across chains, can a user exploit cross-chain transfers to move funds during WHITELIST_ENABLED state even if they're not whitelisted on the source chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69a4b10d-2f32-4579-a7ab-f15b8ca931db",
+    "timestamp": "2025-12-01 23:48:27.509180",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [redistributeLockedAmount lines 109-118] At line 110, the function checks if 'from' is blacklisted and 'to' is not. But does it verify that the 'to' address is not the zero address or the contract itself, potentially burning tokens permanently or creating an inconsistent state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_451c6905-6e5a-44ef-ba38-bbcf68bf300a",
+    "timestamp": "2025-12-01 23:48:53.172094",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [redistributeLockedAmount lines 109-118] The function burns from 'from' (line 112) and mints to 'to' (line 113) atomically. But do these operations properly trigger _beforeTokenTransfer validation, or could they bypass checks if msg.sender is the owner?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_62c7706e-a15b-4c8b-b036-7be8053b0fb7",
+    "timestamp": "2025-12-01 23:49:18.839052",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [redistributeLockedAmount line 111] The function uses balanceOf(from) to determine the amount to redistribute. If 'from' receives more tokens between the balanceOf call and the _burn call (through a reentrancy or concurrent transaction), could the burn fail or redistribute an incorrect amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1feca2d5-8c8a-4c5f-9845-045330471fb0",
+    "timestamp": "2025-12-01 23:49:43.635310",
+    "report_generated": false
   }
 ]
