@@ -1,1 +1,152 @@
-[]
+[
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Silo balance verification] Since withdraw() doesn't verify balances, if the silo's iTRY balance becomes less than the requested amount due to unforeseen circumstances, would the transaction revert and permanently lock that user's cooldown until the silo is refunded?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e069832c-a632-499d-9936-eaa2c827a27a",
+    "timestamp": "2025-12-01 21:09:07.024743",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Partial unstaking] The unstake() function withdraws the full cooldown.underlyingAmount (line 82). Is there a way for users to partially unstake? If not, does this create griefing opportunities where users must wait for the entire cooldown even if they only need a portion of their iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_61dbb4b4-492a-40eb-bbdf-c5153f85e9b0",
+    "timestamp": "2025-12-01 21:09:20.829707",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown reset exploitation] Each cooldownShares call resets cooldownEnd to the current time + duration (line 114). Can an attacker force victims to repeatedly reset their cooldowns by transferring wiTRY to them (if transfers trigger cooldown resets), preventing them from ever unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_01d064c5-b943-4442-9bbd-9e7a7aa4e1b9",
+    "timestamp": "2025-12-01 21:09:34.968045",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Multiple cooldown accumulation] Users can call cooldownShares multiple times, accumulating cooldown.underlyingAmount (line 115, 178). Can this accumulation logic be exploited to claim more iTRY than the silo holds by repeatedly gaming the share-to-asset conversion rate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_97ba7967-39e2-4aeb-8a99-01219eb8e6d0",
+    "timestamp": "2025-12-01 21:09:49.195286",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Composer balance accounting] When unstakeThroughComposer sends to msg.sender (composer) instead of the user, how does the composer track which iTRY belongs to which user for subsequent cross-chain delivery? Can accounting errors cause users to receive wrong amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bee2e2b5-f494-4cf6-ba4c-25c2607c8532",
+    "timestamp": "2025-12-01 21:10:04.683007",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Failed cross-chain delivery] If the LayerZero message delivering unstaked iTRY back to L2 fails, does the iTRY remain with the composer on L1? Can the user recover their funds, or are they permanently lost?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b96229b0-5d62-451e-a4f4-580cc93e7a85",
+    "timestamp": "2025-12-01 21:10:22.134389",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [LayerZero message fees] When unstakeThroughComposer sends iTRY back to L2, does the composer pay LayerZero fees from the unstaked iTRY amount, reducing what the user receives? Can fee manipulation steal user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a126941a-59d3-48d3-902e-a07dc6062dab",
+    "timestamp": "2025-12-01 21:10:40.094740",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cross-chain consistency] If wiTRY is bridged across chains via LayerZero, are there separate silos on each chain? Can inconsistencies between L1 and L2 silo balances cause users to unstake more iTRY on one chain than they deposited?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cc629f74-f908-415a-8327-e6e2512c8749",
+    "timestamp": "2025-12-01 21:11:00.122656",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Silo self-destruction] Although the silo has no selfdestruct, if Ethereum implements EIP-6780 or similar changes that affect contract behavior, could this impact the silo's ability to hold iTRY long-term?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_97f35b2f-dcd0-4542-b14b-de30638eaf30",
+    "timestamp": "2025-12-01 21:11:22.349407",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [EIP-1167 minimal proxy] If the silo is deployed as a minimal proxy (EIP-1167) instead of a full contract, could delegate call vulnerabilities or storage collision issues arise that break the custody guarantees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7a024fe8-7c42-4859-b6ae-710c367b072c",
+    "timestamp": "2025-12-01 21:11:44.657002",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Contract upgrade compatibility] If StakediTry is upgraded via proxy pattern, would the new implementation still correctly interact with the immutable silo deployed by the old implementation, or could this cause incompatibility issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_407beceb-b13e-4910-bb9e-3190037d4891",
+    "timestamp": "2025-12-01 21:12:08.441986",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Malicious STAKING_VAULT] Although trusted, if the STAKING_VAULT is compromised or contains a bug, can it call withdraw() in ways that violate the protocol invariants, such as sending to blacklisted addresses or withdrawing more than cooldown commitments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f1b3b233-9d75-4111-9096-f8e50c8779a0",
+    "timestamp": "2025-12-01 21:12:33.606874",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Multi-sig or governance delays] If withdrawing from the silo requires governance approval or multi-sig execution (via the staking vault), can time delays cause users' cooldowns to extend beyond their cooldownEnd timestamp, violating the cooldown completion invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4e3d3c75-f451-4b91-b477-46916c8ab293",
+    "timestamp": "2025-12-01 21:12:59.868765",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Asset type confusion] The silo is designed for iTRY tokens. If the staking vault is ever upgraded to use a different asset, would the immutable iTry reference cause all cooldown operations to fail permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9ccc88fd-1503-439a-9ade-35ae11a451d3",
+    "timestamp": "2025-12-01 21:13:25.867558",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown timestamp overflow] In cooldownShares (line 114 in StakediTryCooldown), cooldownEnd is cast to uint104. Can block.timestamp + cooldownDuration overflow this type far in the future, allowing immediate unstaking by wrapping the timestamp?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_19beb202-2779-4801-bc72-2962046b80af",
+    "timestamp": "2025-12-01 21:13:52.179897",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cooldown accounting overflow] In _startComposerCooldown (line 178 in StakediTryCrosschain), cooldowns[redeemer].underlyingAmount uses += with uint152. Can repeated cross-chain operations cause this to overflow and wrap around, allowing attackers to claim massive amounts of iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea57ca3e-76a9-4b23-af8f-bd0e9c46f509",
+    "timestamp": "2025-12-01 21:14:19.235991",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Dust accumulation] If many users initiate cooldowns with tiny amounts, can dust accumulate in the silo due to rounding errors, eventually causing balance discrepancies that prevent the last user from unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_857f8d8d-76d8-47d0-a067-43b69883a4b5",
+    "timestamp": "2025-12-01 21:14:48.212015",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Precision loss in cooldown] When converting between shares and assets during cooldown operations, can precision loss accumulate such that the total cooldown.underlyingAmount across all users exceeds the silo's actual iTRY balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cfa719d4-b85a-4319-ad9d-1ecd7f3999ab",
+    "timestamp": "2025-12-01 21:15:17.793669",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Maximum withdrawal] Can withdraw() be called with amount=type(uint256).max, causing an arithmetic overflow or underflow in the silo's balance tracking or the iTRY token's internal accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6aa4087e-a49d-420c-9ab7-27e29f88757f",
+    "timestamp": "2025-12-01 21:15:47.526010",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Zero amount withdrawals] Can withdraw() be called with amount=0? Would this waste gas, emit misleading events (if events existed), or cause unexpected state transitions in the calling contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dbd939ca-2a97-42ad-b5dd-848984e2f233",
+    "timestamp": "2025-12-01 21:16:15.549040",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Approval mechanism] The silo never calls approve() or increases allowances. If a future protocol upgrade requires the silo to have allowances for certain operations, how would this be implemented without breaking immutability?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12a1e749-cb93-4310-beee-843d07d1b312",
+    "timestamp": "2025-12-01 21:16:43.070036",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Integration with external protocols] If the silo address is used in external DeFi protocols (lending, DEX liquidity), can interactions with these protocols drain the silo or interfere with its custody guarantees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43753f16-172b-4bfa-b52e-94ff08f377e0",
+    "timestamp": "2025-12-01 21:17:09.314836",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [View function consistency] Since the silo has no view functions to query its balance or validate cooldown claims, off-chain systems must trust iTry.balanceOf(silo). Can this be exploited if balanceOf() is manipulated or returns stale data?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_26cf27c6-a635-44a6-948c-1e900a9fd98b",
+    "timestamp": "2025-12-01 21:17:35.918916",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Cross-function reentrancy] While withdraw() has no reentrancy guard, could an attacker use read-only reentrancy by calling view functions during the iTRY transfer callback to manipulate other operations like cooldownShares() or previewRedeem()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b42c0d99-413a-44c8-b4df-49fd5351dd50",
+    "timestamp": "2025-12-01 21:18:03.088982",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Sandwich attack on unstake] Can an MEV bot sandwich unstake() by front-running with a large yield distribution that increases totalAssets, causing the user to receive more iTRY than their cooldown.underlyingAmount, stealing from other stakers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d2d45a0e-9635-41ce-90b5-0e0ce7a46e24",
+    "timestamp": "2025-12-01 21:18:31.502418",
+    "report_generated": false
+  }
+]
