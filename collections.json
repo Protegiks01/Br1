@@ -1798,5 +1798,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74558f35-d70a-4b84-8b28-6be2bdfb9ae5",
     "timestamp": "2025-12-01 23:19:09.367746",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setMintFeeInBPS, lines 443-448] Similar to redemption fee, can the mint fee be changed to MAX_MINT_FEE_BPS (9999) right before a user's mint transaction, causing them to receive nearly zero iTRY for their DLF (griefing attack)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aea5e95e-f9f3-4072-a145-0790444dd3b7",
+    "timestamp": "2025-12-01 23:20:22.313887",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewAccumulatedYield, lines 230-239] This view function calculates yield but doesn't account for any fees. When processAccumulatedYield() is actually called, does it deduct fees before minting? If not, is the preview accurate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f000b4cf-00ab-4a83-9807-65489175ad2b",
+    "timestamp": "2025-12-01 23:20:35.551944",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 302] After _transferIntoVault() and _mint(), the function emits ITRYIssued event with netDlfAmount. But _totalDLFUnderCustody was incremented by netDlfAmount, not the total dlfAmount. Is the event data consistent with actual accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df1369a4-080f-4600-b72f-b24c59806766",
+    "timestamp": "2025-12-01 23:20:49.341697",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 369] The ITRYRedeemed event includes the 'fromBuffer' boolean. But this is determined after _burn() is called. If _burn() succeeds but both _redeemFromVault() and _redeemFromCustodian() revert, is the event still emitted with incorrect data?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f1f29f4c-004d-4618-ba50-7f6fa0f2849d",
+    "timestamp": "2025-12-01 23:21:03.429942",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, lines 607-609] The comment says 'Transfer net DLF amount to buffer pool', but the actual transfer is to liquidityVault. If liquidityVault is compromised or has a bug, could this enable theft of all incoming DLF collateral?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_14803f8c-a57a-44c0-b294-389cc1872909",
+    "timestamp": "2025-12-01 23:21:18.858391",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_mint, lines 577-578] The function calls iTryToken.mint(receiver, amount). If the iTry token contract has a bug in its mint() function or _beforeTokenTransfer hook that allows blacklisted addresses to receive tokens, could this bypass blacklist enforcement?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c66490be-4707-4145-a065-7a859b00717d",
+    "timestamp": "2025-12-01 23:21:35.630877",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_burn, lines 589-590] The function calls iTryToken.burnFrom(from, amount). If burnFrom() has a bug that allows burning from blacklisted addresses, does this create an inconsistency with transfer restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5a873df4-4b3c-48fa-a9b1-dbd8a4d4d827",
+    "timestamp": "2025-12-01 23:21:53.631200",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, lines 295-297] The minAmountOut slippage check compares iTRYAmount < minAmountOut. But this check happens after _transferIntoVault() could have already been called in a previous transaction path. Wait, looking at the code flow, _transferIntoVault is at line 300, after the slippage check. So this is safe. But can an attacker set minAmountOut = type(uint256).max to DOS the function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_734d3411-3c25-4ff8-929c-b2d5e400076e",
+    "timestamp": "2025-12-01 23:22:13.277886",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 347-349] The minAmountOut slippage check happens after _burn() is called. If the check fails and reverts, is _burn() already executed, causing iTRY to be permanently burned without DLF redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7a3ec8f9-d285-4300-8f3e-171306a57acc",
+    "timestamp": "2025-12-01 23:22:36.035691",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 300] The CEI pattern check - _transferIntoVault() makes external calls to collateralToken.transferFrom(). If collateralToken is a malicious ERC20 that re-enters into mintFor() during transferFrom(), can this exploit reentrancy despite the nonReentrant modifier (the modifier should prevent this)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29ffae8b-68da-4cdd-ae18-879548d8d5f3",
+    "timestamp": "2025-12-01 23:23:00.340409",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 356-366] The fromBuffer boolean is set based on whether liquidityVault has sufficient balance. But between the balance check at line 354 and the actual redemption call at line 358 or 363, can another transaction drain the vault, causing the redemption to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d9cacacd-3110-40bf-84e2-510ac07b1d03",
+    "timestamp": "2025-12-01 23:23:26.318282",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromVault, line 628] The calculation _totalDLFUnderCustody -= (receiveAmount + feeAmount) subtracts both user amount and fee. But if the vault doesn't have enough balance for both, does liquidityVault.processTransfer() revert, leaving _totalDLFUnderCustody corrupted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_711b196b-c583-4ffd-942e-c15d218fc502",
+    "timestamp": "2025-12-01 23:23:52.177165",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromCustodian, line 645] Similar to vault redemption, _totalDLFUnderCustody is decremented immediately. But since this only emits events and doesn't transfer tokens on-chain, can the custody accounting become permanently desynchronized if the custodian doesn't fulfill the transfer request?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c00324b4-970f-4001-b867-9edcfddb6c62",
+    "timestamp": "2025-12-01 23:24:18.993224",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, line 605] _totalDLFUnderCustody += dlfAmount is called before the actual transferFrom(). If this addition causes an integer overflow (unlikely with uint256, but theoretically possible if _totalDLFUnderCustody is already very large), what happens to the accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2a666fa0-28d1-4ef5-a62c-bf69b82fe85c",
+    "timestamp": "2025-12-01 23:24:46.773816",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, line 404] The calculation currentCollateralValue = _totalDLFUnderCustody * navPrice / 1e18 could overflow if both values are very large. Can an attacker inflate _totalDLFUnderCustody through repeated minting to cause overflow in this calculation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9ff73d63-4b0b-4e0d-b509-665e29433442",
+    "timestamp": "2025-12-01 23:25:14.530069",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [addToWhitelist, lines 553-555] The WHITELIST_MANAGER_ROLE can add any address to the whitelist. If a compromised or malicious address is added, they can mint unbounded iTRY (limited only by their DLF holdings). Is there any rate limiting or minting cap per user?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_06f894b6-8c15-4b23-a293-312fa1be785f",
+    "timestamp": "2025-12-01 23:25:40.790857",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [removeFromWhitelist, lines 562-564] If a user is removed from the whitelist while they have an active mint or redeem transaction pending, does the transaction revert? Could this cause a griefing attack where the WHITELIST_MANAGER front-runs user transactions to remove them from the whitelist?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49bdda49-3d46-48a2-b5b8-13d3c95eaa8d",
+    "timestamp": "2025-12-01 23:26:08.064163",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 277] The recipient address is validated as non-zero at line 277. But what if the recipient is a contract address that doesn't accept iTRY tokens (e.g., no fallback function or reverts on receive)? Would the iTryToken.mint() call succeed, or could this lock tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_20aeb67e-6936-4ca2-8964-ca410ac1bade",
+    "timestamp": "2025-12-01 23:26:34.802168",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 325] Similar to minting, the recipient address is validated as non-zero. But if recipient is the liquidityVault address, could this create a circular dependency or accounting issue where DLF is transferred to the vault that should be transferring it out?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6c7193f9-1167-4213-8267-cd31335ea8f8",
+    "timestamp": "2025-12-01 23:27:00.682187",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_calculateMintFee, line 673] The fee calculation uses amount * mintFeeInBPS / 10000. For small amounts, this could round to zero. Line 674 prevents this by returning 1 if feeAmount == 0. But can an attacker exploit this by minting amounts where the fee should be 0.5 tokens but is rounded up to 1, paying double the intended fee?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d9cd6b8a-837f-4c70-861d-6f019b652dc0",
+    "timestamp": "2025-12-01 23:27:26.425663",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_calculateRedemptionFee, line 692] Similar rounding issue - if the calculated fee is 0.9 tokens, it rounds down to 0 and then gets bumped to 1. Is this rounding always in favor of the protocol, or could it disadvantage users in edge cases?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5a6a86e7-09fe-4685-9d44-219d73b8bf5d",
+    "timestamp": "2025-12-01 23:27:51.368792",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [getTotalIssuedITry, lines 246-248] This view function returns _totalIssuedITry. But this value is updated in _mint() and _burn(). If there's a bug where _mint() or _burn() is called without updating this variable, could the returned value be incorrect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c35dba69-7ed2-4182-86b8-f265732394b0",
+    "timestamp": "2025-12-01 23:28:17.166018",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [getCollateralUnderCustody, lines 251-253] This returns _totalDLFUnderCustody, which is updated in _transferIntoVault() and _redeemFromVault()/_redeemFromCustodian(). If these functions have bugs, could this view function return incorrect data, breaking integrations that rely on it?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_72622d82-b449-417e-ad93-421482710347",
+    "timestamp": "2025-12-01 23:28:44.104809",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, lines 173-174] Initial _totalIssuedITry and _totalDLFUnderCustody are set from constructor parameters. But there's no validation that _initialIssued <= (_initialDLFUnderCustody * initialNavPrice / 1e18). Can this allow deployment with an already-violated backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_94860bff-21cf-46ff-90d5-7113ad78751a",
+    "timestamp": "2025-12-01 23:29:11.766492",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, line 182] The comment says 'The iTRY token admin should call addMinter(address(this))'. But if this step is forgotten, would all mint() calls fail, effectively DOS-ing the protocol? Is there a way to recover from this?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fef431d4-f238-4f27-9f84-07e901431bbd",
+    "timestamp": "2025-12-01 23:29:39.713210",
+    "report_generated": false
   }
 ]
