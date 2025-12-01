@@ -1948,5 +1948,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fef431d4-f238-4f27-9f84-07e901431bbd",
     "timestamp": "2025-12-01 23:29:39.713210",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 290] The iTRY amount calculation divides by 1e18. If navPrice is scaled differently than expected (e.g., oracle returns price in different decimals), could this calculation be completely wrong, allowing massive over-minting or under-minting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5377eb1c-30f4-4135-b0bd-95efefc21029",
+    "timestamp": "2025-12-01 23:30:53.983694",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 339] The DLF amount calculation multiplies by 1e18. If there's a mismatch in decimal scaling between iTRY and DLF tokens, could this lead to massive over-redemption or under-redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9aa60d18-05ad-41fe-a535-c9729a8daffe",
+    "timestamp": "2025-12-01 23:31:07.385225",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, line 416] After minting yield, the function calls yieldReceiver.processNewYield(newYield). If this external call reverts, does the entire transaction revert, including the yield minting? Or is the yield already minted and _totalIssuedITry already increased?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_40fa39de-dd92-4517-b839-b49f7a948519",
+    "timestamp": "2025-12-01 23:31:21.069145",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_setOracle, lines 485-490] The internal _setOracle() function doesn't validate that the new oracle implements the IOracle interface correctly. Can an attacker (with INTEGRATION_MANAGER_ROLE) set the oracle to a contract that always returns 0 or type(uint256).max, breaking all minting and redemption operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_879477ad-4517-49d8-b1aa-92080e232897",
+    "timestamp": "2025-12-01 23:31:36.217914",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_setCustodian, lines 496-501] The custodian address can be changed, but there's no check that it's not the same as the issuer contract itself. Can setting custodian = address(this) create unexpected behavior or circular dependencies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e753940f-fd02-475f-be96-196d9f431159",
+    "timestamp": "2025-12-01 23:31:51.305782",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_setYieldReceiver, lines 507-512] Can the yield receiver be set to address(this), causing processAccumulatedYield() to mint yield to itself? This could create weird accounting where the issuer holds iTRY tokens.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_92294425-38c1-4342-b5a2-1db2e3773d02",
+    "timestamp": "2025-12-01 23:32:07.905045",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_setTreasury, lines 527-532] Can the treasury be set to address(0) despite the zero address check at line 528? Wait, there is a check. But can it be set to address(this), causing fees to be sent to the issuer contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2121c88c-9a51-42aa-87a3-1d4836115ee6",
+    "timestamp": "2025-12-01 23:32:25.481781",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_validateFeeBPS, lines 540-542] This validates that fee BPS doesn't exceed max. But MAX_MINT_FEE_BPS and MAX_REDEEM_FEE_BPS are both 9999 (99.99%). Can fees be set this high, effectively making minting or redemption economically non-viable (griefing attack)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_adcb4194-ae1a-42d6-8939-f3bf56e08f12",
+    "timestamp": "2025-12-01 23:32:45.340199",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 273] The nonReentrant modifier protects against reentrancy. But does it protect against cross-function reentrancy where an attacker calls redeemFor() from within a callback during mintFor()? The modifier should protect against this since it's at the contract level.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69f114a1-cd75-47e2-bcd3-23620ed1b310",
+    "timestamp": "2025-12-01 23:33:06.689840",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 321] Similar question - does nonReentrant on redeemFor prevent reentrancy from mintFor? Yes, it should, but has this been tested with malicious ERC20 tokens that try to re-enter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f67add8b-7f24-449a-8ba4-c9590c365807",
+    "timestamp": "2025-12-01 23:33:32.345895",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, line 398] This function does NOT have the nonReentrant modifier. Can yieldReceiver.processNewYield() at line 416 re-enter into mintFor() or redeemFor(), bypassing the reentrancy protection? Wait, mintFor and redeemFor have nonReentrant, so they should block re-entrancy even if called from processAccumulatedYield.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4d5cdee6-35ed-4379-8df8-76824ea56b86",
+    "timestamp": "2025-12-01 23:33:56.087323",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [burnExcessITry, line 376] This function has nonReentrant modifier. But can it be exploited by front-running legitimate redemptions? If admin burns excess iTRY right before users redeem, does this affect the redemption ratio or available yield?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_65a750e3-75a5-4669-ad3e-46c37863ac31",
+    "timestamp": "2025-12-01 23:34:20.939555",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, lines 607-615] Two transferFrom() calls are made - one to vault, one to treasury. If the vault transfer succeeds but treasury transfer fails, the entire transaction reverts. But _totalDLFUnderCustody was already incremented at line 605. Does this revert properly roll back the storage change?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c024372f-9407-4d53-a118-5bce0b7f0d4f",
+    "timestamp": "2025-12-01 23:34:45.992837",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 305] The ITRYIssued event is emitted at the end. But if this event emission somehow fails or runs out of gas, does the entire transaction revert, including the minting? Events can't revert transactions, but what about event ordering relative to state changes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1adfe056-04b4-4ec0-8d9a-0e3cd2837718",
+    "timestamp": "2025-12-01 23:35:09.862194",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 369] The ITRYRedeemed event is emitted with a 'fromBuffer' boolean. But what if liquidityVault.getAvailableBalance() returns stale data at line 354? Could the event incorrectly report fromBuffer = true when it should be false?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_de3ffcf6-c6b4-46ed-bdd1-7d0cd1c2b46d",
+    "timestamp": "2025-12-01 23:35:33.118553",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, lines 147-159] FastAccessVault is deployed with 'address(this)' as the issuer parameter. This creates a tight coupling where the vault must trust this issuer contract. Can this coupling be exploited if the vault implementation has bugs?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e94b9cbf-3ef0-4c2e-9a29-c87349408adb",
+    "timestamp": "2025-12-01 23:35:54.360075",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 283] oracle.price() is called to get NAV price. If the oracle is upgradeable or has a pause mechanism, can the oracle contract pause right after the price() call, causing subsequent transactions to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c3764e05-e006-41cc-afa2-e88971204009",
+    "timestamp": "2025-12-01 23:36:16.343224",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 335] Similar to minting, oracle.price() is called for redemptions. Can oracle front-running attacks manipulate the price between when a user submits their transaction and when it's executed, causing slippage beyond minAmountOut protection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e2bc722-666f-4bbd-8a8e-f8e00f0d7bac",
+    "timestamp": "2025-12-01 23:36:38.815325",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewMint, line 193] This view function calls oracle.price() to preview mint amount. If the oracle's price() function is not a pure view (e.g., it updates state or has side effects), could calling previewMint() affect subsequent mint operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_95a12a0b-c2a1-47b8-98d9-e5089e8d8d62",
+    "timestamp": "2025-12-01 23:37:00.620084",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewRedeem, line 210] Similar issue - if oracle.price() has side effects, could repeatedly calling previewRedeem() affect redemption operations or accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_35c109a6-cde5-4858-975e-fb454c4baa62",
+    "timestamp": "2025-12-01 23:37:23.209898",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewAccumulatedYield, line 231] This function calculates yield based on current oracle price and _totalDLFUnderCustody. But if _totalDLFUnderCustody is manipulated through minting/redemption, can the preview be made arbitrarily incorrect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a53d4c3f-839d-4b99-9b87-cba6c71118d4",
+    "timestamp": "2025-12-01 23:37:47.229598",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_mint, line 578] The function calls iTryToken.mint(receiver, amount). If iTryToken.mint() fails due to receiver being blacklisted or transfer restrictions, does this properly revert after _totalIssuedITry was incremented at line 577?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ebf9eff6-25a8-433d-a704-5e2a3769a3b1",
+    "timestamp": "2025-12-01 23:38:11.654499",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_burn, line 590] The function calls iTryToken.burnFrom(from, amount). If burnFrom() fails due to insufficient balance or allowance, does this properly revert after _totalIssuedITry was decremented at line 589?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_91b8f6ee-4ca3-4015-8b08-32deabd747d5",
+    "timestamp": "2025-12-01 23:38:37.675204",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, lines 286-292] The entire fee and iTRY amount calculation block - if any arithmetic operation fails or reverts, are all prior state changes properly rolled back? Specifically, if line 290 reverts due to overflow, what happens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0ed6218e-ddd9-4a68-9d8b-76e6b96536cb",
+    "timestamp": "2025-12-01 23:39:03.497577",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 330-332] The check at line 330-332 validates iTRYAmount <= _totalIssuedITry. But this check happens before _burn() is called. Between the check and the burn, can another transaction change _totalIssuedITry (e.g., processAccumulatedYield), causing the burn to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a60ce825-6140-424a-a392-55a3044403e6",
+    "timestamp": "2025-12-01 23:39:28.879852",
+    "report_generated": false
   }
 ]
