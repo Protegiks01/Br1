@@ -1498,5 +1498,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7ec41a17-3050-4ff4-801e-7b3d1f933584",
     "timestamp": "2025-12-01 22:59:20.874411",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and competing operations, line 156] If rescueToken() and processNewYield() are called in quick succession (same block, different transactions), can this create a race where rescued tokens might be from legitimate yield that should have been forwarded, causing accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_117300a4-cde4-4bdc-b6ad-91ba6df77672",
+    "timestamp": "2025-12-01 23:00:29.316680",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [constructor and contract dependencies] The constructor doesn't verify that _yieldToken is the actual iTRY token address used by the protocol - if deployed with wrong token address, will all subsequent operations fail silently or with confusing errors, making debugging difficult?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8409beee-60df-412c-9456-a2c0d393eeaa",
+    "timestamp": "2025-12-01 23:00:42.491034",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and balance mutation] After processNewYield() transfers all yieldToken balance, the contract's balance becomes 0 - can this create edge cases where subsequent calls to processNewYield() before new yield is minted cause unexpected reverts or incorrect behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f9f5dc0d-fee4-469a-a23d-42a9967e63b8",
+    "timestamp": "2025-12-01 23:00:56.559432",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [yieldRecipient and multi-recipient scenarios] The contract only supports a single yieldRecipient - if the protocol needs to split yield between multiple recipients (e.g., insurance fund, stakers, treasury), does this require deploying multiple YieldForwarder instances, and could this complicate yield tracking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_990642c4-092a-4d5c-8bb2-11a57a325997",
+    "timestamp": "2025-12-01 23:01:10.582764",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and token locking, line 156] If a malicious token is sent to YieldForwarder that locks transfers after a certain condition, can calling rescueToken() on that token permanently lock the YieldForwarder contract by consuming all gas or reverting in an unrecoverable way?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_335b851c-a918-412a-aa4a-a6b94a462815",
+    "timestamp": "2025-12-01 23:01:25.464747",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [setYieldRecipient and backwards compatibility] If yieldRecipient is changed to a new StakediTry version with different interface expectations, will this break the processNewYield() flow, and is there a way to test recipient compatibility before making the change?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da0eb6f1-e07e-4b74-8019-6f7a7ec89906",
+    "timestamp": "2025-12-01 23:01:41.967180",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and frontrunning economics] Since processNewYield() has no access control",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8718f450-7b69-42d0-9851-c711d6628e93",
+    "timestamp": "2025-12-01 23:01:59.549022",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, lines 270-306] Can an attacker call mintFor() with a malicious ERC20 collateralToken that returns true from transferFrom() without actually transferring tokens, causing unbacked iTRY minting that violates the backing invariant (_totalDLFUnderCustody increases but no real DLF is held)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dbbc0ddc-e740-4dcc-99ca-9a6d6cab6866",
+    "timestamp": "2025-12-01 23:02:19.407863",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, lines 604-618] Does _transferIntoVault() increment _totalDLFUnderCustody before verifying the transferFrom() succeeded? If the transfer reverts after the increment, could this corrupt custody accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00fdca93-527b-4188-af8c-7ba92b221a47",
+    "timestamp": "2025-12-01 23:02:40.758670",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 290] In the iTRY amount calculation (iTRYAmount = netDlfAmount * navPrice / 1e18), can an attacker exploit rounding down to zero when navPrice is very low or netDlfAmount is very small, causing the function to revert at line 292 but after DLF custody was already incremented?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84aef328-951a-44ac-a1a6-1e458486cb86",
+    "timestamp": "2025-12-01 23:03:03.472789",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, lines 286-290] Can an attacker cause integer overflow in the calculation iTRYAmount = netDlfAmount * navPrice / 1e18 when both netDlfAmount and navPrice are very large (near uint256.max), resulting in a much smaller iTRYAmount than expected and unbacked iTRY issuance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e42df5c2-a357-491e-a4e8-e85a2a52c4d8",
+    "timestamp": "2025-12-01 23:03:27.021587",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_mint internal function, lines 576-579] Does _mint() update _totalIssuedITry before calling iTryToken.mint()? If iTryToken.mint() reverts due to transfer restrictions (blacklist/whitelist), is _totalIssuedITry already corrupted, allowing the backing invariant to be violated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5c02d1ce-88f4-45cd-8958-2f3bd37ce44a",
+    "timestamp": "2025-12-01 23:03:51.763642",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 300] The comment says CEI pattern, but _transferIntoVault() is called before _mint(). If _transferIntoVault() successfully increments _totalDLFUnderCustody but _mint() reverts (e.g., iTryToken.mint() fails due to recipient being blacklisted), does this leave _totalDLFUnderCustody inflated while _totalIssuedITry is not increased, violating the backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_51530d39-890f-4e87-b358-b2d3b48e3ac9",
+    "timestamp": "2025-12-01 23:04:16.909038",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 318-370] Can an attacker call redeemFor() and have _burn() succeed (decreasing _totalIssuedITry) but then have _redeemFromVault() or _redeemFromCustodian() fail, causing DLF custody to not decrease while iTRY supply decreases, permanently locking user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b357392f-f17d-42a6-9b28-efc92e63c403",
+    "timestamp": "2025-12-01 23:04:42.011305",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_burn internal function, lines 587-591] Does _burn() decrement _totalIssuedITry before calling iTryToken.burnFrom()? If burnFrom() reverts (e.g., user has insufficient balance or approval), is _totalIssuedITry already corrupted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0a518112-86f2-42fd-888e-d3a04da357d7",
+    "timestamp": "2025-12-01 23:05:05.519318",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 351] The function calls _burn(msg.sender, iTRYAmount) which burns from msg.sender, but the DLF is sent to 'recipient'. Can an attacker exploit this by burning another user's iTRY (via approval) and redirecting the DLF to themselves?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_88e03464-0194-41d0-929a-f265378e5aaf",
+    "timestamp": "2025-12-01 23:05:30.104855",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromVault, lines 627-635] Does _redeemFromVault() decrement _totalDLFUnderCustody before calling liquidityVault.processTransfer()? If processTransfer() reverts, is _totalDLFUnderCustody already decremented, causing custody accounting corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a71e79c-f69a-40c9-8a8a-a5259b412f4e",
+    "timestamp": "2025-12-01 23:05:55.439064",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromCustodian, lines 644-658] In _redeemFromCustodian(), _totalDLFUnderCustody is decremented at line 645 but only events are emitted (no actual token transfer). Can this be exploited to drain custody accounting while no DLF actually leaves the system, allowing future unbacked minting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8cf4697c-e352-43e2-b63e-98ab5f64d71d",
+    "timestamp": "2025-12-01 23:06:22.762331",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 338-339] The calculation grossDlfAmount = iTRYAmount * 1e18 / navPrice can result in rounding down. Can an attacker repeatedly redeem tiny amounts of iTRY where grossDlfAmount rounds to zero, burning iTRY without decreasing DLF custody, gradually building up excess DLF that enables unbacked minting later?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e8033b33-ed3f-4117-b16f-76b722328407",
+    "timestamp": "2025-12-01 23:06:48.814431",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 339] Can integer overflow occur in the calculation grossDlfAmount = iTRYAmount * 1e18 / navPrice when iTRYAmount is very large, causing the function to either revert or return an incorrect small grossDlfAmount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_01523120-4578-4b7a-ab4d-98cde497ae61",
+    "timestamp": "2025-12-01 23:07:14.030742",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, lines 343-344] Fee calculation at line 343 (_calculateRedemptionFee) subtracts fee from gross amount at line 344. Can rounding errors accumulate when feeAmount rounds to 1 (due to the check at line 693) even when the actual fee is less than 1, causing users to pay more fees than expected?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bcdf16c8-b329-4dd6-8711-1e402ac57eec",
+    "timestamp": "2025-12-01 23:07:36.415667",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, lines 398-420] In processAccumulatedYield(), new iTRY is minted at line 413 without any DLF transfer into custody. Does this violate the backing invariant? The function calculates yield as (currentCollateralValue - _totalIssuedITry), but if the NAV oracle is manipulated or returns stale data, could this mint excessive unbacked iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5e2f9cdc-334f-44b7-a2e5-3f8fde6f94c5",
+    "timestamp": "2025-12-01 23:07:59.698286",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, line 404] The yield calculation uses _totalDLFUnderCustody * navPrice / 1e18. Can an attacker manipulate this by first calling mintFor() to inflate _totalDLFUnderCustody, then waiting for a NAV price increase, then calling processAccumulatedYield() to mint more yield than actually exists?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6d48a501-af5a-4cc7-be5e-ea656c9cf5e2",
+    "timestamp": "2025-12-01 23:08:22.275064",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, lines 413-416] After minting yield to yieldReceiver at line 413, the function calls yieldReceiver.processNewYield(). If processNewYield() is a malicious contract that re-enters into mintFor() or processAccumulatedYield(), can this exploit reentrancy despite the nonReentrant modifier on mintFor/redeemFor (processAccumulatedYield doesn't have nonReentrant)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9b7285e8-e0cf-44e1-a9f4-65523989336d",
+    "timestamp": "2025-12-01 23:08:47.474380",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, line 413] When _mint(address(yieldReceiver), newYield) is called, this increases _totalIssuedITry. But the yield calculation at line 410 was based on the old _totalIssuedITry. Can this create an accounting error where the next yield calculation is incorrect because _totalIssuedITry was increased but _totalDLFUnderCustody was not?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55fa8695-85c3-49e7-8373-0fcf897d89c3",
+    "timestamp": "2025-12-01 23:09:11.842480",
+    "report_generated": false
   }
 ]
