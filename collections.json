@@ -1,1 +1,152 @@
-[]
+[
+  {
+    "question": "[File: FastAccessVault.sol] [onlyIssuer modifier, lines 70-75] Can an attacker bypass the onlyIssuer modifier by deploying a malicious contract that mimics the issuer interface and somehow changes the immutable _issuerContract reference through delegatecall or storage collision?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3f9f1825-a7c6-4177-9eaa-5e099ac01c81",
+    "timestamp": "2025-12-01 21:08:53.724980",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Does processTransfer properly validate that the receiver is not a blacklisted address before transferring DLF tokens, or can this function be used to bypass iTRY blacklist enforcement by redeeming directly to a sanctioned address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_edb798bb-c910-4aa3-aff5-800a01b2d2ac",
+    "timestamp": "2025-12-01 21:09:08.506864",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 149-152] Can an attacker cause a race condition where multiple processTransfer calls drain the vault beyond its actual balance by exploiting the gap between balance check and transfer execution in a multi-transaction block?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_09a6213e-b6f6-434f-8998-3f2945ea1fe3",
+    "timestamp": "2025-12-01 21:09:23.317964",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, line 154] If the vault token's transfer() function returns false instead of reverting (non-standard ERC20), will the conditional check properly catch this failure, or could silent failures lead to DLF custody tracking desynchronization in iTryIssuer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bdaf275c-adbe-4a59-af97-513a537495c8",
+    "timestamp": "2025-12-01 21:09:39.126952",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, line 157] Does the TransferProcessed event emit before the transfer completes, creating a discrepancy where event listeners might act on incorrect remaining balance if the transfer subsequently fails?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a84150d-7fa2-4eb1-b814-8a3913b4e46b",
+    "timestamp": "2025-12-01 21:09:57.517633",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, lines 144-158] Can an attacker exploit reentrancy via a malicious receiver address to call back into processTransfer or other vault functions during the transfer, despite the lack of reentrancy guard on this function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dd269fe4-18a1-4183-9b3f-2a08c8ac22a3",
+    "timestamp": "2025-12-01 21:10:17.801848",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer, line 146] Can setting receiver to address(this) be exploited in edge cases despite the check, such as through address aliasing or proxy patterns that make address(this) appear different?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c03ea3c-10ae-4dbb-b76e-05486dbd7acb",
+    "timestamp": "2025-12-01 21:10:38.815280",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [processTransfer integration] When iTryIssuer calls processTransfer twice for redemption+fees (lines 630-634 in iTryIssuer), can an attacker exploit the separate calls to create inconsistencies in DLF custody tracking if the first succeeds but second fails?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ccee180-0ba4-4d5b-a7db-87e11461ea38",
+    "timestamp": "2025-12-01 21:11:02.223250",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_redeemFromVault integration] Does the iTryIssuer's _totalDLFUnderCustody decrease (line 628) occur atomically with vault's processTransfer, or can a failure in processTransfer leave the custody tracking in an inconsistent state violating the iTRY backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2d3e67be-2887-41f6-bf13-1578667e1396",
+    "timestamp": "2025-12-01 21:11:26.628439",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 165-181] Since rebalanceFunds is not access-controlled and can be called by anyone, can an attacker repeatedly call it to grief the protocol by spamming TopUpRequestedFromCustodian events or front-running legitimate rebalancing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e710ae87-b549-4720-a845-8c448db05dba",
+    "timestamp": "2025-12-01 21:11:53.293204",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 166-167] Can an attacker manipulate getCollateralUnderCustody() in iTryIssuer to return artificially inflated values, causing rebalanceFunds to transfer excess vault funds to the custodian inappropriately?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_86d7ff06-dfff-479f-814a-283dacebce83",
+    "timestamp": "2025-12-01 21:12:19.590096",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 170-173] If the calculated 'needed' amount for top-up is extremely large due to AUM manipulation, could this cause off-chain custodian systems to transfer excessive DLF to the vault, enabling subsequent drainage attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5fb050d-6a27-413c-a6b5-1ca596e87f09",
+    "timestamp": "2025-12-01 21:12:48.287824",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, lines 174-179] Does the transfer to custodian in the 'excess' case properly handle transfer failures, or could a malicious custodian address (if admin is compromised within trust boundaries) brick rebalancing by reverting on receive?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49e9ff4e-d6f8-419d-8f68-85e439d10a15",
+    "timestamp": "2025-12-01 21:13:17.976707",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rebalanceFunds, line 176] Is there a check to prevent transferring funds to a zero address custodian if setCustodian is called with address(0) and then rebalanceFunds is invoked before correcting the error?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d0cd561d-27f5-4a39-89e5-9509341f54a7",
+    "timestamp": "2025-12-01 21:13:48.923468",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_calculateTargetBufferBalance, lines 241-244] Can integer division truncation in (referenceAUM * targetBufferPercentageBPS) / 10000 cause precision loss that accumulates over multiple rebalancing cycles, eventually leading to significant under-buffering?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b40761e7-4677-4d0d-8275-9ef5c86fe5aa",
+    "timestamp": "2025-12-01 21:14:21.070274",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_calculateTargetBufferBalance, lines 241-244] If referenceAUM is extremely large (e.g., > 2^256 / 10000), can the multiplication overflow before division, causing incorrect target calculation and improper fund transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4f4117ce-1fc0-49e0-82b2-bc5339d877c2",
+    "timestamp": "2025-12-01 21:14:53.406268",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [_calculateTargetBufferBalance, line 243] Can an attacker exploit the ternary operator logic by manipulating either targetBufferPercentageBPS or minimumExpectedBalance to always return minimumExpectedBalance, preventing percentage-based buffering?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0a5d5cb9-972b-4044-aae8-4538bc69f7bf",
+    "timestamp": "2025-12-01 21:15:22.378243",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setTargetBufferPercentage, lines 188-194] Can the owner set targetBufferPercentageBPS to 0, causing _calculateTargetBufferBalance to always return minimumExpectedBalance, which could then be set to 0 via setMinimumBufferBalance, effectively disabling the buffer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93328ee6-955b-4aa6-8da3-9531be1b6648",
+    "timestamp": "2025-12-01 21:15:52.711022",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setTargetBufferPercentage, lines 188-194] Is there a minimum non-zero BPS value enforced, or can setting it too low (e.g., 1 BPS) create scenarios where the vault is perpetually under-buffered relative to redemption demand?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6cbce8d2-3cab-4310-8e08-11c8b7ed9879",
+    "timestamp": "2025-12-01 21:16:22.195023",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setMinimumBufferBalance, lines 197-201] Can the owner set minimumExpectedBalance to an excessively high value (e.g., exceeding total DLF supply), causing rebalanceFunds to always emit TopUpRequestedFromCustodian events that can never be satisfied?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_32303cd5-d1dd-4c6b-8aaf-9aab573fffa8",
+    "timestamp": "2025-12-01 21:16:54.145384",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setMinimumBufferBalance, lines 197-201] If minimumExpectedBalance is set higher than the current vault balance while processTransfer operations are in flight, could this create a state where redemptions fail due to insufficient balance checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1a2ba929-289b-43c9-ab72-8cde07fd06f7",
+    "timestamp": "2025-12-01 21:17:22.877738",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setCustodian, lines 260-266] If the custodian address is changed while a rebalanceFunds operation has already calculated excess funds to transfer, can the old custodian lose expected funds, or can an attacker front-run with setCustodian to redirect funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e195cfa5-181c-4051-8f75-ae0b0a98ac23",
+    "timestamp": "2025-12-01 21:17:53.298477",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [setCustodian, lines 260-266] Does changing the custodian address invalidate pending off-chain top-up requests from TopUpRequestedFromCustodian events, potentially causing funds to be sent to the wrong address or lost?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_820449ef-753d-475e-97d7-7ce4740ed08b",
+    "timestamp": "2025-12-01 21:18:21.477300",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rescueToken, lines 215-229] Can the owner use rescueToken to withdraw the vault's DLF tokens (vaultToken), effectively draining the liquidity buffer and causing all subsequent processTransfer calls to fail, breaking iTRY redemption functionality?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_92d6046b-8341-484d-b00f-19d671e501db",
+    "timestamp": "2025-12-01 21:18:47.210488",
+    "report_generated": false
+  },
+  {
+    "question": "[File: FastAccessVault.sol] [rescueToken, lines 215-229] Does rescuing DLF tokens update iTryIssuer's _totalDLFUnderCustody tracking, or does this create a desynchronization where iTryIssuer believes more DLF is custodied than actually exists, violating the backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b580ebf3-1308-439e-9b22-2b8b8faf0b58",
+    "timestamp": "2025-12-01 21:19:13.377598",
+    "report_generated": false
+  }
+]
