@@ -1648,5 +1648,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55fa8695-85c3-49e7-8373-0fcf897d89c3",
     "timestamp": "2025-12-01 23:09:11.842480",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewMint, lines 190-200] The previewMint() function calculates the expected iTRY amount. If an attacker front-runs a user's mintFor() call with a transaction that changes the oracle price, can the user receive a very different amount than previewed, effectively getting sandwiched?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8f9e4560-3cd6-4b03-8d8b-94fa6bb92f4b",
+    "timestamp": "2025-12-01 23:10:20.956989",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [previewRedeem, lines 207-223] Similar to previewMint, can previewRedeem() be front-run to change the oracle price, causing the user to receive much less DLF than expected when they call redeemFor()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da00f235-430d-4dd8-853b-df39f3a78e3b",
+    "timestamp": "2025-12-01 23:10:34.479960",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 284] The function checks if navPrice == 0 and reverts. But what if the oracle returns a very small price like 1 (nearly zero)? This would pass the check but cause iTRYAmount calculation to round down to zero at line 290, causing a revert at line 292 after _totalDLFUnderCustody was already incremented?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c868df2e-db75-471c-b4fc-25cea53b2cb5",
+    "timestamp": "2025-12-01 23:10:48.789661",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 336] Similar issue - if navPrice == 0 is checked but a very large navPrice (e.g., oracle manipulation) passes, this could cause grossDlfAmount to round down to a tiny amount, allowing an attacker to burn large amounts of iTRY for negligible DLF?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00d6569a-e45e-4197-be9d-d8e19eb0fd98",
+    "timestamp": "2025-12-01 23:11:02.877170",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_calculateMintFee, lines 670-678] The fee calculation at line 673 is amount * mintFeeInBPS / 10000. Can integer overflow occur if amount and mintFeeInBPS are both very large? Also, line 674 prevents rounding to zero by returning 1 instead. Can an attacker exploit this by minting many tiny amounts where each pays a fee of 1 token regardless of actual percentage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ad956a29-41d2-425c-a2bf-5fa9f2effefa",
+    "timestamp": "2025-12-01 23:11:17.857757",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_calculateRedemptionFee, lines 686-694] Similar to mint fee, line 693 returns 1 if feeAmount rounds to zero. Can an attacker exploit this by redeeming many tiny amounts, paying only 1 token fee each time instead of the proper percentage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6b0f2648-b6fc-48cd-8b53-30326d679e8b",
+    "timestamp": "2025-12-01 23:11:33.791599",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, lines 286-287] The function calculates feeAmount and netDlfAmount. If feeAmount > 0, netDlfAmount = dlfAmount - feeAmount. But if feeAmount == dlfAmount (100% fee, though limited by MAX_MINT_FEE_BPS = 9999), netDlfAmount would be zero, causing the iTRY calculation at line 290 to yield zero and revert at line 292. Can this DOS legitimate users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_07805ae5-1961-4ef8-b3d2-be636d1ddda7",
+    "timestamp": "2025-12-01 23:11:51.671536",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, lines 130-183] The constructor sets _totalIssuedITry and _totalDLFUnderCustody to _initialIssued and _initialDLFUnderCustody for migration scenarios. Can an attacker deploy a new iTryIssuer with manipulated initial values where _initialIssued > (_initialDLFUnderCustody * navPrice / 1e18), immediately violating the backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_53c3989f-158b-4d89-a137-a8fccd86aef5",
+    "timestamp": "2025-12-01 23:12:12.044622",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [constructor, lines 147-159] The constructor deploys a new FastAccessVault internally. If the vault deployment fails or reverts, does the entire constructor revert, or could there be a state where iTryIssuer is deployed but liquidityVault is address(0), breaking all redemption logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_188653b8-b1bb-4b78-a68a-1b7815fc28c6",
+    "timestamp": "2025-12-01 23:12:33.363285",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [mintFor function, line 272] The onlyRole(_WHITELISTED_USER_ROLE) modifier restricts who can call mintFor(). But the 'recipient' parameter at line 270 is not checked for whitelist status. Can a whitelisted attacker mint iTRY for a non-whitelisted or blacklisted address, bypassing transfer restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_14780147-5847-4d84-acda-4df08a90abaf",
+    "timestamp": "2025-12-01 23:12:56.009310",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 320] Similar issue - onlyRole(_WHITELISTED_USER_ROLE) checks msg.sender, but 'recipient' is not validated. Can a whitelisted attacker redeem iTRY and send DLF to a blacklisted address, enabling sanctioned users to extract value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5c3f4b31-cac4-48c6-8be1-53dd506a771d",
+    "timestamp": "2025-12-01 23:13:20.142463",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, lines 607-609] The function uses transferFrom() with a boolean check. SafeERC20 is imported but not used here. If collateralToken is a non-standard ERC20 that doesn't return a boolean, could this cause a silent failure where _totalDLFUnderCustody is incremented but no tokens are transferred?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12b909df-1231-43a2-a8fb-e5606586f638",
+    "timestamp": "2025-12-01 23:13:43.383957",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_transferIntoVault, lines 611-616] The treasury fee transfer at lines 613-615 happens after the vault transfer. If the treasury transfer fails, does the entire transaction revert, or could _totalDLFUnderCustody already be corrupted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da32430a-f2a2-4850-891a-ea113d12aabd",
+    "timestamp": "2025-12-01 23:14:08.326845",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [redeemFor function, line 354] The function checks if liquidityVault.getAvailableBalance() >= grossDlfAmount to decide whether to redeem from vault or custodian. Can an attacker front-run legitimate redemptions by draining the vault balance, forcing all subsequent redemptions to go through the slower custodian path (griefing attack)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1670920a-a6b6-47aa-b0e4-39d8f91945aa",
+    "timestamp": "2025-12-01 23:14:33.858258",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromVault, lines 630-634] After decrementing _totalDLFUnderCustody, the function calls liquidityVault.processTransfer(). If this external call fails or reverts, is the transaction rolled back, or could _totalDLFUnderCustody be permanently decremented without tokens being transferred?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6766152c-6b5f-4f85-ad11-9925a6bec8ed",
+    "timestamp": "2025-12-01 23:14:59.723058",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [_redeemFromCustodian, lines 647-649] The function emits FastAccessVaultTopUpRequested(topUpAmount) as a signal to the custodian. But there's no on-chain mechanism to enforce this top-up. Can the custodian ignore the event, leaving the vault permanently underfunded and forcing all future redemptions through the custodian (centralization risk)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2c129c1a-59ba-41b6-be7a-c870c5cb01a9",
+    "timestamp": "2025-12-01 23:15:24.887934",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [burnExcessITry, lines 373-390] This function allows DEFAULT_ADMIN_ROLE to burn iTRY without redeeming DLF. This decreases _totalIssuedITry but not _totalDLFUnderCustody. Can this be exploited to artificially inflate the backing ratio, allowing future unbacked minting via processAccumulatedYield()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_285ea519-1ec2-4f84-926e-af179044cd61",
+    "timestamp": "2025-12-01 23:15:49.707570",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [burnExcessITry, line 385] The function burns iTRY from msg.sender (the admin). But what if the admin doesn't have enough iTRY balance or hasn't approved the issuer? Would the transaction revert at the burnFrom() call after _totalIssuedITry was already decremented at line 589?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0b970104-d626-4aa4-b48f-5b6b9f00fda9",
+    "timestamp": "2025-12-01 23:16:15.591898",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [processAccumulatedYield, lines 407-409] If currentCollateralValue <= _totalIssuedITry, the function reverts with NoYieldAvailable. But what if there's a NAV decrease after minting? This would make currentCollateralValue < _totalIssuedITry permanently, preventing any yield processing and potentially locking the protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9ec7ba90-3f6f-476e-ac7e-7cae6f2a05b5",
+    "timestamp": "2025-12-01 23:16:40.965523",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setOracle, lines 459-461] The INTEGRATION_MANAGER_ROLE can call setOracle() to change the oracle address. If the oracle is changed to a malicious contract that returns an extremely high navPrice, could this enable unbacked minting via processAccumulatedYield() or cause users to receive far less DLF during redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7b33ec5-82b9-4847-84da-3602470822ee",
+    "timestamp": "2025-12-01 23:17:06.092838",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setOracle, lines 459-461] Can setOracle() be called during active minting/redemption transactions? If the oracle price changes mid-transaction due to a front-running admin, could this cause accounting inconsistencies or allow sandwich attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_732455be-6579-43b8-810a-cfc15ed8e934",
+    "timestamp": "2025-12-01 23:17:31.978009",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setCustodian, lines 468-470] If the custodian address is changed via setCustodian(), what happens to pending custodian transfer requests from _redeemFromCustodian()? Could tokens be sent to the old custodian address, causing permanent loss of user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_07d047b2-ec83-4dc0-866d-d870d4be8d87",
+    "timestamp": "2025-12-01 23:17:57.270935",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setYieldReceiver, lines 477-479] If yieldReceiver is changed after processAccumulatedYield() has been called but before yieldReceiver.processNewYield() is called, could the yield tokens be sent to the wrong receiver? Though processAccumulatedYield() reads the current yieldReceiver at line 413, so this seems safe.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f71b2faf-863c-4647-aee3-d56626078e8b",
+    "timestamp": "2025-12-01 23:18:22.171676",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setTreasury, lines 519-521] If treasury address is changed mid-transaction (front-running), could protocol fees be redirected to an attacker's address during mintFor() or redeemFor() operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_92d6cefe-2390-4420-9ebd-b0def830f572",
+    "timestamp": "2025-12-01 23:18:46.011538",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/protocol/iTryIssuer.sol] [setRedemptionFeeInBPS, lines 431-436] Can the redemption fee be changed to MAX_REDEEM_FEE_BPS (9999 = 99.99%) right before a user's redemption transaction, causing them to receive nearly zero DLF (griefing attack via front-running)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74558f35-d70a-4b84-8b28-6be2bdfb9ae5",
+    "timestamp": "2025-12-01 23:19:09.367746",
+    "report_generated": false
   }
 ]
