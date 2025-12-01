@@ -448,5 +448,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7d539c6c-9e16-485d-ba85-a0d86d28bd15",
     "timestamp": "2025-12-01 21:46:23.195124",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Does withdraw() emit any events? Without event emissions, off-chain monitoring cannot track when cooldown funds are released, making it harder to detect unauthorized withdrawals or silo balance discrepancies.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_77097ae6-c12d-439c-a2d6-dbd41557e0a1",
+    "timestamp": "2025-12-01 21:47:42.358027",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can an attacker front-run a legitimate unstake() call by manipulating the iTRY token state (blacklisting the user, changing transfer state to FULLY_DISABLED) to cause silo.withdraw() to revert, permanently locking the user's cooldown balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b78916f0-9acf-49e5-94ff-723b702118c6",
+    "timestamp": "2025-12-01 21:47:55.968854",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] If the iTRY token contract is upgraded to have a _beforeTokenTransfer hook that calls back into the staking vault, can this create a reentrancy vulnerability that bypasses cooldown checks in StakediTryCooldown.unstake()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_36a5a864-86a4-4bb5-bc7a-64b65337a157",
+    "timestamp": "2025-12-01 21:48:10.710198",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can withdraw() be called during a reentrancy attack from a malicious iTRY token contract? The function has no reentrancy guard, so could an attacker drain the silo by re-entering during the transfer callback?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b2c19f45-e286-4f99-8808-4942a4ea84ea",
+    "timestamp": "2025-12-01 21:48:25.463508",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Does SafeERC20.transfer() handle all failure modes correctly? If iTRY.transfer() returns false (non-reverting failure on a non-standard ERC20), would SafeERC20 catch it, or could funds be stuck in the silo?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cce73333-162c-4a03-a60d-11c2cfd1d674",
+    "timestamp": "2025-12-01 21:48:40.978170",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can the staking vault call withdraw() multiple times with the same cooldown balance, effectively double-spending iTRY from the silo if the cooldown state is not atomically updated with the withdrawal?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_79bae12b-77cd-45e5-8c69-aa5e0b713025",
+    "timestamp": "2025-12-01 21:49:00.156405",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Does withdraw() validate that amount <= iTry.balanceOf(address(this))? Without this check, can an attacker manipulate the staking vault to call withdraw with inflated amounts, causing reverts that DOS legitimate unstake operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_148392f1-2bcd-41f9-8f48-4d14629aa2e2",
+    "timestamp": "2025-12-01 21:49:20.973512",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can withdraw() be called with an arbitrary 'to' address different from msg.sender (the staking vault)? In StakediTryCrosschain.unstakeThroughComposer (line 93), the silo sends to msg.sender (composer), not the actual user 'receiver' - could this enable the composer to steal user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6e4837b3-1f27-4ec8-a8b9-5f2328586f5f",
+    "timestamp": "2025-12-01 21:49:43.267768",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] When iTRY token is in TransferState.WHITELIST_ENABLED mode, can withdraw() succeed if the 'to' address is not whitelisted? This would violate the whitelist enforcement invariant and allow blacklisted or non-whitelisted users to receive iTRY via the unstake flow.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_45acdcf7-de15-473a-b769-78f3a6674eda",
+    "timestamp": "2025-12-01 21:50:07.329738",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can withdraw() be called with an arbitrary 'to' address that is blacklisted in the iTRY token contract? Would this cause the transfer to revert per _beforeTokenTransfer checks, preventing legitimate unstake operations and locking user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cda8bf34-dbc9-4af6-93fc-e9813c6f1d39",
+    "timestamp": "2025-12-01 21:50:33.931651",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [withdraw function - Line 28-30] Can withdraw() be called with to=address(0), causing iTRY tokens to be burned without decreasing the user's cooldown balance, creating a mismatch between silo holdings and cooldown accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_44a798a7-aabb-4654-a5e2-4ff01d9e4462",
+    "timestamp": "2025-12-01 21:50:59.519036",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [onlyStakingVault modifier - Line 23-26] Does the modifier only check msg.sender == STAKING_VAULT, meaning if the staking vault is compromised or upgraded incorrectly, the silo has no additional protection against unauthorized withdrawals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_eb641b34-8911-49c2-8a64-b61d36798ed8",
+    "timestamp": "2025-12-01 21:51:26.625179",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Constructor - Line 18-21] If the _iTryToken address points to a malicious ERC20 contract, can the attacker drain funds by making transfer() always succeed but not actually move tokens, breaking the silo custody invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d288d5e0-547a-4f2d-aab1-ceac7d062021",
+    "timestamp": "2025-12-01 21:51:52.810207",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Constructor - Line 18-21] Can an attacker deploy a malicious iTrySilo with a fake STAKING_VAULT address and trick the legitimate StakediTry contract into transferring iTRY to this malicious silo during cooldownShares/cooldownAssets operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ba38670f-936d-4c91-bbe7-b13e1464bed5",
+    "timestamp": "2025-12-01 21:52:19.552686",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Constructor - Line 18-21] Can the constructor accept a zero address for iTry token, causing withdraw() to revert on SafeERC20 operations and permanently trap all iTRY transferred to the silo during cooldown operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8945770-ec19-454c-b7aa-3976f15d27e1",
+    "timestamp": "2025-12-01 21:52:47.994315",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/iTrySilo.sol] [Constructor - Line 18-21] Can the constructor accept a zero address for STAKING_VAULT, allowing an attacker to deploy a malicious silo where no valid vault can withdraw cooldown-locked iTRY, permanently locking user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_19d729c1-04a6-45f6-a3cf-26fc0141ec0c",
+    "timestamp": "2025-12-01 21:53:20.206108",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund function] extraOptions set to newOptions() for refund - but does this match the original message's options, or can option mismatches cause refunds to use wrong gas limits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_77735ec1-359b-4cd6-98cb-e58d2681df57",
+    "timestamp": "2025-12-01 21:53:50.072219",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [quoteUnstakeReturn and quoteFastRedeemReturn] Both functions create identical SendParam structures - but do they account for differences in enforced options between unstake and fast redeem flows?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d9145b5c-4918-4e2f-a8dd-3e248ec2be1d",
+    "timestamp": "2025-12-01 21:54:19.761180",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function] The function doesn't validate _guid uniqueness - can replayed messages (if LayerZero nonce protection fails) cause double unstaking or cooldown corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e109cdc4-6ac6-48ef-98b5-4749475cb199",
+    "timestamp": "2025-12-01 21:54:48.883116",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [Multiple functions] The contract relies on external calls to VAULT (StakediTryCrosschain) - but are all return values properly validated, or can unexpected return values cause silent failures?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5f64cdbd-5eba-4742-8bc7-11696129a0b7",
+    "timestamp": "2025-12-01 21:55:17.610102",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake user validation] While user != address(0) is checked, can the user address be a contract that reverts on iTRY receipt, causing the cross-chain transfer to fail and trap funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cf95602b-5164-46ce-a110-6832843ecbf2",
+    "timestamp": "2025-12-01 21:55:47.805064",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem _sendParam modification] Original sendParam is modified before sending - but if the sendParam contains user-specific routing data, can this modification break intended destination or compose behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d812389-871f-426a-9e91-c8295f6ae3ed",
+    "timestamp": "2025-12-01 21:56:19.936202",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose minMsgValue check] The check ensures sufficient msg.value for the current operation - but does it account for potential retries if the operation fails, or will retry attempts require additional payments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_03c43e2b-0bc6-4f4d-ab96-a25f29663d08",
+    "timestamp": "2025-12-01 21:56:51.829931",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake options, line 262] Empty options are created with newOptions() - but does ASSET_OFT have enforced options that will override these, and are those enforced options sufficient for all destination chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_043a7d10-66bd-406c-81ad-1dbb3a68ab1e",
+    "timestamp": "2025-12-01 21:57:22.857104",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken ETH rescue, lines 190-193] Low-level call is used with no gas limit - can this be exploited for reentrancy even with nonReentrant modifier if the call itself triggers a callback chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d66b9bbd-2916-4a21-873b-92d598a65c7e",
+    "timestamp": "2025-12-01 21:57:51.408169",
+    "report_generated": false
   }
 ]
