@@ -3448,5 +3448,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4511860c-a32a-4b40-a525-5d6931b8656c",
     "timestamp": "2025-12-02 06:24:10.915644",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 82] If a user calls fastWithdraw() for an amount that would leave vault totalSupply exactly at MIN_SHARES after the treasury withdrawal but below MIN_SHARES after the receiver withdrawal, will the transaction revert, and can this be exploited for griefing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5197afd1-48b8-46b3-936c-3945aa4d2068",
+    "timestamp": "2025-12-02 06:25:27.862594",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] When _redeemWithFee() calls _withdraw() twice (lines 152, 155), does each _withdraw() call independently check MIN_SHARES via _checkMinShares() in the parent contract, and can this cause the first withdrawal to succeed but the second to revert if totalSupply falls below MIN_SHARES?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2dd44204-f409-4bce-b91d-2bc6bfffe5a1",
+    "timestamp": "2025-12-02 06:25:41.045700",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] Does fastRedeem() verify that the vault's totalSupply will remain >= MIN_SHARES after burning `shares`, or can an attacker drain the vault below MIN_SHARES by fast redeeming, preventing all subsequent withdrawals until new deposits occur?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a039281f-bebc-49a4-bef6-f589237624e0",
+    "timestamp": "2025-12-02 06:25:54.677716",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] Since _redeemWithFee() performs two separate _withdraw() calls, can the intermediate state after the first withdrawal (line 152) violate the MIN_SHARES requirement even if the final state after both withdrawals would be valid, causing transaction reversion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fd0ee4e2-ffd5-4861-a607-1a5c147fbd3f",
+    "timestamp": "2025-12-02 06:26:10.671321",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 147] Does converting feeAssets to feeShares via previewWithdraw() use the same share price as the original preview that calculated `assets` from `shares`, or can share price changes between conversions cause accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c660bb3-d96b-4265-87bb-3781b8b1f088",
+    "timestamp": "2025-12-02 06:26:26.093320",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] If the first _withdraw() call (treasury) succeeds but the second _withdraw() call (receiver) reverts, are shares permanently burned with only partial iTRY delivery, causing permanent user fund loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2818b717-7a95-494d-bc33-0711896d4197",
+    "timestamp": "2025-12-02 06:26:42.693250",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When _withdraw() is called for the treasury portion, does it properly deduct allowance from the owner if caller != owner, or can an attacker bypass approval requirements by having the treasury withdrawal consume the allowance before the receiver withdrawal?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1e48a36d-0816-4ef8-a03e-5b6775769880",
+    "timestamp": "2025-12-02 06:27:00.591334",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 147-149] Can an attacker exploit the share splitting logic where `netShares = shares - feeShares` to cause integer underflow if `feeShares > shares` due to share price fluctuations between preview and execution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_33feea17-dc1a-4454-b144-b4c4c6cbe87e",
+    "timestamp": "2025-12-02 06:27:19.762537",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] Does the sequential execution of two _withdraw() calls (treasury withdrawal at line 152, then receiver withdrawal at line 155) create a vulnerability where the second withdrawal could fail due to insufficient vault balance, leaving shares burned but iTRY not fully delivered?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7770d799-786d-44b8-b3bb-040120e9fc9c",
+    "timestamp": "2025-12-02 06:27:41.960125",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 149] Can an attacker manipulate the share price immediately before calling fastRedeem() to maximize the rounding error in `netAssets = assets - feeAssets`, extracting more value than intended while paying minimal fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0b53fe55-bb16-44f2-98a1-680f55f1e9c6",
+    "timestamp": "2025-12-02 06:28:05.161677",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 84-85] In fastWithdraw(), does calculating `totalShares = previewWithdraw(assets)` and then calling `_redeemWithFee(totalShares, assets, ...)` ensure that exactly `assets` worth of iTRY is withdrawn, or can rounding cause the actual withdrawn amount to differ from requested?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fabbcf28-8ccb-48ca-8b2f-932a03a8396c",
+    "timestamp": "2025-12-02 06:28:29.392445",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65-66] In fastRedeem(), can the sequence of `totalAssets = previewRedeem(shares)` followed by `_redeemWithFee(shares, totalAssets, ...)` create a mismatch if the share price changes between preview and execution, allowing users to extract more iTRY than their shares are worth?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e325beed-fbfb-4ed4-848a-d7a91f01248d",
+    "timestamp": "2025-12-02 06:28:54.417386",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 147] Does the conversion `feeShares = previewWithdraw(feeAssets)` followed by `netShares = shares - feeShares` create rounding inconsistencies where `feeShares + netShares != shares`, potentially burning incorrect share amounts and violating ERC4626 share accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6dfa8709-cf86-4204-a07e-9dfb139a3720",
+    "timestamp": "2025-12-02 06:29:22.780862",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] Can an attacker exploit rounding down in the fee calculation `feeAssets = (assets * fastRedeemFeeInBPS) / BASIS_POINTS` to pay zero fees by choosing asset amounts where the product rounds to less than BASIS_POINTS, bypassing the zero fee check at line 145?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0695ef51-1608-4912-9c7e-50a9f1f329af",
+    "timestamp": "2025-12-02 06:29:52.174294",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer and cooldownAssetsByComposer, lines 36-66] Do both functions execute _startComposer",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3d946718-9b3d-42ae-9a13-a88d0db57e67",
+    "timestamp": "2025-12-02 06:30:21.522139",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, lines 90-91] Does setting cooldownEnd to zero before underlyingAmount create a state where cooldownEnd=0 but underlyingAmount>0? If execution fails after cooldownEnd is zeroed but before underlyingAmount is zeroed, could this create irrecoverable cooldown states?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b73f4070-2b8f-4f78-bf2c-7febfa90990e",
+    "timestamp": "2025-12-02 06:30:52.977849",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 178] Does adding to underlyingAmount maintain precision when assets has 18 decimals? Could repeated additions introduce cumulative rounding errors that cause underlyingAmount to drift from the actual assets locked in the silo?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29a94b74-038a-4d68-ad4f-442a698fb305",
+    "timestamp": "2025-12-02 06:31:22.558651",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer and fastWithdrawThroughComposer, lines 121, 151] Do both functions validate that ensureCooldownOn is active? If cooldown is disabled (duration = 0), should fast redeem also be disabled, or does fast redeem represent a separate bypass mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f4c60f92-ec80-4b33-bdc1-ad1e461a057c",
+    "timestamp": "2025-12-02 06:31:50.418301",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer function, line 47] Does _startComposerCooldown calculate assets internally or trust the passed parameter? If there's a discrepancy between the assets parameter and what _withdraw actually processes, which value gets stored in cooldowns[redeemer].underlyingAmount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ffbb2beb-e511-4d66-80b0-a098ff5c6d52",
+    "timestamp": "2025-12-02 06:32:18.685172",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, line 93] Does calling silo.withdraw with msg.sender mean the composer receives iTRY? If the composer contract is not designed to hold iTRY (e.g., no receive function), could iTRY be locked in the composer permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_177dcb6f-cc0c-46f1-86c3-a0443a70809c",
+    "timestamp": "2025-12-02 06:32:45.317661",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 177] Does overwriting cooldownEnd unconditionally mean that multiple cooldowns for the same redeemer don't accumulate separate cooldown periods? If redeemer has 1000 iTRY cooling for 30 days and adds 100 iTRY, does the new cooldownEnd apply to all 1100 iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b84bd70f-fb7d-4caf-bdcd-8b891a2bad30",
+    "timestamp": "2025-12-02 06:33:13.388618",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer function, line 128] Does emitting crosschainReceiver in the event guarantee that iTRY will actually be bridged to that address? Could wiTryVaultComposer malfunction and send iTRY to a different address, making the event log incorrect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_130b28b6-bab3-4042-8f60-8ab8c2dae1f0",
+    "timestamp": "2025-12-02 06:33:41.017450",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer and cooldownAssetsByComposer, lines 44, 62] Do both functions use ExcessiveRedeemAmount and ExcessiveWithdrawAmount errors that are defined in parent contracts? Could these error messages mislead users about whether shares or assets are the limiting factor?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7f559109-e292-4544-8447-4aa7c8d09e94",
+    "timestamp": "2025-12-02 06:34:09.859414",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownAssetsByComposer function, line 64] Does previewWithdraw's share calculation round up to favor the protocol? If it rounds down, could repeatedly initiating and canceling cooldowns leak value through cumulative rounding errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4bcd04fb-58dd-4941-9d49-9976f8d32f8c",
+    "timestamp": "2025-12-02 06:34:39.518812",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 174] Does _withdraw's internal _checkMinShares call happen before or after shares are burned? If before, could burning shares violate MIN_SHARES after the check passes, leaving the vault vulnerable to donation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_669ec896-4d3d-4f91-b1b3-6f9ae4a77e68",
+    "timestamp": "2025-12-02 06:35:10.000347",
+    "report_generated": false
   }
 ]
