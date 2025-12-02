@@ -4348,5 +4348,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_700697f3-a311-433e-8264-148e558ef982",
     "timestamp": "2025-12-02 07:27:50.031016",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 88] The silo.withdraw() call transfers iTRY to receiver. If iTRY is an upgradeable token and gets upgraded to a malicious implementation after cooldown initiation, could the silo.withdraw() call be exploited to drain funds or brick the cooldown system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84f418cc-d05b-4c9b-944a-37bcd888ca73",
+    "timestamp": "2025-12-02 07:28:57.125758",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [redeem function, lines 67-75] Same question as withdraw(): if cooldown is enabled after users have deposited, are they forced into the cooldown mechanism retroactively? Can this trap funds in an unexpected lockup period?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b3bf344f-880c-43c3-9a74-18021a01bbba",
+    "timestamp": "2025-12-02 07:29:10.187854",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [withdraw function, lines 54-62] The override only adds ensureCooldownOff modifier. Does this mean when cooldownDuration > 0, users MUST use the cooldown mechanism even if they want immediate withdrawal? Is there any escape hatch for users who deposited before cooldown was enabled?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c916d185-be55-41a4-97e4-ce8fe9295bf8",
+    "timestamp": "2025-12-02 07:29:25.797469",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [setCooldownDuration function, lines 122-130] The function emits CooldownDurationUpdated event but doesn't enforce any cooldown period on this change itself. Can an admin rapidly toggle cooldownDuration between 0 and non-zero values to disrupt user operations or enable griefing attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_41034db2-cf25-455b-a812-ff5118cae2af",
+    "timestamp": "2025-12-02 07:29:41.384080",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 115] When underlyingAmount is accumulated with +=, is there any validation that the total accumulated underlyingAmount doesn't exceed the total iTRY balance in the silo? Could multiple users with overlapping cooldowns drain the silo through accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_eb40eb98-0555-4f41-bb6b-e2dc259af70d",
+    "timestamp": "2025-12-02 07:29:58.123116",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 102] The += operator accumulates underlyingAmount across multiple cooldown calls. Does this properly handle the case where the accumulated total exceeds the user's original share balance due to share price appreciation? Could users claim more iTRY than they originally staked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_77cc5427-2111-486f-9eb0-3c73f1dc34d4",
+    "timestamp": "2025-12-02 07:30:15.906840",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 82] The assets value is read from storage once. If there's any way to modify cooldowns[msg.sender].underlyingAmount between the read and the silo.withdraw() call (e.g., through another contract interaction), could this lead to claiming wrong amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e76e259a-320b-45ba-9112-25df5c4b0d72",
+    "timestamp": "2025-12-02 07:30:32.947800",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, lines 109-118] If a user calls cooldownShares() and then the share price increases significantly due to yield distribution, the underlyingAmount they accumulate is fixed. When they unstake(), they receive the same underlyingAmount regardless of current share price. Could this create an arbitrage opportunity where users cooldown before yields, losing potential gains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bde53e74-bc92-4a16-bd08-d10fddbaefe1",
+    "timestamp": "2025-12-02 07:30:52.863854",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, lines 96-105] The entire function is marked ensureCooldownOn, preventing calls when cooldownDuration == 0. But if a user initiates a cooldown, then cooldownDuration is set to 0, can they still call unstake() immediately (line 84 condition), or are they forced to wait for cooldownDuration to be set back to non-zero?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e9f062a8-cb86-4c31-804f-f85e7418c103",
+    "timestamp": "2025-12-02 07:31:14.074982",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 110] Similarly, does maxRedeem(msg.sender) properly account for all share restrictions? If a user becomes FULL_RESTRICTED_STAKER_ROLE after calling cooldownShares() but before calling unstake(), can they still claim their cooldown assets despite being blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_61cbe582-d124-457d-ac1d-5eec0c131797",
+    "timestamp": "2025-12-02 07:31:35.970495",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 97] The maxWithdraw(msg.sender) check uses the base contract's implementation. Does maxWithdraw() account for any locked shares or restrictions? Could a restricted user (SOFT_RESTRICTED_STAKER_ROLE) pass the maxWithdraw() check but fail in _withdraw(), burning no shares but corrupting their cooldown state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8cfa5691-0c8a-4422-a417-1e7896d9ba39",
+    "timestamp": "2025-12-02 07:31:58.055216",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, lines 85-86] The cooldown state is cleared before calling silo.withdraw(). This follows checks-effects-interactions pattern for reentrancy protection. But if silo.withdraw() uses a pull pattern and requires the receiver to claim, could the receiver never claim, leaving ghost cleared cooldowns?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_06e9c5c6-624a-4246-9ae9-469e93b41081",
+    "timestamp": "2025-12-02 07:32:24.420341",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [setCooldownDuration function, line 128] When cooldownDuration is changed, existing UserCooldown structs in the cooldowns mapping are not updated. If duration is reduced, users with old longer cooldownEnd values still have to wait. But if duration is increased, new cooldowns get longer waits while old cooldowns maintain shorter waits. Is this asymmetry exploitable?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_837387b0-6494-434f-bbb0-dd75ce785300",
+    "timestamp": "2025-12-02 07:32:52.114057",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 117] When _withdraw() is called with receiver = address(silo), does the base contract's _withdraw() implementation have any special handling for the silo address? Could the silo being a contract trigger unexpected behavior in inheritance hierarchy?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c9983dff-adb5-4f14-9d60-8e8adcb220dc",
+    "timestamp": "2025-12-02 07:33:18.719989",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 104] Does _withdraw() from base contract check that the shares being burned don't violate MIN_SHARES after the burn? If cooldownAssets() burns shares such that totalSupply() falls below MIN_SHARES, could this permanently brick the vault by preventing all future operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_31562c72-179b-4535-b42c-48ddf19d0762",
+    "timestamp": "2025-12-02 07:33:48.587264",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [silo immutable, line 22] The silo address is immutable and set in constructor. If the silo contract is not initialized properly or contains a bug that prevents withdrawals, all cooldown assets become permanently locked. Is there any emergency recovery mechanism for silo-locked funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_075e5cc3-ab1b-4f50-8aed-3558aa3ac1cf",
+    "timestamp": "2025-12-02 07:34:19.384535",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 84] The condition 'block.timestamp >= userCooldown.cooldownEnd || cooldownDuration == 0' uses || (OR). If cooldownDuration is 0, the cooldownEnd check is bypassed entirely. Can this lead to a scenario where users unstake assets that were never actually cooldown-ed, if cooldown state becomes corrupted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6967ca29-8e61-424f-937d-904621534196",
+    "timestamp": "2025-12-02 07:34:49.363147",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 114] Similar overflow concern: uint104(block.timestamp) + cooldownDuration could theoretically overflow. If it does, cooldownEnd could wrap around to a small value, making the cooldown immediately claimable. Is there any validation to prevent this in extreme timestamp scenarios?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d443156f-698c-43ce-b5df-928cd267c7e0",
+    "timestamp": "2025-12-02 07:35:18.067369",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 101] The cooldownEnd is calculated as uint104(block.timestamp) + cooldownDuration. If block.timestamp is very large (near uint104 max ~6.4e11 years in the future), adding cooldownDuration could overflow. While unlikely in practice, does the contract handle this edge case or assume realistic timestamps?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8ad42c9-dc83-4099-9695-4aa9289e2be5",
+    "timestamp": "2025-12-02 07:35:47.748939",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 86] When userCooldown.underlyingAmount is set to 0, the actual assets value is determined on line 82 before the block.timestamp check. If block.timestamp < cooldownEnd and the function reverts, the cooldown state remains unchanged. But if an attacker can manipulate block.timestamp (in a test environment), could they bypass cooldown checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bba6be0c-fc6c-41cd-9ec1-34b08561940d",
+    "timestamp": "2025-12-02 07:36:17.361286",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 115] The underlyingAmount += uint152(assets) cast could silently truncate if assets exceeds uint152 max. Does the function validate that assets fits in uint152 before casting, or could large cooldown amounts be silently reduced, causing users to claim less than they burned shares for?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_64222401-7994-4db1-9c99-7a9c4b5ce719",
+    "timestamp": "2025-12-02 07:36:45.465140",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 102] The underlyingAmount is stored as uint152. Given that iTRY has 18 decimals, uint152 can store about 5.7e45 tokens. Is this sufficient, or can a whale user with massive positions overflow this storage slot through accumulation, causing cooldown corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0065d372-bc93-4a60-abd6-7a83d75db81d",
+    "timestamp": "2025-12-02 07:37:13.482097",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 112] Does previewRedeem(shares) handle the case where shares == totalSupply()? If the last staker tries to cooldown all remaining shares, could this violate MIN_SHARES protection or cause division by zero in future share price calculations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dd1ceb95-ffe3-4a88-a59a-4a34456d30d3",
+    "timestamp": "2025-12-02 07:37:41.650321",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 99] If previewWithdraw(assets) reverts due to mathematical overflow or division by zero (when totalSupply is 0 somehow), can this permanently prevent users from initiating cooldowns even though they have valid share balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_146dff58-9104-4116-baae-257d92e4674a",
+    "timestamp": "2025-12-02 07:38:12.012973",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [redeem function, line 71] Similar to withdraw(), when cooldownDuration == 0, redeem() calls super.redeem() directly. Does this bypass all cooldown state, allowing users to extract funds without clearing their cooldowns[msg.sender] state? Could this leave ghost cooldown entries that accumulate underlyingAmount without corresponding shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_044a3e96-1323-42fc-bd3a-77f9b1021fed",
+    "timestamp": "2025-12-02 07:38:37.997950",
+    "report_generated": false
   }
 ]
