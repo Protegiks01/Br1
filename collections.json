@@ -2398,5 +2398,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e956fe25-0523-405d-b64d-d876db18480f",
     "timestamp": "2025-12-02 06:26:46.611190",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [rescueTokens line 126] The rescueTokens function has nonReentrant but uses SafeERC20.safeTransfer. If the rescued token is a malicious ERC20 that calls back into this contract, does the nonReentrant modifier properly prevent reentrancy exploitation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1680b701-3015-4b9b-92dc-d6bfe3454143",
+    "timestamp": "2025-12-02 06:27:51.069671",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _credit] When _credit is called during lzReceive to mint tokens on the spoke chain, does it trigger _beforeTokenTransfer with msg.sender as the LayerZero endpoint (minter)? Does the 'to' address get validated as non-blacklisted per line 145?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cd26e9ee-e183-4837-b7f6-2d18fe00c3e3",
+    "timestamp": "2025-12-02 06:28:04.503967",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _debit] When _debit is called during send to burn tokens on the spoke chain, does it trigger _beforeTokenTransfer with msg.sender as the user or the OFT contract? Does this match the minter check at line 143 for burning?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76b431fe-f465-41c8-9cba-c0a90a16606a",
+    "timestamp": "2025-12-02 06:28:17.919390",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer line 143] The redeeming check validates 'msg.sender == minter && !blacklisted[from] && to == address(0)'. If msg.sender is the user during a send operation (not the minter), does this check fail and block legitimate cross-chain burns?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_42000214-d7b1-46d0-8975-93632ddaba5f",
+    "timestamp": "2025-12-02 06:28:31.888741",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Cross-chain message flow] When a user on the spoke chain calls OFT.send() to bridge back to hub, the spoke OFT burns tokens. But who validates that the hub adapter unlocks an equivalent amount, ensuring no unbacked iTRY remains locked on the hub?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_65712e69-1a92-41c7-bae9-db64da5d6e9c",
+    "timestamp": "2025-12-02 06:28:47.204074",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Cross-chain message flow] When the hub adapter locks iTRY and sends a message to the spoke OFT to mint, does the spoke OFT verify the message authenticity through LayerZero's security model, or could a malicious actor forge mint messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_39589672-1ae8-436d-b156-7e49239b2f19",
+    "timestamp": "2025-12-02 06:29:03.563894",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 140-177] The function allows minter to burn from any non-blacklisted address (line 143). Could a compromised minter drain all user funds by burning their tokens without their consent during fake cross-chain operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9096f4ca-b9ff-42e1-8426-f1119dde2ebd",
+    "timestamp": "2025-12-02 06:29:21.068255",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 140-177] The function allows minter to mint to any non-blacklisted address (line 145). Could a compromised minter mint unbacked iTRY to arbitrary addresses on the spoke chain, inflating supply without hub backing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_34ca88dc-1e93-44fe-9f0a-df53aef7a32a",
+    "timestamp": "2025-12-02 06:29:40.447240",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [setMinter line 60] The setMinter function is onlyOwner. If the owner sets the minter to address(0), does this permanently disable all cross-chain operations since no address can match the minter check in _beforeTokenTransfer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_40af604a-1aa3-476c-b42e-41dfc0a5b7ac",
+    "timestamp": "2025-12-02 06:30:02.015230",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [setMinter line 60] If the owner accidentally sets the minter to an incorrect address (not the LayerZero endpoint or intended minter contract), can this be corrected, or will all pending cross-chain messages fail when they arrive?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b55f7a03-6abe-4e4b-972d-dc733321a2bf",
+    "timestamp": "2025-12-02 06:30:23.630540",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer line 151] In FULLY_ENABLED state, the normal transfer case requires all three addresses (msg.sender, from, to) to be non-blacklisted. Does this correctly handle the case where msg.sender == from (direct transfer), or could it fail for legitimate transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1850a5a2-014c-4f88-b8c7-a6eb086cbb1f",
+    "timestamp": "2025-12-02 06:30:46.976440",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer line 168] In WHITELIST_ENABLED state, the normal transfer case requires all three addresses (msg.sender, from, to) to be whitelisted. Does this correctly handle direct transfers where msg.sender == from, or does it require redundant whitelist checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3f702d6f-35c5-4d4f-b4e5-88d0bcb91548",
+    "timestamp": "2025-12-02 06:31:11.709863",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [transferState line 41] The transferState variable is public and can be read by anyone. Could external contracts rely on this state and front-run updateTransferState transactions to exploit state transitions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_085a4fca-8a5e-4f65-820a-fa312aecb17f",
+    "timestamp": "2025-12-02 06:31:37.211784",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [updateTransferState line 134] The updateTransferState function doesn't have any validation on the state transition (e.g., can't go from FULLY_DISABLED to FULLY_ENABLED directly). Could abrupt state changes cause issues with in-flight transactions or cross-chain messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b103fae5-0f50-48c6-a970-c14a201bef1b",
+    "timestamp": "2025-12-02 06:32:04.400138",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [blacklisted/whitelisted mappings] The blacklist and whitelist states are stored in separate mappings. Could an address be both blacklisted and whitelisted simultaneously through a race condition or incorrect admin operations, creating undefined behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb99b611-1de0-4e36-88b4-391ae8894d8c",
+    "timestamp": "2025-12-02 06:32:32.425289",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [addBlacklistAddress line 72] The function automatically removes whitelist when blacklisting (line 72). But addWhitelistAddress checks !blacklisted before whitelisting (line 91). Does this asymmetry create edge cases where an address can't be properly whitelisted after being blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dfb273e1-efa5-4981-92e4-1d310f753e12",
+    "timestamp": "2025-12-02 06:33:02.138782",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [redistributeLockedAmount line 109] The function requires 'from' to be blacklisted and 'to' to not be blacklisted (line 110). But does it check if 'to' is whitelisted when in WHITELIST_ENABLED state, potentially violating the whitelist invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a558b1ee-c5e6-415f-a930-49731449dd83",
+    "timestamp": "2025-12-02 06:33:32.468315",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 147-150] The redistributeLockedAmount mint path (lines 149-150) allows the owner to mint to any non-blacklisted address. In WHITELIST_ENABLED state, should this also require the 'to' address to be whitelisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2e2b226a-a685-45fa-bc5e-48d7e7471863",
+    "timestamp": "2025-12-02 06:34:04.401309",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT quota mechanism] Does the OFT contract implement any rate limiting or quota mechanisms for cross-chain transfers? Could an attacker drain the hub adapter's locked iTRY by sending many small cross-chain transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_356dc7c2-96e9-48ab-bdfb-e921ce30d209",
+    "timestamp": "2025-12-02 06:34:34.847850",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT message encoding] How are the recipient addresses encoded in LayerZero messages? Could an attacker manipulate message encoding to cause tokens to be minted to an incorrect address on the spoke chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_36dc212e-ffba-475b-ab52-f197740c6da8",
+    "timestamp": "2025-12-02 06:35:05.237220",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT message decoding] When lzReceive processes incoming messages, does it properly decode recipient addresses? Could malformed messages cause tokens to be minted to the zero address or an attacker-controlled address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b6357b7-bf2a-418e-87dd-5d67c0bf4980",
+    "timestamp": "2025-12-02 06:35:36.769453",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Cross-chain fee handling] Who pays for cross-chain message fees? If users pay upfront, could failed messages on the destination chain lock user funds without refunding fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85911e3f-e0ed-40d6-825e-ec81a8a00708",
+    "timestamp": "2025-12-02 06:36:08.848326",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT send failure] If a user calls OFT.send() to bridge tokens but the message fails on the destination, are tokens burned on the source and never minted on the destination, causing permanent loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84b412f0-9e1e-4cad-8d85-38e68e889d1c",
+    "timestamp": "2025-12-02 06:36:40.088589",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT retry mechanism] Does LayerZero provide a retry mechanism for failed messages? Could an attacker cause messages to fail intentionally (e.g., by blacklisting the recipient between send and receive), then retry when convenient?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_83b4031a-7864-4def-8272-e2d352d10078",
+    "timestamp": "2025-12-02 06:37:05.504790",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 140-177] The function has 6 different conditional branches in FULLY_ENABLED state (lines 143-154). Are all possible transfer scenarios covered, or could there be edge cases that fall through to the revert at line 154?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c7fbfbf8-4a8e-4275-a0ef-7517e964bfd6",
+    "timestamp": "2025-12-02 06:37:29.960453",
+    "report_generated": false
   }
 ]
