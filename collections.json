@@ -3298,5 +3298,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_32b3ba53-cd11-4621-a8f7-c034967c3d64",
     "timestamp": "2025-12-02 07:32:05.635048",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint lines 155-157] The function is protected by `onlyRole(MINTER_CONTRACT)`. However, can multiple MINTER_CONTRACT roles be granted via addMinter (line 59-62)? If a malicious or compromised minter exists, can it mint unbacked iTRY without DLF deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_51674664-78f2-460a-aad5-a39dad219c62",
+    "timestamp": "2025-12-02 07:33:27.224790",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint lines 155-157] The mint function directly calls `_mint(to, amount)` without any validation. Can this be called with `to == address(0)`, `to` being a blacklisted address, or `amount` causing totalSupply overflow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a33f6653-65bc-4476-b167-a4cac46a3da5",
+    "timestamp": "2025-12-02 07:33:40.331453",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint lines 155-157] The function doesn't check if `to` is blacklisted before minting. Will the _beforeTokenTransfer hook (lines 182-183) properly block minting to blacklisted addresses, or can MINTER_CONTRACT bypass this check?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9e2e7ab4-29be-4dc8-a75a-f7bb210804ce",
+    "timestamp": "2025-12-02 07:33:54.456139",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint lines 155-157] Can MINTER_CONTRACT mint iTRY to itself? If iTryIssuer contract is the MINTER_CONTRACT and holds user deposits, minting to itself could confuse accounting between user-owned and protocol-owned tokens.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c986e67b-d5a6-4ae1-88b2-d83e7c4cdd7a",
+    "timestamp": "2025-12-02 07:34:08.583486",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint lines 155-157] Does the mint function emit proper events? The inherited _mint should emit Transfer event, but is there any case where this event emission could be suppressed or manipulated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29331715-6597-4451-a7ff-1c690972787f",
+    "timestamp": "2025-12-02 07:34:23.217641",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addMinter lines 59-62] The function grants MINTER_CONTRACT role to an address. Can the same address be granted this role multiple times, and does this create any unexpected behavior with role counting or revocation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1441086f-6c1c-47ba-90b0-9707f39f3403",
+    "timestamp": "2025-12-02 07:34:38.825667",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addMinter lines 59-62] Can address(0) be added as a MINTER_CONTRACT? If so, would this allow anyone to call mint() by sending transactions from a non-existent address (not possible) or create other edge cases?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6bd33322-f6fc-4306-8294-9d738e932820",
+    "timestamp": "2025-12-02 07:34:56.474435",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [removeMinter lines 64-67] When revoking MINTER_CONTRACT role, can this be called while the minter is in the middle of a minting operation? Could this create a race condition where minting completes but the role is revoked before event emission?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43fe76a5-988c-47f8-aebf-a45f469e9ac1",
+    "timestamp": "2025-12-02 07:35:15.485793",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [removeMinter lines 64-67] If all MINTER_CONTRACT roles are removed, can iTRY still be minted? Does this permanently lock the minting mechanism, potentially causing issues if new DLF deposits are received?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05ee5e81-b6aa-4931-ab4e-734195334e67",
+    "timestamp": "2025-12-02 07:35:36.555631",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [renounceRole lines 164-166] The function is overridden to always revert with OperationNotAllowed. However, does this prevent a MINTER_CONTRACT from resigning its role? Can a compromised minter be forced to keep the role even if it wants to resign?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f480feaa-8b1b-4082-8fa8-610574b7476c",
+    "timestamp": "2025-12-02 07:35:58.859001",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [renounceRole lines 164-166] The override blocks role renunciation for all roles. Can this create issues where a user accidentally granted a role (like BLACKLIST_MANAGER_ROLE) cannot resign it, requiring admin intervention?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1cdf1dba-9719-4d59-b1bf-518fb372eb01",
+    "timestamp": "2025-12-02 07:36:23.040299",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize lines 48-57] The function grants DEFAULT_ADMIN_ROLE to admin and MINTER_CONTRACT to minterContract. Can either of these addresses be address(0)? The check at line 52 prevents this, but can subsequent role grants via addMinter allow address(0)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5ea93359-35fc-4d31-92fd-1e8abde683d1",
+    "timestamp": "2025-12-02 07:36:47.496637",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Role Management] Can a single address hold multiple roles (e.g., both BLACKLIST_MANAGER_ROLE and WHITELIST_MANAGER_ROLE)? Does this create any conflicts in permission logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cd0c8513-6048-425e-8e06-80152d1bb603",
+    "timestamp": "2025-12-02 07:37:11.828472",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Role Management] DEFAULT_ADMIN_ROLE can grant itself to multiple addresses. Can this lead to scenarios where multiple competing admins exist, and they conflict in their blacklist/whitelist management decisions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_82c7b746-9dfd-44a1-aaa8-89a549caf71b",
+    "timestamp": "2025-12-02 07:37:36.913474",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState lines 171-175] The function can change transferState to any of the three enum values. Can changing from FULLY_ENABLED to FULLY_DISABLED lock all user funds indefinitely? Is there any timelock or governance mechanism to prevent sudden transfer lockdowns?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f830dff1-a3ba-4058-8b13-50871225da5b",
+    "timestamp": "2025-12-02 07:38:02.236589",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState lines 171-175] When transitioning from WHITELIST_ENABLED to FULLY_ENABLED, do previously whitelisted addresses retain their WHITELISTED_ROLE? Can this create confusion about which addresses are still considered trusted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d797590f-ca7a-46d1-8870-4e6fb270abb8",
+    "timestamp": "2025-12-02 07:38:26.474638",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState lines 171-175] Can the state be changed while transfers are in progress? For example, if a transaction is pending in the mempool during FULLY_ENABLED state, and the state changes to FULLY_DISABLED before the transaction is mined, will the transfer fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d05a523-10b0-4eca-b86e-fd51337413fa",
+    "timestamp": "2025-12-02 07:38:49.238858",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState lines 171-175] The function emits TransferStateUpdated event with prevState and new state. Can monitoring systems rely on this event to track state changes, or can the event be emitted multiple times with the same state (e.g., changing from FULLY_ENABLED to FULLY_ENABLED)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78dc7ef5-0035-4410-b9e4-6516a2417694",
+    "timestamp": "2025-12-02 07:39:13.282449",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [transferState] The state variable is public and can be read by anyone. Can external contracts or users front-run state changes to execute transfers before restrictions are applied?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ec775e67-04f4-4f93-9319-b902660cbbed",
+    "timestamp": "2025-12-02 07:39:36.767434",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20PermitUpgradeable Inheritance] The contract inherits ERC20PermitUpgradeable. Can blacklisted users still grant approvals via permit() signatures? Will these permits be usable if the user later becomes blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dc7a0299-3b79-475e-befa-af99ca8de793",
+    "timestamp": "2025-12-02 07:39:59.450952",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20PermitUpgradeable Inheritance] Can permit() be used to grant allowances even when transferState is FULLY_DISABLED? If so, when the state changes back to FULLY_ENABLED, will those allowances immediately become active?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b3898ff1-bd01-4782-ab3c-d3c5c78e256b",
+    "timestamp": "2025-12-02 07:40:22.019347",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20PermitUpgradeable Inheritance] Does permit() signature validation check for blacklisted signers? Can a blacklisted user create valid permit signatures that could be executed later after they're removed from the blacklist?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_592def04-f586-4f19-984d-9ddaebd88d88",
+    "timestamp": "2025-12-02 07:40:44.335119",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20PermitUpgradeable Inheritance] Can permit() be used by contracts? If a blacklisted contract has pre-signed permit messages, can those be replayed after it's removed from the blacklist?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f0b654e3-ba3c-41ae-968a-bb2cc13c3be1",
+    "timestamp": "2025-12-02 07:41:06.729631",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20BurnableUpgradeable Inheritance] The contract inherits burn() and burnFrom() functions. Can blacklisted users burn their own tokens directly via burn(), bypassing the _beforeTokenTransfer restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f0fdbf86-53fe-4893-99b8-9915f112606b",
+    "timestamp": "2025-12-02 07:41:31.167212",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20BurnableUpgradeable Inheritance] In WHITELIST_ENABLED state, can whitelisted users burn tokens? The _beforeTokenTransfer logic (lines 208-210) allows this, but does burning reduce iTryIssuer's totalIssued counter, or does it create accounting mismatches?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2c6f048c-e3bf-48c7-90e5-b693b8772291",
+    "timestamp": "2025-12-02 07:41:56.202422",
+    "report_generated": false
   }
 ]
