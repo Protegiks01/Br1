@@ -1050,7 +1050,7 @@
     "report_generated": false
   },
   {
-    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and integration flow] If the intended flow is iTryIssuer mints → YieldForwarder forwards → StakediTry receives, but someone with REWARDER_ROLE forgets to call transferInRewards() after processNewYield(), will the yield tokens sit idle in StakediTry's address without updating totalAssets(), breaking the share price appreciation mechanism?",
+    "question": "[File: src/protocol/YieldForwarder.sol] [processNewYield and integration flow] If the intended flow is iTryIssuer mints \u2192 YieldForwarder forwards \u2192 StakediTry receives, but someone with REWARDER_ROLE forgets to call transferInRewards() after processNewYield(), will the yield tokens sit idle in StakediTry's address without updating totalAssets(), breaking the share price appreciation mechanism?",
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f9a36c51-d0f0-4b3c-8f0f-f98c95dd54f2",
     "timestamp": "2025-12-01 22:30:07.583070",
     "report_generated": false
@@ -1470,7 +1470,7 @@
     "report_generated": false
   },
   {
-    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and nonReentrant effectiveness, line 156] The nonReentrant modifier prevents recursive calls to rescueToken(), but does it prevent reentrancy from rescueToken() → malicious token callback → processNewYield() → back to different function, creating cross-function reentrancy?",
+    "question": "[File: src/protocol/YieldForwarder.sol] [rescueToken and nonReentrant effectiveness, line 156] The nonReentrant modifier prevents recursive calls to rescueToken(), but does it prevent reentrancy from rescueToken() \u2192 malicious token callback \u2192 processNewYield() \u2192 back to different function, creating cross-function reentrancy?",
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ab28eba1-13d8-4137-8d26-8abb8c847c46",
     "timestamp": "2025-12-01 22:57:37.452578",
     "report_generated": false
@@ -4048,5 +4048,377 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71165c49-bfb8-4e39-96bb-739c7bd29569",
     "timestamp": "2025-12-02 08:23:34.610970",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 preview functions] ERC4626 provides preview functions (previewDeposit, previewMint, previewWithdraw, previewRedeem) that estimate shares/assets. If these use the current totalAssets() which includes time-based vesting, could an attacker front-run yield distribution to get more favorable preview values, then deposit at old share price?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_493072b0-0c52-4abc-8d3e-15e4be013381",
+    "timestamp": "2025-12-02 08:24:47.755941",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [multiple inheritance, line 19] StakediTry inherits from SingleAdminAccessControl, ReentrancyGuard, ERC20Permit, and ERC4626. Could the multiple inheritance create storage layout conflicts or function selector collisions that corrupt state variables like vestingAmount or totalSupply?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_92594d28-e6dc-453c-a250-9d54012e0fc0",
+    "timestamp": "2025-12-02 08:25:00.918225",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [asset() function from ERC4626] The contract uses IERC20(asset()) to interact with iTRY token. If iTRY token is upgraded to a malicious implementation (assuming upgradability), could it return false balances to inflate totalAssets() and allow share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2f0f247c-d58c-4204-bdbb-c90e0814d508",
+    "timestamp": "2025-12-02 08:25:14.573843",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [SafeERC20 usage, line 20] The contract uses SafeERC20 for token transfers. However, if the iTRY token doesn't revert on failure but returns false, does SafeERC20 properly catch this? Could transferInRewards() succeed without actually receiving tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78423123-d3e5-47d5-8250-a2ce1f962855",
+    "timestamp": "2025-12-02 08:25:29.010128",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [rescueTokens function, lines 154-161] The rescueTokens() function at line 159 checks if token == asset() and reverts. However, could an attacker send wiTRY shares (address(this) token) to the contract, then have admin accidentally rescue those, burning shares without burning underlying iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_352543da-4cb6-424f-ad3b-b964fc8b0a93",
+    "timestamp": "2025-12-02 08:25:44.500121",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC20Permit inheritance, line 19] StakediTry inherits ERC20Permit for gasless approvals. Could an attacker replay permit signatures across chain forks or after contract upgrades to drain user allowances? Does the permit implementation properly use DOMAIN_SEPARATOR with chainId?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_65e8cb3e-c6e4-4ef1-9700-87f8dea16e9e",
+    "timestamp": "2025-12-02 08:26:01.761901",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [child contract extensions] Since StakediTry is extended by StakediTryCooldown which adds iTrySilo integration, does the base StakediTry.totalAssets() correctly account for iTRY held in the silo? Or does the child contract override totalAssets() to include silo balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0d37ecf3-bce1-4dea-8092-a49885264fef",
+    "timestamp": "2025-12-02 08:26:19.713449",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [MIN_SHARES constant, line 32] MIN_SHARES is set to 1 ether. If the first depositor deposits exactly 1 ether of iTRY when share price is 1:1, they receive 1 ether shares. If they immediately withdraw, does totalSupply become 0? Could this reset the vault to vulnerable state for donation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a04fa91c-47ba-4d17-9ca9-4917e1c46f3a",
+    "timestamp": "2025-12-02 08:26:39.287946",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_checkMinShares function, lines 228-231] The _checkMinShares() check allows totalSupply to be either 0 or >= MIN_SHARES. Could an attacker deposit MIN_SHARES, then immediately withdraw MIN_SHARES, leaving totalSupply at 0 and allowing them to repeat donation attack?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b20ce980-ac93-43ce-bf6a-9c78d0d3d696",
+    "timestamp": "2025-12-02 08:27:00.163955",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_deposit and _withdraw MIN_SHARES checks] Both _deposit() and _withdraw() call _checkMinShares() after minting/burning. If a user tries to deposit/withdraw an amount that would leave totalSupply between 1 wei and MIN_SHARES - 1, their transaction reverts. Does this create unfair lock-in where the last MIN_SHARES worth of value can never be withdrawn?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df760852-7644-4543-8f52-58474f23fb03",
+    "timestamp": "2025-12-02 08:27:22.214638",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount MIN_SHARES check, line 173] When redistributeLockedAmount() burns shares at line 172 then checks MIN_SHARES at line 173, could this permanently lock the admin's ability to redistribute if the blacklisted user holds more than (totalSupply - MIN_SHARES) shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_963da5af-15fc-45bc-b50e-c07df343ebbf",
+    "timestamp": "2025-12-02 08:27:47.052114",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [initial deployment state] Before the first deposit, totalSupply is 0 which passes the _checkMinShares() check. Could an attacker front-run the protocol's initial deposit, deposit 1 wei to become first depositor, then donate large iTRY amounts to inflate share price and grief subsequent depositors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_defa68f2-67f0-41b4-87f0-b08d2354f2af",
+    "timestamp": "2025-12-02 08:28:12.908022",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [nonReentrant modifier usage] The contract uses nonReentrant on _deposit, _withdraw, transferInRewards, rescueTokens, and redistributeLockedAmount. However, are view functions like totalAssets() or getUnvestedAmount() protected? Could an attacker reenter from token callbacks to read inconsistent state mid-transaction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f12118a2-0053-442e-b19f-7f84ec246289",
+    "timestamp": "2025-12-02 08:28:39.928024",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards reentrancy, lines 113-119] If the iTRY token has a transfer callback that allows reentrancy, could an attacker reenter during safeTransferFrom() at line 116 to call deposit() before vestingAmount is updated at line 114? Wait, _updateVestingAmount() is called first at line 114, but could they reenter to call another transferInRewards()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fb7e55c3-160b-4edc-913a-063a3ec81662",
+    "timestamp": "2025-12-02 08:29:08.352102",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer and state consistency] The _beforeTokenTransfer() hook is called before balances are updated. If a child contract's override reads totalAssets() during this hook, could it see stale vesting calculations that allow share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_806ee5bf-42a8-40cc-a3d5-3fe429d41b62",
+    "timestamp": "2025-12-02 08:29:38.446574",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 deposit/withdraw atomicity] ERC4626 standard requires deposit/mint/withdraw/redeem to be atomic. If the ReentrancyGuard is applied only in _deposit() and _withdraw() but not in the public deposit()/mint() functions, could an attacker bypass reentrancy protection by calling the unguarded public functions directly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0b315241-ed7d-4e9a-8ca7-e9c5baa85b5d",
+    "timestamp": "2025-12-02 08:30:07.660293",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod constraints, lines 95-107] The setVestingPeriod() function allows changing vestingPeriod between MIN_VESTING_PERIOD (1 hour) and MAX_VESTING_PERIOD (30 days). If admin reduces vesting period from 30 days to 1 hour, does this instantly accelerate vesting of current unvested amount, allowing stakers to immediately extract yield meant to vest over weeks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d37ee6af-06f3-4b26-a8d7-f5e293d3ed7c",
+    "timestamp": "2025-12-02 08:30:36.325483",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vestingPeriod initial value, line 82] The constructor sets vestingPeriod to MIN_VESTING_PERIOD (1 hour) at line 82. Is this intentional for initial deployment? Could an attacker exploit the short initial vesting period to extract yield faster than expected by depositing immediately after first reward distribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_791f1ac8-e0fb-4e90-aaae-dbcbbd4b8f9e",
+    "timestamp": "2025-12-02 08:31:05.872086",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod timing attack] Since setVestingPeriod() at line 99 can only be called when getUnvestedAmount() == 0, could an attacker monitor the mempool for this transaction and front-run it with a deposit to get shares at the old vesting rate before the new (possibly longer) period takes effect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_212b0560-9210-4873-992f-ed2c9295ff95",
+    "timestamp": "2025-12-02 08:31:36.419899",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards MEV vulnerability] When transferInRewards() is called, totalAssets() increases and share price appreciates. Could an MEV bot sandwich this transaction by depositing before and withdrawing after to capture yield without time-weighted exposure to the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_28023d50-fdce-4051-9ebd-f62ac75149fc",
+    "timestamp": "2025-12-02 08:32:05.358865",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vesting start timing] The _updateVestingAmount() function sets lastDistributionTimestamp to block.timestamp at line 284. If the reward distribution transaction is delayed in the mempool, could an attacker deposit right before it's mined to get a larger share of the newly vesting rewards?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_56a45e9a-e087-4df7-9abb-7c05c70a5723",
+    "timestamp": "2025-12-02 08:32:33.974393",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets() volatility] Since totalAssets() at line 193 changes every block due to time-based vesting in getUnvestedAmount(), does this create constant share price volatility? Could high-frequency traders exploit tiny share price changes between blocks for profit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_75849f1a-9389-4328-8079-1a869e87c470",
+    "timestamp": "2025-12-02 08:33:03.893648",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [reward distribution frequency] If transferInRewards() can only be called when getUnvestedAmount() == 0 (due to _updateVestingAmount check at line 281), does this force rewards to be distributed at fixed intervals of vestingPeriod? Could this predictable timing allow attackers to optimize sandwich attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c156c7d-9d44-42cf-97f1-faf9497dc351",
+    "timestamp": "2025-12-02 08:33:34.641573",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC20 approve function inherited] StakediTry inherits ERC20 which includes approve(). Could a FULL_RESTRICTED_STAKER still call approve() to grant allowance even though they can't transfer? Then if they're later removed from blacklist, they could have pre-approved transfers ready to execute?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1b2320cc-de15-4c90-9fb6-a582f0b72f26",
+    "timestamp": "2025-12-02 08:34:04.906131",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer allowance bug] The known issue mentions blacklisted users can transferFrom() on behalf of non-blacklisted users since msg.sender isn't checked in _beforeTokenTransfer(). However, in StakediTry specifically for wiTRY shares, does this allow a FULL_RESTRICTED user to extract their staked position by having a helper contract transfer on their behalf?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84d570cc-cad0-4747-a2b1-381602a4d84c",
+    "timestamp": "2025-12-02 08:34:34.554518",
+    "report_generated": false
+  },
+  {
+    "filename": "audit_1.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bece5380-82c6-4d66-afe4-8c486749795e",
+    "timestamp": "2025-11-29 07:18:18.528135",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_10.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_edd72ec6-9e94-420a-9fcf-b21f7fc63c88",
+    "timestamp": "2025-11-29 07:18:31.709627",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_11.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_457543d9-3a37-499a-a6e3-6158f8b33574",
+    "timestamp": "2025-11-29 07:18:45.206401",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_12.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_115091ce-948e-490b-8df9-eddd7a288511",
+    "timestamp": "2025-11-29 07:18:59.944162",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_13.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5866c0d-8311-4537-aee7-36333e1e3643",
+    "timestamp": "2025-11-29 07:19:14.594698",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_14.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a3e779ac-4995-4f0e-9a2c-89cade27b8b7",
+    "timestamp": "2025-11-29 07:19:30.546456",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_15.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b1323fe-04bd-4f30-a5e4-71c57c0c8206",
+    "timestamp": "2025-11-29 07:19:47.424164",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_16.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d741ad9-55c1-45b0-87ba-16f994f53851",
+    "timestamp": "2025-11-29 07:20:06.325868",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_17.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e97fe4bb-cacb-4707-8007-97f67423ef9f",
+    "timestamp": "2025-11-29 07:20:26.942957",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_18.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ebe7252b-26c9-478f-aba6-51fe710a91b7",
+    "timestamp": "2025-11-29 07:20:48.343763",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_19.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_88429e97-09bb-4f97-883a-436f77d04ff4",
+    "timestamp": "2025-11-29 07:21:11.273147",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_2.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2f438796-30dd-4aba-a37b-f7f61a74c217",
+    "timestamp": "2025-11-29 07:21:35.580343",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_20.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e44ee4f6-ac18-423e-a583-d03d60497631",
+    "timestamp": "2025-11-29 07:21:59.008906",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_21.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4c4b0a1f-5a06-4828-90ae-66a201e873d7",
+    "timestamp": "2025-11-29 07:22:22.574100",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_22.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_196966e9-3c3d-4b73-ab5b-5a1d5acb8a85",
+    "timestamp": "2025-11-29 07:22:47.357906",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_23.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6c0ad132-3d69-4533-827b-71370dd796e8",
+    "timestamp": "2025-11-29 07:23:13.781928",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_24.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c84cf5b-f483-4534-8066-131324575fc6",
+    "timestamp": "2025-11-29 07:23:40.908976",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_25.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2214857d-f7fa-47ea-8c1d-df219e6d0df3",
+    "timestamp": "2025-11-29 07:24:07.615936",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_26.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84377b6d-e9b5-4701-b48d-3f590a34e5fd",
+    "timestamp": "2025-11-29 07:24:33.862958",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_27.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d00f8cc6-0a41-4763-be83-42d445aa9e93",
+    "timestamp": "2025-11-29 07:25:00.948925",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_28.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5e9c83ad-6ebc-4f41-8db3-d59d6aa751ff",
+    "timestamp": "2025-11-29 07:25:29.828597",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_29.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2148c4e2-4b1b-425f-8f1f-453efe35007d",
+    "timestamp": "2025-11-29 07:25:58.699924",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_3.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3ad7f191-b410-48a4-8ea8-8f55a4c413c2",
+    "timestamp": "2025-11-29 07:26:27.499586",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_30.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_549a885e-dd31-4509-abd3-29f4160236b4",
+    "timestamp": "2025-11-29 07:26:55.562953",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_31.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6e69f133-7b08-4749-9d12-5b4e58ce36ac",
+    "timestamp": "2025-11-29 07:27:19.345996",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_32.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1ed9c22a-64bf-4ebd-91e4-e195a3cd1cfd",
+    "timestamp": "2025-11-29 07:28:30.291723",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_33.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7be92249-1b82-4d07-9bf8-96bed74996f5",
+    "timestamp": "2025-11-29 07:28:43.367950",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_34.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0a24d23d-3f4e-466a-8438-a31fe5a0b7cf",
+    "timestamp": "2025-11-29 07:28:56.662741",
+    "report_generated": false
+  },
+  {
+    "filename": "audit_35.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da5a59ea-26bb-4db3-a375-c768e84b38b9",
+    "timestamp": "2025-11-29 07:29:12.038341",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_36.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3d58b622-1303-4fec-acaa-fa6c9b52dd2b",
+    "timestamp": "2025-11-29 07:29:28.505348",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_37.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_46426180-ef40-4eb2-81f7-7d927f747f72",
+    "timestamp": "2025-11-29 07:29:45.666305",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_4.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74fbae3b-1b8c-4577-a274-e9d0f3c20f86",
+    "timestamp": "2025-11-29 07:30:05.632806",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_5.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3f6db111-5dd4-4a77-9d37-5b51e1ecdb7f",
+    "timestamp": "2025-11-29 07:30:25.612539",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_6.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e87d4d04-0f53-49cb-bf6b-bd358c789fa0",
+    "timestamp": "2025-11-29 07:30:47.274939",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_7.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_efc5b196-fbe1-44cb-b9ff-07ed5ae9ea1b",
+    "timestamp": "2025-11-29 07:31:08.956371",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_8.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_95e9565a-bd50-48f9-9f64-d3b73eab3f4a",
+    "timestamp": "2025-11-29 07:31:32.781547",
+    "report_generated": true
+  },
+  {
+    "filename": "audit_9.md",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dd6a6f75-3d0f-41f9-8a68-6af780cc1b41",
+    "timestamp": "2025-11-29 07:31:56.616359",
+    "report_generated": true
   }
 ]
