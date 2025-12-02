@@ -2698,5 +2698,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a151c5e1-922a-45a5-9706-432468ab5faa",
     "timestamp": "2025-12-02 06:48:04.969663",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [removeBlacklistAddress] If a user is removed from the blacklist, can they immediately transfer tokens, or is there a delay? Could they front-run the removal to transfer before it takes effect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_184b6e82-9142-4125-b73e-a49b87e9ec80",
+    "timestamp": "2025-12-02 06:49:18.264110",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer lines 151, 168] Both FULLY_ENABLED and WHITELIST_ENABLED states check three addresses (msg.sender, from, to) for blacklist/whitelist. In the case of a direct transfer (msg.sender == from), is this redundant checking, or does it serve a security purpose?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_72aa1db7-7f63-4d8b-91b3-5351fc7750b0",
+    "timestamp": "2025-12-02 06:49:31.637646",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT message ordering] Does LayerZero guarantee message ordering? Could out-of-order messages cause issues, such as a burn message arriving before a mint message, creating temporary negative balances or reverts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3fcdd47-335b-4ed0-9512-cc6077b10a69",
+    "timestamp": "2025-12-02 06:49:45.488295",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT message expiry] Do LayerZero messages have an expiry time? Could old messages be delivered long after they were sent, when blacklist or whitelist status has changed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1299c331-cad6-49d5-937d-b4d47a805347",
+    "timestamp": "2025-12-02 06:49:59.615351",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Cross-chain supply consistency] How is totalSupply kept consistent across hub and spoke chains? If tokens are minted on spokes, does the total global supply equal the amount locked on the hub adapter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_740a2ebe-a7fb-44f7-a1b8-9f77bd6ee71c",
+    "timestamp": "2025-12-02 06:50:14.672341",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Integration with wiTRY] If users stake iTRY into wiTRY on the spoke chain, do cross-chain operations properly handle the iTRY locked in the staking vault? Could bridging operations affect staked balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e66a8a6b-7d5b-489f-acf4-0ad502f9cd8e",
+    "timestamp": "2025-12-02 06:50:31.173578",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Integration with wiTRY] If a user has iTRY staked in wiTRY on a spoke chain and gets blacklisted, can their wiTRY shares be seized via redistributeLockedAmount, or are they protected by the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1c6c2dd5-1ad6-4d49-ab92-b6fd6110407f",
+    "timestamp": "2025-12-02 06:50:48.818060",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer] Does _beforeTokenTransfer handle all ERC20 operations (transfer, transferFrom, mint, burn), or are there other token operations that could bypass these checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7fb6126-8c5c-4d81-abc3-f72b11f8af51",
+    "timestamp": "2025-12-02 06:51:08.789087",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT inheritance] The OFT contract from LayerZero likely has its own access control and configuration functions. Are these properly secured to prevent unauthorized minting or configuration changes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9e6a3edd-7898-4053-be33-3a5d87fd8193",
+    "timestamp": "2025-12-02 06:51:30.443361",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [setMinter line 62] The setMinter function emits MinterUpdated with old and new minter addresses. But does it validate that the new minter is not the zero address, or could setting it to zero break all cross-chain operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8dd50d0b-6146-4670-805c-a7469df4bbe8",
+    "timestamp": "2025-12-02 06:51:52.276132",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [Constructor line 51] The OFT constructor is called with _owner parameter. Does this owner have special privileges in the OFT contract, and are they properly restricted to prevent unauthorized operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85f22e40-fb77-4ff7-a3df-af84d7264b4e",
+    "timestamp": "2025-12-02 06:52:14.754931",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [LayerZero fee payment] Who pays LayerZero message fees for cross-chain transfers? If the user pays, could insufficient fee payment cause messages to be stuck, burned tokens on source without minting on destination?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_846cae82-0956-4bca-a325-54ded937b012",
+    "timestamp": "2025-12-02 06:52:38.281289",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [LayerZero refund] If LayerZero refunds excess fees, where do refunds go? Could an attacker exploit fee refunds to drain protocol funds or receive unintended payments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_30905047-d3a4-4578-9cc3-22668be36aea",
+    "timestamp": "2025-12-02 06:53:03.376976",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT receive path] When lzReceive mints tokens to a recipient, does it check if the recipient is a contract? Could minting to a contract without receive/fallback functions lock tokens permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_934ed9c7-ae76-4561-8793-e146017c70d5",
+    "timestamp": "2025-12-02 06:53:30.129833",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT send path] When a user burns tokens to bridge them, does the function check if the user has sufficient balance? Could an underflow occur if the balance check happens after _beforeTokenTransfer validation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_87d47674-ca42-4d3e-bcce-f7ce63a39649",
+    "timestamp": "2025-12-02 06:53:57.373746",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [_beforeTokenTransfer architecture] The _beforeTokenTransfer hook is called before every token operation. Does this include operations triggered by OFT inherited functions, or do some OFT operations bypass this hook?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_06d13882-f009-465a-89cd-36836ac8e576",
+    "timestamp": "2025-12-02 06:54:26.069648",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _debit override] Does iTryTokenOFT override the _debit function from OFT? If not, does the default implementation properly call _burn which triggers _beforeTokenTransfer, or could it bypass validation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e6c18d8a-531b-43ce-ba02-df62d00d318f",
+    "timestamp": "2025-12-02 06:54:56.402623",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol] [OFT _credit override] Does iTryTokenOFT override the _credit function from O",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fc78dd23-67bd-40e9-8667-7c0d1d8cb51d",
+    "timestamp": "2025-12-02 06:55:27.058733",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _debit function] Does the OFTAdapter's inherited _debit function properly enforce iTRY's blacklist restrictions when a blacklisted user attempts to bridge tokens from hub to spoke chain, or can they bypass the blacklist by calling the adapter's send() function directly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_550dca66-ac76-4c31-92cc-408c31158ff2",
+    "timestamp": "2025-12-02 06:55:56.375291",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _credit function] When the adapter receives a LayerZero message to unlock iTRY tokens on the hub chain, does the inherited _credit function validate that the recipient is not blacklisted, or could tokens be credited to a blacklisted address violating the blacklist enforcement invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b9093303-504e-4a98-9b4f-3ed14e59faab",
+    "timestamp": "2025-12-02 06:56:25.434555",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _debit function] During the lock phase when bridging iTRY from hub to spoke, does the adapter's _debit function respect iTRY's WHITELIST_ENABLED transfer state, or can non-whitelisted users bridge tokens when only whitelisted transfers should be allowed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a491340e-c9f0-499d-852b-b0992677378b",
+    "timestamp": "2025-12-02 06:56:56.393219",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Constructor] The constructor passes _owner to the parent OFTAdapter, granting them LayerZero configuration privileges including setPeer. If the owner is compromised or misconfigured, could they set a malicious peer contract that mints unbacked iTRY on spoke chains by sending fake LayerZero messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a61e5d8e-5604-402d-8eef-5d7f100a7895",
+    "timestamp": "2025-12-02 06:57:26.713475",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited send function] When users call the inherited send() function to bridge iTRY to a spoke chain, does the function validate that msg.sender has sufficient iTRY balance and approval for the adapter, or could an attacker drain the adapter's locked iTRY by manipulating the LayerZero message parameters?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e73f0a4c-1304-46b8-8836-76c0f1d5509f",
+    "timestamp": "2025-12-02 06:57:57.853200",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Token approval] The adapter requires users to approve it to spend their iTRY tokens before bridging. If a blacklisted user has a pre-existing approval, can they still bridge tokens after being blacklisted, bypassing the blacklist enforcement during the approval-based transfer in _debit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ab4f1055-e6b7-4b47-bc24-bf28ae5be12c",
+    "timestamp": "2025-12-02 06:58:29.321348",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited lzReceive function] When the adapter's inherited lzReceive function processes incoming LayerZero messages to unlock iTRY, does it validate the peer (sender) is the authorized iTryTokenOFT contract on the spoke chain, or could a malicious contract send fake messages to unlock iTRY without burning the spoke-side tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a860c967-4db8-42da-a708-928b9318f0ad",
+    "timestamp": "2025-12-02 06:58:58.212530",
+    "report_generated": false
   }
 ]
