@@ -3748,5 +3748,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_53da9d0a-7472-4b87-b7aa-a28b99bb2b7d",
     "timestamp": "2025-12-02 06:45:53.892026",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 177] Does cooldownEnd use block.timestamp which can be manipulated by miners? Could a miner set block.timestamp to a value that causes cooldownEnd to be in the past, allowing immediate unstaking without waiting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b1b3b0ae-7a13-426c-8bbe-957dc0f0ad77",
+    "timestamp": "2025-12-02 06:47:03.709043",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer and cooldownAssetsByComposer, lines 38-39, 56-57] Do both modifiers (onlyRole and ensureCooldownOn) execute in sequence? Could a race condition occur where COMPOSER_ROLE is revoked between modifier checks, allowing an unauthorized cooldown initiation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_52e44a04-7c91-4e2e-981b-6e7919a277ec",
+    "timestamp": "2025-12-02 06:47:17.053356",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, line 89] Does block.timestamp comparison use the exact block timestamp of transaction execution? Could miners manipulate timestamp within the allowed drift to make block.timestamp >= cooldownEnd when it should not be, enabling early unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ddb52f86-b3ec-40c3-91e2-5e7cfcc77c0a",
+    "timestamp": "2025-12-02 06:47:30.452825",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer function, line 123] Does previewRedeem(shares) match the totalAssets parameter passed to _redeemWithFee? Could a discrepancy between preview and actual assets cause the fee calculation to be based on incorrect values, allowing fee evasion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b69e4ff7-8798-412e-8345-9695aff46e1c",
+    "timestamp": "2025-12-02 06:47:44.488787",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer function, line 47] Does _startComposerCooldown return the assets value, but is this return value actually used by the caller? Could there be a mismatch between the returned assets and what's actually stored in cooldowns[redeemer].underlyingAmount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a09d21cf-3880-49f0-ba96-49c3710b8121",
+    "timestamp": "2025-12-02 06:48:00.055643",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 174] Does _withdraw check that owner (composer) has approved caller (composer) for share transfers? Since caller and owner are the same, does approval logic get bypassed, or could this create allowance confusion in parent contracts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_af26f8c3-13b5-4043-bc9a-be1f91371e3b",
+    "timestamp": "2025-12-02 06:48:16.861147",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, lines 90-91] Does zeroing underlyingAmount before calling silo.withdraw create a reentrancy risk? If silo.withdraw reenters (though nonReentrant should prevent this), would underlyingAmount already be zero, preventing the reentrant call from withdrawing assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d207ceae-9d7b-4a39-b7dd-4ecc57126a16",
+    "timestamp": "2025-12-02 06:48:34.804800",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownAssetsByComposer function, line 64] Does previewWithdraw account for potential MIN_SHARES violations when calculating shares? Could burning the returned shares violate MIN_SHARES, causing _startComposerCooldown to revert mid-execution after shares are already burned?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a00754b4-f439-4c6a-b63c-cac72a69513e",
+    "timestamp": "2025-12-02 06:48:55.090829",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer and fastWithdrawThroughComposer, lines 112-159] Do both functions allow the crosschainReceiver to be an arbitrary address? Could a malicious composer set crosschainReceiver to an address that can't receive iTRY on L2, causing permanent loss when wiTryVaultComposer attempts to bridge?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d3b5123-ed21-4ade-88e3-541b1d46db7c",
+    "timestamp": "2025-12-02 06:49:18.457335",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer function, line 46] Does previewRedeem use the same totalAssets value that _withdraw will use? If totalAssets includes unvested rewards that vest between preview and execution, could the assets returned be incorrect, causing accounting mismatches?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a1414631-6e4b-4e2f-affe-e54b43a8b07b",
+    "timestamp": "2025-12-02 06:49:42.389858",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, lines 86-87] Does the UserCooldown storage pointer remain valid after cooldown data is zeroed? Could concurrent modifications to cooldowns mapping invalidate the pointer, causing underlyingAmount to be read from a different storage slot?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_61caf81a-a38b-47f6-b8be-38fa1c0ad574",
+    "timestamp": "2025-12-02 06:50:05.992396",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 178] Does += on uint152 underlyingAmount accumulate correctly when adding large assets values? If assets is close to 2^152, could the addition silently overflow in Solidity 0.8.20, reverting the transaction instead of wrapping?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_53688e1a-e132-41e0-b455-e3e093d95b7b",
+    "timestamp": "2025-12-02 06:50:29.987047",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer function, line 124] Does _redeemWithFee call _withdraw twice (once for fee, once for net assets)? Could the second _withdraw fail if MIN_SHARES is violated after the first, causing the fee to be collected but net assets not delivered?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_13f59905-c472-4c2b-8d88-c83bcde8d086",
+    "timestamp": "2025-12-02 06:50:54.270781",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer and cooldownAssetsByComposer, lines 36-66] Do both functions emit ComposerCooldownInitiated event (line 180) with the same composer and redeemer? Could event logs be used to forensically link L2 users to L1 composers, exposing privacy-sensitive cross-chain transaction flows?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c7365307-0023-42bd-b1bf-b8c96a0f529c",
+    "timestamp": "2025-12-02 06:51:18.727254",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, line 93] Does silo.withdraw validate that 'to' address (msg.sender/composer) is not blacklisted? Could the transfer succeed to iTrySilo but fail when composer tries to bridge iTRY to L2, locking funds in the composer contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e183a7ce-27bd-4376-9974-690796d6a115",
+    "timestamp": "2025-12-02 06:51:45.362149",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 177] Does overwriting cooldownEnd with a new timestamp benefit attackers? If an attacker can repeatedly call cooldownSharesByComposer through a compromised wiTryVaultComposer, could they continuously reset cooldownEnd to delay legitimate users' unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b3c3f546-a246-44d9-b36c-f7b07682a0f5",
+    "timestamp": "2025-12-02 06:52:13.742345",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer and fastWithdrawThroughComposer, lines 121, 151] Do both functions validate maxRedeem/maxWithdraw on composer, but not on owner? Could owner be a different address with no shares, causing _redeemWithFee to fail or behave unexpectedly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9757ace3-346e-4269-b57b-a664cb6a1a5c",
+    "timestamp": "2025-12-02 06:52:42.850409",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer function, line 43] Does the InvalidZeroAddress check prevent setting redeemer to zero, but could redeemer be set to the composer itself? If composer and redeemer are the same, does this allow bypassing cross-chain authentication that expects distinct addresses?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4587e427-3aaa-49e9-8c73-12f3e4b83a62",
+    "timestamp": "2025-12-02 06:53:10.975570",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, line 80] Does the nonReentrant modifier protect against reentrancy from silo.withdraw? If iTRY has a malicious hook in transfer, could it reenter unstakeThroughComposer to claim cooldown assets multiple times?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cbf22e27-5261-484b-a61d-484fa5f0ab72",
+    "timestamp": "2025-12-02 06:53:39.276334",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, line 171] Does uint104(block.timestamp) safely cast timestamp without overflow until the year 2262? Could systems operating past 2^104 seconds (far future) experience cooldownEnd overflow, allowing instant unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea57ca7b-8126-4588-a803-bde82221d6aa",
+    "timestamp": "2025-12-02 06:54:07.365743",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [fastRedeemThroughComposer function, line 126] Does the assets = totalAssets - feeAssets calculation round correctly? Could precision loss cause the returned assets value to be slightly higher or lower than what's actually transferred, misleading wiTryVaultComposer about available funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_66821454-2baf-4d42-b30d-f620b11d7139",
+    "timestamp": "2025-12-02 06:54:34.312407",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownSharesByComposer and cooldownAssetsByComposer, lines 44, 62] Do maxRedeem and maxWithdraw respect blacklist restrictions for the composer? Could a blacklisted composer still initiate cooldowns by exploiting that these max functions might return non-zero values for blacklisted addresses?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3493c0c-eb82-43fe-9480-460f4f714327",
+    "timestamp": "2025-12-02 06:55:00.062307",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [cooldownAssetsByComposer function, line 64] Does previewWithdraw round shares up to ensure sufficient shares are burned? If it rounds down, could a composer burn fewer shares than needed for the specified assets, causing a deficit when the redeemer unstakes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f6e5f72d-a0eb-42da-a6aa-7743db3f89dd",
+    "timestamp": "2025-12-02 06:55:24.949283",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [unstakeThroughComposer function, lines 89-96] Does the if-else structure ensure that both branches mutate userCooldown storage consistently? Could the else branch (revert) be bypassed through a fallback mechanism, leaving cooldown data partially updated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29c057af-31b2-4faf-b16f-e6d75c0864b5",
+    "timestamp": "2025-12-02 06:55:50.834151",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryCrosschain.sol] [_startComposerCooldown function, lines 174, 177-178] Does the pattern of calling _withdraw (external interaction) before updating cooldown state (effects) violate Checks-Effects-Interactions? Even though _withdraw is nonReentrant, could other state changes during _withdraw cause unexpected behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_630ffd00-543a-4c8f-9020-678a29c6f161",
+    "timestamp": "2025-12-02 06:56:18.771251",
+    "report_generated": false
   }
 ]
