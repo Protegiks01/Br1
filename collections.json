@@ -3448,5 +3448,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2c6f048c-e3bf-48c7-90e5-b693b8772291",
     "timestamp": "2025-12-02 07:41:56.202422",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20BurnableUpgradeable Inheritance] Can burnFrom() be used by a non-whitelisted spender to burn tokens from a whitelisted holder? Does this bypass whitelist restrictions when both the spender and holder are not whitelisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_513fed43-63c6-4a44-be3c-5aa6bf58e529",
+    "timestamp": "2025-12-02 07:42:58.045442",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ERC20BurnableUpgradeable Inheritance] When a user burns their iTRY tokens, does this properly update the backing invariant? Specifically, does iTryIssuer track these burns to adjust totalIssued, or can burns create unbacked iTRY by reducing supply without releasing DLF?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1cd1d131-e72a-442c-ace9-152b951a80b4",
+    "timestamp": "2025-12-02 07:43:11.132110",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize lines 48-57] The function is marked `virtual` and `initializer`. Can this contract be used as a base for other contracts that override initialize? Would child contracts need to call super.initialize() to ensure proper role setup?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_04722778-e48f-4b2d-b91e-c91403cd484a",
+    "timestamp": "2025-12-02 07:43:25.024686",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize lines 48-57] The constructor (lines 38-40) calls _disableInitializers(). Can this prevent the contract from being initialized behind a proxy, or does it properly protect against re-initialization attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8ebcb2fc-6693-4bba-82d4-f594cef5a16c",
+    "timestamp": "2025-12-02 07:43:39.041150",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize lines 48-57] The function sets transferState to FULLY_ENABLED (line 53). Can this be exploited by an attacker who calls initialize() on an uninitialized proxy deployment before the legitimate admin does?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_82753c0c-b515-4354-83c9-6e15a9d8eb6c",
+    "timestamp": "2025-12-02 07:43:54.187433",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize lines 48-57] After initialization, does the contract validate that admin != minterContract? Can the same address hold both DEFAULT_ADMIN_ROLE and MINTER_CONTRACT, potentially creating conflicts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_883a375f-8114-421b-a2ef-96256614e27e",
+    "timestamp": "2025-12-02 07:44:10.302495",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] Can an attacker exploit the conditional logic by creating a scenario where `msg.sender`, `from`, and `to` are carefully chosen to match multiple branches? For example, if msg.sender is MINTER_CONTRACT but also blacklisted, which check takes precedence?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49e6bf09-fae1-4978-9569-00f4631ae1eb",
+    "timestamp": "2025-12-02 07:44:28.027323",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] In FULLY_ENABLED state, normal transfers check all three addresses for blacklist (lines 190-192). However, can an attacker use a contract as an intermediary that receives tokens in one transaction and forwards them in another, effectively bypassing blacklist checks on msg.sender?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_058a7b9b-1b7b-41fd-a666-d2e319a11900",
+    "timestamp": "2025-12-02 07:44:47.497235",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer + addBlacklistAddress] Can a front-running attack occur where a user sees an incoming blacklist transaction and quickly transfers all their iTRY to another address before the blacklist is applied?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93efca55-cf64-4bf3-9237-734aff953673",
+    "timestamp": "2025-12-02 07:45:08.608931",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer + redistributeLockedAmount] During redistributeLockedAmount execution, the _beforeTokenTransfer hook is called twice (burn and mint). Can the state change between these calls, such as `to` becoming blacklisted after the burn but before the mint?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b4742bd6-c3b7-4e87-b94a-7110a8c5f41d",
+    "timestamp": "2025-12-02 07:45:30.601368",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Approve + Transfer] Can a blacklisted user who has a pre-existing approval from a non-blacklisted user still execute transferFrom() on behalf of that user? The _beforeTokenTransfer checks msg.sender, from, and to, but does it properly validate the approval mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e2335d92-76b6-4ecf-9798-0d3cc8769d62",
+    "timestamp": "2025-12-02 07:45:53.841191",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Multiple Minters] If multiple addresses have MINTER_CONTRACT role (via addMinter), can they coordinate to mint unbacked iTRY? Specifically, if one minter is compromised, can it mint without corresponding DLF deposits in iTryIssuer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_882f32f5-4a5c-4f52-a407-520a333a8757",
+    "timestamp": "2025-12-02 07:46:17.884919",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Reentrancy] Despite the ReentrancyGuardUpgradeable inheritance, can any functions be re-entered through the _beforeTokenTransfer hook? For example, if a blacklisted address is a contract with a malicious fallback, can it re-enter during burn operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c1386fc7-cf82-4fd5-8846-b7c33b3d4e77",
+    "timestamp": "2025-12-02 07:46:44.029026",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Gas Limit] In addBlacklistAddress, addWhitelistAddress, removeBlacklistAddress, or removeWhitelistAddress, can the uint8 loop counter combined with a large array cause out-of-gas errors, preventing legitimate blacklist/whitelist management?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49561eaa-9b25-4632-b15d-ca82ecb589d6",
+    "timestamp": "2025-12-02 07:47:11.139148",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint function lines 155-157] Does the mint function coordinate with iTryIssuer to ensure DLF custody increases proportionally? Or is this validation solely the responsibility of the MINTER_CONTRACT (iTryIssuer)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6693e4e6-9aa3-48d4-a06e-d586c5179eb1",
+    "timestamp": "2025-12-02 07:47:38.946390",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [burn functionality] When users burn iTRY via burn() or burnFrom(), does this notify iTryIssuer to release DLF custody? Or can burns create a mismatch where iTRY supply decreases but DLF remains locked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a4fed0bd-482c-41a7-9b4f-01c71bf92f3b",
+    "timestamp": "2025-12-02 07:48:05.300152",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer redeem path lines 180-181, 199-200] The redeem path allows MINTER_CONTRACT to burn from non-blacklisted addresses (to == address(0)). Does iTryIssuer properly validate the caller before invoking this burn, preventing unauthorized redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bb253678-e751-40b5-a5dd-8658947b6c7f",
+    "timestamp": "2025-12-02 07:48:32.828163",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [totalSupply] If iTRY.totalSupply() is called, does it reflect the actual circulating supply minus blacklisted balances? Or does it include all minted tokens regardless of blacklist status, potentially overstating the liquid supply?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3ec81654-937e-499e-8746-c759fe01e97b",
+    "timestamp": "2025-12-02 07:48:58.006531",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint function] Can this iTry.sol contract be deployed on multiple chains, and if so, can MINTER_CONTRACT mint independently on each chain? Would this violate the backing invariant by creating multiple supplies backed by the same DLF custody on the hub chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cd25bb50-94e6-4023-b0cc-a48aef02f0ab",
+    "timestamp": "2025-12-02 07:49:24.157152",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Blacklist/Whitelist Sync] If iTRY exists on multiple chains, can blacklist/whitelist states become desynchronized? For example, can a user be blacklisted on Ethereum but still trade iTRY on an L2 where the blacklist hasn't been updated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5793f479-f009-4b4f-b974-5fd67c55fd8a",
+    "timestamp": "2025-12-02 07:49:49.825446",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Cross-chain Bridge] Does this contract integrate with any bridging mechanism (LayerZero OFT)? If so, does _beforeTokenTransfer properly validate cross-chain transfers, or can blacklisted users bridge tokens to escape restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b4c055f3-29f2-42a7-a7b9-ad1c1a7c6ce7",
+    "timestamp": "2025-12-02 07:50:13.559961",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] What happens if from == to in a transfer? Does the hook handle self-transfers correctly, and can this be exploited to trigger specific conditional branches?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_375cbb3d-6c1e-4bfc-80ce-a9af0a01c417",
+    "timestamp": "2025-12-02 07:50:38.651932",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] Can transferring 0 tokens bypass any checks? For example, can a blacklisted user call transfer(someAddress, 0) to test if they're blacklisted without actually violating restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_90f60f5b-2904-4af6-b570-3782c7e3791d",
+    "timestamp": "2025-12-02 07:51:02.876589",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [balanceOf] If a blacklisted address holds iTRY, does balanceOf() return their balance accurately? Can external contracts rely on balanceOf() to determine liquid supply, or are blacklisted balances misleadingly included?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a8e7b172-bffa-496d-8548-2e25f1b09397",
+    "timestamp": "2025-12-02 07:51:28.717444",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [allowance] If a blacklisted user has approved a spender before being blacklisted, does the allowance persist? Can the spender still call transferFrom() even if the original owner is blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d65b5766-ef41-4eee-85ed-eb28be9ef01d",
+    "timestamp": "2025-12-02 07:51:54.280206",
+    "report_generated": false
   }
 ]
