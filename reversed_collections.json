@@ -4948,5 +4948,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12ccfae8-93f6-41a5-89e7-0c88331041aa",
     "timestamp": "2025-12-02 08:27:49.564509",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer allowance bug] The known issue mentions blacklisted users can transferFrom() on behalf of non-blacklisted users since msg.sender isn't checked in _beforeTokenTransfer(). However, in StakediTry specifically for wiTRY shares, does this allow a FULL_RESTRICTED user to extract their staked position by having a helper contract transfer on their behalf?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74ca3793-8539-4ba2-bd6a-45e5c8223632",
+    "timestamp": "2025-12-02 08:29:01.563809",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC20 approve function inherited] StakediTry inherits ERC20 which includes approve(). Could a FULL_RESTRICTED_STAKER still call approve() to grant allowance even though they can't transfer? Then if they're later removed from blacklist, they could have pre-approved transfers ready to execute?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6c138d0e-db83-4c5f-96a3-441c185d5e1e",
+    "timestamp": "2025-12-02 08:29:15.326231",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [reward distribution frequency] If transferInRewards() can only be called when getUnvestedAmount() == 0 (due to _updateVestingAmount check at line 281), does this force rewards to be distributed at fixed intervals of vestingPeriod? Could this predictable timing allow attackers to optimize sandwich attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9c83322e-6276-473f-a693-9aa7e9b47c0a",
+    "timestamp": "2025-12-02 08:29:29.071315",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets() volatility] Since totalAssets() at line 193 changes every block due to time-based vesting in getUnvestedAmount(), does this create constant share price volatility? Could high-frequency traders exploit tiny share price changes between blocks for profit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3c5f3a3d-995e-43b0-be8c-ab4c28318001",
+    "timestamp": "2025-12-02 08:29:43.255247",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vesting start timing] The _updateVestingAmount() function sets lastDistributionTimestamp to block.timestamp at line 284. If the reward distribution transaction is delayed in the mempool, could an attacker deposit right before it's mined to get a larger share of the newly vesting rewards?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8f7f6512-5c76-4b47-a93e-f9cb35cac2f2",
+    "timestamp": "2025-12-02 08:29:58.391137",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards MEV vulnerability] When transferInRewards() is called, totalAssets() increases and share price appreciates. Could an MEV bot sandwich this transaction by depositing before and withdrawing after to capture yield without time-weighted exposure to the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_efaddb46-f9b3-483f-8f1d-1ceffc4d9572",
+    "timestamp": "2025-12-02 08:30:14.973519",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod timing attack] Since setVestingPeriod() at line 99 can only be called when getUnvestedAmount() == 0, could an attacker monitor the mempool for this transaction and front-run it with a deposit to get shares at the old vesting rate before the new (possibly longer) period takes effect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69fff3fe-a883-45ce-84c1-b51f0ad8c761",
+    "timestamp": "2025-12-02 08:30:32.780720",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vestingPeriod initial value, line 82] The constructor sets vestingPeriod to MIN_VESTING_PERIOD (1 hour) at line 82. Is this intentional for initial deployment? Could an attacker exploit the short initial vesting period to extract yield faster than expected by depositing immediately after first reward distribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e04906ba-58f5-4cbd-9eaf-37bce283aa33",
+    "timestamp": "2025-12-02 08:30:52.285434",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod constraints, lines 95-107] The setVestingPeriod() function allows changing vestingPeriod between MIN_VESTING_PERIOD (1 hour) and MAX_VESTING_PERIOD (30 days). If admin reduces vesting period from 30 days to 1 hour, does this instantly accelerate vesting of current unvested amount, allowing stakers to immediately extract yield meant to vest over weeks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f5386d1c-1a0c-4063-865d-9d34ffac4024",
+    "timestamp": "2025-12-02 08:31:14.214924",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 deposit/withdraw atomicity] ERC4626 standard requires deposit/mint/withdraw/redeem to be atomic. If the ReentrancyGuard is applied only in _deposit() and _withdraw() but not in the public deposit()/mint() functions, could an attacker bypass reentrancy protection by calling the unguarded public functions directly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1ed985f8-b3b7-41ca-a1f3-cfb5a7db96a7",
+    "timestamp": "2025-12-02 08:31:36.790156",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer and state consistency] The _beforeTokenTransfer() hook is called before balances are updated. If a child contract's override reads totalAssets() during this hook, could it see stale vesting calculations that allow share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_17c7a481-251f-4f8f-9673-cb8fb1aa383a",
+    "timestamp": "2025-12-02 08:32:00.826591",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards reentrancy, lines 113-119] If the iTRY token has a transfer callback that allows reentrancy, could an attacker reenter during safeTransferFrom() at line 116 to call deposit() before vestingAmount is updated at line 114? Wait, _updateVestingAmount() is called first at line 114, but could they reenter to call another transferInRewards()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4a994b8b-86f8-4a8b-9e75-cc71db85866b",
+    "timestamp": "2025-12-02 08:32:25.308452",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [nonReentrant modifier usage] The contract uses nonReentrant on _deposit, _withdraw, transferInRewards, rescueTokens, and redistributeLockedAmount. However, are view functions like totalAssets() or getUnvestedAmount() protected? Could an attacker reenter from token callbacks to read inconsistent state mid-transaction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a39c880c-0fac-42af-aee5-f8be0d1978e7",
+    "timestamp": "2025-12-02 08:32:50.750324",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [initial deployment state] Before the first deposit, totalSupply is 0 which passes the _checkMinShares() check. Could an attacker front-run the protocol's initial deposit, deposit 1 wei to become first depositor, then donate large iTRY amounts to inflate share price and grief subsequent depositors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3ecec0c0-6904-40fe-901d-9f6a0a1434a2",
+    "timestamp": "2025-12-02 08:33:18.246794",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount MIN_SHARES check, line 173] When redistributeLockedAmount() burns shares at line 172 then checks MIN_SHARES at line 173, could this permanently lock the admin's ability to redistribute if the blacklisted user holds more than (totalSupply - MIN_SHARES) shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3d2a8381-bce7-4578-9cf2-a41989f629ca",
+    "timestamp": "2025-12-02 08:33:46.941525",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_deposit and _withdraw MIN_SHARES checks] Both _deposit() and _withdraw() call _checkMinShares() after minting/burning. If a user tries to deposit/withdraw an amount that would leave totalSupply between 1 wei and MIN_SHARES - 1, their transaction reverts. Does this create unfair lock-in where the last MIN_SHARES worth of value can never be withdrawn?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_917c79f6-fe57-4c3d-8588-7636feca360e",
+    "timestamp": "2025-12-02 08:34:16.245333",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_checkMinShares function, lines 228-231] The _checkMinShares() check allows totalSupply to be either 0 or >= MIN_SHARES. Could an attacker deposit MIN_SHARES, then immediately withdraw MIN_SHARES, leaving totalSupply at 0 and allowing them to repeat donation attack?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78ec43b9-423b-45db-b1a8-3268c75e79b3",
+    "timestamp": "2025-12-02 08:34:43.188744",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [MIN_SHARES constant, line 32] MIN_SHARES is set to 1 ether. If the first depositor deposits exactly 1 ether of iTRY when share price is 1:1, they receive 1 ether shares. If they immediately withdraw, does totalSupply become 0? Could this reset the vault to vulnerable state for donation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_410cc64b-0a40-4ee5-a2de-314632179b36",
+    "timestamp": "2025-12-02 08:35:11.787102",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [child contract extensions] Since StakediTry is extended by StakediTryCooldown which adds iTrySilo integration, does the base StakediTry.totalAssets() correctly account for iTRY held in the silo? Or does the child contract override totalAssets() to include silo balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f1c0f051-b678-4454-88a7-4c31dd9ef9f5",
+    "timestamp": "2025-12-02 08:35:40.581175",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC20Permit inheritance, line 19] StakediTry inherits ERC20Permit for gasless approvals. Could an attacker replay permit signatures across chain forks or after contract upgrades to drain user allowances? Does the permit implementation properly use DOMAIN_SEPARATOR with chainId?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bbc65241-ce58-40bf-838d-234cac8d66af",
+    "timestamp": "2025-12-02 08:36:09.784251",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [rescueTokens function, lines 154-161] The rescueTokens() function at line 159 checks if token == asset() and reverts. However, could an attacker send wiTRY shares (address(this) token) to the contract, then have admin accidentally rescue those, burning shares without burning underlying iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b18de33a-c9e8-45df-90c9-1a01498deff3",
+    "timestamp": "2025-12-02 08:36:34.767251",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [SafeERC20 usage, line 20] The contract uses SafeERC20 for token transfers. However, if the iTRY token doesn't revert on failure but returns false, does SafeERC20 properly catch this? Could transferInRewards() succeed without actually receiving tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ed1029d-bfdf-44e8-a8dd-2ed81be403da",
+    "timestamp": "2025-12-02 08:36:59.110908",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [asset() function from ERC4626] The contract uses IERC20(asset()) to interact with iTRY token. If iTRY token is upgraded to a malicious implementation (assuming upgradability), could it return false balances to inflate totalAssets() and allow share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8081be9c-1a24-4f02-983e-cf9356a42080",
+    "timestamp": "2025-12-02 08:37:25.017160",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [multiple inheritance, line 19] StakediTry inherits from SingleAdminAccessControl, ReentrancyGuard, ERC20Permit, and ERC4626. Could the multiple inheritance create storage layout conflicts or function selector collisions that corrupt state variables like vestingAmount or totalSupply?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d6e4dfe1-149f-4ee0-acdc-08205895caf9",
+    "timestamp": "2025-12-02 08:37:51.309986",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 preview functions] ERC4626 provides preview functions (previewDeposit, previewMint, previewWithdraw, previewRedeem) that estimate shares/assets. If these use the current totalAssets() which includes time-based vesting, could an attacker front-run yield distribution to get more favorable preview values, then deposit at old share price?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bb2e48be-c500-4ec5-82ff-1743afb09bc0",
+    "timestamp": "2025-12-02 08:38:16.809052",
+    "report_generated": false
   }
 ]
