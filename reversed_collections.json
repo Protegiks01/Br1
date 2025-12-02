@@ -2848,5 +2848,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b4235c30-374a-45f9-a87f-06f96b3368a3",
     "timestamp": "2025-12-02 05:41:22.328083",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 147-148] The calculation `feeShares = previewWithdraw(feeAssets)` followed by `netShares = shares - feeShares` assumes ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99b7ce75-9647-4fbe-b0bb-0f7d54ddebb5",
+    "timestamp": "2025-12-02 05:42:31.891989",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] If maxRedeem(owner) returns the owner's full balance without checking caller's allowance, and the actual _withdraw() at line 152/155 enforces allowance, can users pass the maxRedeem check but fail during execution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cef3ef82-0579-4113-8ca5-8567e050226d",
+    "timestamp": "2025-12-02 05:42:44.981920",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] When two _withdraw() calls are made with the same owner but different receivers (treasury and user's receiver), does the ERC4626 _withdraw() implementation properly handle allowance deduction for both, or does only the first call deduct allowance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cf876aad-f208-41c5-8519-49d21bbd0ff6",
+    "timestamp": "2025-12-02 05:42:59.174447",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee with concurrent operations] If multiple users call fastRedeem() concurrently and their _withdraw() calls interleave, can this cause race conditions in share price calculation or totalAssets updates that benefit some users at others' expense?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_04c37005-a217-4eb6-8c3e-94cf50f2bf05",
+    "timestamp": "2025-12-02 05:43:13.292419",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem to unstake transition] If a user calls fastRedeem() to extract their shares, but another user's unstake() call executes in between the two _withdraw() calls in _redeemWithFee(), can this cause silo balance mismatches or accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8b6a65b-271c-49f6-a709-e9b81cb97a7e",
+    "timestamp": "2025-12-02 05:43:28.042822",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemFee line 104] Can an admin set fastRedeemFeeInBPS to MIN_FAST_REDEEM_FEE (1 basis point) which causes most small redemptions to calculate 0 feeAssets and revert at line 145, effectively DOSing fast redemption for small amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d8ee3a56-b2c3-4eee-893b-2a7228f37eae",
+    "timestamp": "2025-12-02 05:43:43.924606",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] If the treasury address is set to a contract that always reverts on token receipt, will all fast redemptions permanently fail, causing complete DOS of the fast redemption feature?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_18d21d29-d21e-4cce-81be-21241795974d",
+    "timestamp": "2025-12-02 05:44:01.813542",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] If maxRedeem(owner) calculation includes complex logic that can be manipulated, can an attacker force maxRedeem to return 0, preventing all users from fast redeeming by manipulating share price or vault state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1f86be26-6598-4347-9ee6-2db98333913b",
+    "timestamp": "2025-12-02 05:44:21.174473",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Does _redeemWithFee() properly handle all modifiers and checks from parent contract _withdraw() implementations, or can inheritance quirks cause security checks to be bypassed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e385057-d56a-4584-b836-418c74eb46cb",
+    "timestamp": "2025-12-02 05:44:41.578460",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [overall structure] Since StakediTryFastRedeem extends StakediTryV2, which extends StakediTry, are there any function overrides or super calls that could cause unexpected behavior in the inheritance chain, particularly in _withdraw() or _beforeTokenTransfer()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f30bba32-ba8e-464d-9977-686721d94ab7",
+    "timestamp": "2025-12-02 05:45:04.245460",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [constructor line 45] Does the zero address check for _fastRedeemTreasury prevent all invalid addresses, or should there be additional validation that treasury is not a token contract or other system contract that could cause issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fc7ba037-ccde-4aab-ac54-af854e046f9d",
+    "timestamp": "2025-12-02 05:45:28.365670",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemTreasury line 117] The validation only checks `treasury == address(0)`, but should it also check that treasury is not the vault itself, the silo, or other critical protocol contracts to prevent circular transfers or locked fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b5bcf6d4-5b9b-4021-8e2c-7e37b267ba55",
+    "timestamp": "2025-12-02 05:45:53.022187",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When withdrawing to fastRedeemTreasury, if the treasury address is a contract with fallback function that manipulates state, can this cause reentrancy or state corruption before the receiver withdrawal at line 155?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ae16091f-ffe2-450f-b1e3-931f3f74ac7d",
+    "timestamp": "2025-12-02 05:46:19.433552",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Since _redeemWithFee() is internal and called by fastRedeem/fastWithdraw which have modifiers, does it assume certain preconditions are met, and can calling it from a future child contract bypass security checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4496185f-17f6-4b5d-9f99-29e592fe58c2",
+    "timestamp": "2025-12-02 05:46:47.996784",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 60] The ensureFastRedeemEnabled modifier at line 60 checks fastRedeemEnabled, but if this is toggled to false while a transaction is in flight, will users lose gas with no state changes, and is this adequately protected against?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_73aefa00-df55-4a1a-b4c1-a704a4687564",
+    "timestamp": "2025-12-02 05:47:16.362698",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 59] The ensureCooldownOn modifier at line 59 requires cooldownDuration > 0, but what happens if cooldownDuration is set to 0 mid-execution of fastRedeem(), can this cause unexpected behavior or state corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dce8c636-bb36-49b0-a8ca-f3535a11309f",
+    "timestamp": "2025-12-02 05:47:46.441730",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Does _redeemWithFee() return only feeAssets, and is this sufficient for the caller to calculate net assets, or should it return both feeAssets and netAssets for clarity?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_01703737-8711-4911-b15e-2b3c6a5e0f2f",
+    "timestamp": "2025-12-02 05:48:14.899721",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 89] The function returns `totalShares` which includes both fee and net shares, but should it return shares burned for the user (excluding fee shares) for accurate accounting by calling contracts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_de80d142-270d-4033-9c9c-ff25a4d402c3",
+    "timestamp": "2025-12-02 05:48:44.872404",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 70] The function returns `totalAssets - feeAssets`, but _redeemWithFee() already calculated `netAssets = assets - feeAssets` at line 149. Why recalculate instead of returning netAssets, and can this discrepancy cause integration errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_88e0135a-e42f-4e3f-9a08-e2ab8b87b27d",
+    "timestamp": "2025-12-02 05:49:13.895694",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 76] If a user has iTRY locked in the silo from a previous cooldown, can they call fastWithdraw() to extract that locked iTRY without completing the cooldown, bypassing the silo's custody protection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6043e784-03ac-457f-b343-1e4698768e57",
+    "timestamp": "2025-12-02 05:49:44.613377",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Do the _withdraw() calls in _redeemWithFee() interact with the silo contract at all, or do they withdraw directly from the vault's iTRY balance, potentially causing silo balance inconsistencies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_62b2b5df-c1f3-46e1-b828-81ecdd27db52",
+    "timestamp": "2025-12-02 05:50:16.516882",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem vs silo] Since fast redemption bypasses the cooldown mechanism, does it also bypass the iTrySilo custody system, and can this cause the silo to hold stale cooldown entries that can never be unstaked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a45ae1a-9cf0-4122-ba88-cdddb97ba0db",
+    "timestamp": "2025-12-02 05:50:47.283117",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Does _redeemWithFee() assume that totalAssets and share price remain constant across the two _withdraw() calls, or does it handle the case where the first withdrawal changes the share price for the second withdrawal?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4a0583dd-7c30-4786-935d-46b397a7a3df",
+    "timestamp": "2025-12-02 05:51:16.105851",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65] If previewRedeem() is called and returns totalAssets, but then yield is distributed or shares are burned by another user before _redeemWithFee() executes, can this cause the actual withdrawn amount to differ from previewed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4d8aa28b-aa61-40a0-86ed-f96ddcd5abeb",
+    "timestamp": "2025-12-02 05:51:43.993791",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] If totalSupply is exactly MIN_SHARES + feeShares + netShares before the first _withdraw(), can the first withdrawal succeed (bringing totalSupply to MIN_SHARES + netShares) but the second withdrawal fail MIN_SHARES check if netShares < MIN_SHARES?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d4788e1-b1ef-4d4f-b1d4-79e034ca4916",
+    "timestamp": "2025-12-02 05:52:14.677155",
+    "report_generated": false
   }
 ]
