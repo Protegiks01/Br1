@@ -1498,5 +1498,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4e7fdd32-5513-4b52-8dae-9013b7ef7791",
     "timestamp": "2025-12-02 04:05:52.849017",
     "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Allowance exploitation] Since _debit() uses transferFrom to lock shares, could an attacker front-run a user's send() call to reduce their approval, causing the lock to fail after the message fee is paid but shares aren't locked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2772ff9b-2776-49a0-aea1-afdd102c962d",
+    "timestamp": "2025-12-02 04:07:00.241886",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Failed message handling] If a LayerZero message fails on L2 (due to insufficient gas or peer misconfiguration), are the locked shares on L1 stuck forever in the adapter, or is there a recovery mechanism to unlock them back to the sender?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c87b47ef-d45a-4963-8cc8-26ba9fd7cc48",
+    "timestamp": "2025-12-02 04:07:13.806014",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [MIN_SHARES protection] The vault enforces MIN_SHARES to prevent manipulation - but if the adapter locks a large portion of the vault's shares during bridging, could this reduce the L1 totalSupply below MIN_SHARES and break vault operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ea5eaf7-e1e7-45df-b37d-e77770f39ae2",
+    "timestamp": "2025-12-02 04:07:27.639243",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Share price manipulation] When shares are locked on L1 and minted on L2, does the system ensure the same share price applies on both chains, or could an attacker exploit price discrepancies during yield distribution to profit from cross-chain arbitrage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5572bd8b-475f-415a-88ea-9f92c16ca0a8",
+    "timestamp": "2025-12-02 04:07:42.023270",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Composer role interaction] The vault has COMPOSER_ROLE for cross-chain operations - does the adapter respect this role, or could regular users bridge shares that should only be bridged by the composer, breaking the cross-chain unstake flow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d76fd480-e36f-45f7-b203-0700306897f6",
+    "timestamp": "2025-12-02 04:07:57.462074",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Integration with StakediTryCrosschain] Since the adapter locks shares from the StakediTryCrosschain vault, does it verify the shares being locked are not currently in cooldown, or could users bridge cooldown-locked shares to L2 and bypass the cooldown period?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a507fd08-1523-4c76-abcd-e33d4903715a",
+    "timestamp": "2025-12-02 04:08:13.934470",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Cooldown interaction] When shares are locked in the adapter during L1->L2 bridging, does this prevent those shares from participating in the cooldown mechanism on L1, and could this be exploited to bypass cooldown requirements?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c1ec2dde-9354-478a-9af1-4795967370dd",
+    "timestamp": "2025-12-02 04:08:32.175485",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Message replay protection] Does the inherited OFTAdapter use LayerZero's nonce mechanism to prevent message replay, or could an attacker replay a credit message to unlock shares multiple times from the same lock operation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c8b75055-781a-4961-aab9-e85e055b4172",
+    "timestamp": "2025-12-02 04:08:52.417406",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Fee payment] When users call send() with a LayerZero messaging fee, does the adapter validate the fee is sufficient, or could underpayment cause the message to fail on L2 while still locking shares on L1 permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_123f43a5-aceb-4c70-a88d-b1afc3284bc9",
+    "timestamp": "2025-12-02 04:09:14.837830",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Access control] Does OFTAdapter restrict who can call send() to bridge shares, or can any user with wiTRY shares approval bridge them cross-chain even if they're blacklisted or restricted stakers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fbd2af03-8ead-4817-a374-d5ae9b35690b",
+    "timestamp": "2025-12-02 04:09:38.292842",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Reentrancy in lock/unlock] When _debit() locks shares or _credit() unlocks shares, could reentrancy during the ERC20 transfer allow an attacker to manipulate the adapter's locked balance and unlock shares they never locked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d73911eb-348c-4565-a341-df9302bc3f49",
+    "timestamp": "2025-12-02 04:10:02.395991",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Cross-chain message encoding] When send() is called, does the inherited OFTAdapter properly encode the recipient address and share amount in the LayerZero message, or could message decoding errors on L2 cause shares to be minted to the wrong address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e14ca5d4-4f52-43d3-b525-425877758c1a",
+    "timestamp": "2025-12-02 04:10:28.127613",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Peer configuration] Does the inherited setPeer() function validate that peers are only configured for the corresponding wiTryOFT contracts on spoke chains, or could an attacker trick the owner into setting a malicious peer that mints unlimited shares on L2?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d8cd962a-fcab-46e7-9c05-322d1ccc64ca",
+    "timestamp": "2025-12-02 04:10:57.184848",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Share totalSupply consistency] Since wiTRY shares are locked (not burned) on L1 when bridged to L2, does this mean totalSupply on L1 remains unchanged while L2 mints new shares, potentially breaking the invariant that total shares across chains should equal the vault's totalSupply?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ffbde709-7406-499e-b4c6-98293281618a",
+    "timestamp": "2025-12-02 04:11:26.023318",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Lock/unlock pattern] The comments state burning shares would break ERC4626 vault accounting - but does the lock/unlock pattern create a scenario where the adapter holds a large balance of locked shares that could be exploited if the adapter's approval or transfer logic is compromised?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cac96d46-32ad-48db-ac3f-20ba1fd84bc3",
+    "timestamp": "2025-12-02 04:11:55.015848",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [OFTAdapter _credit function] When shares are sent back from L2->L1 and OFTAdapter._credit() unlocks shares from this adapter to the recipient, does it validate the recipient is not blacklisted, or would shares be permanently locked if sent to a blacklisted address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ae72849b-c82c-4f27-b9df-3e712d27b80a",
+    "timestamp": "2025-12-02 04:12:26.481476",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [OFTAdapter _debit function] When OFTAdapter._debit() transfers wiTRY shares from the user to this adapter during send(), does it check if the user is blacklisted in the underlying wiTRY token, or could a blacklisted user lock shares in the adapter that can never be unlocked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_03bb3d0b-4be0-4b2b-ac75-2b18ab91e05f",
+    "timestamp": "2025-12-02 04:12:57.964570",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [OFTAdapter inheritance] Since OFTAdapter uses a lock/unlock pattern, when a user calls send() to bridge wiTRY shares L1->L2, are the shares properly locked in this adapter contract via transferFrom, or could insufficient approval cause transaction revert while still sending LayerZero messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_814bff01-a192-485c-ac85-3ee7e827ca85",
+    "timestamp": "2025-12-02 04:13:31.303234",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Constructor initialization] Does the constructor validate that _owner is not address(0), or could initialization with zero address permanently lock ownership functions needed for peer configuration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f54660cc-8563-4157-b93b-30f04107d2bd",
+    "timestamp": "2025-12-02 04:14:05.678331",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Constructor initialization] Can an attacker deploy a malicious wiTryOFTAdapter with an incorrect _lzEndpoint address, causing cross-chain messages to be routed through a compromised endpoint that steals user shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a9f8d53a-d06f-443a-9828-1cbb12383996",
+    "timestamp": "2025-12-02 04:14:40.231271",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Constructor initialization] Does the constructor properly validate that the _token parameter points to the actual StakediTryCrosschain vault contract and not a malicious contract that could break the lock/unlock accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d182fd61-2687-4212-9c9c-c2e0c7e9c171",
+    "timestamp": "2025-12-02 04:15:16.726100",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [redistributeBlackListedFunds and event emission timing] The RedistributeFunds event is emitted at line 126 after the transfer completes. If the transfer rev",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_689e8ea1-b1f3-43a2-b5eb-3ed035333b35",
+    "timestamp": "2025-12-02 04:15:51.136151",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit and cross-chain atomicity] When hub chain locks shares and sends LayerZero message to spoke chain, if _credit fails on spoke chain (e.g., due to blacklist redirection issues), does LayerZero properly handle the failure? Can shares remain locked on hub without being credited on spoke?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d7512d6c-d1e2-4eff-baca-e97b96a1e136",
+    "timestamp": "2025-12-02 04:16:24.417967",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [setBlackLister and role duplication] If owner() sets blackLister to owner() itself, creating role duplication, does this introduce any security issues? Can having both roles concentrated in one address increase attack surface?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f35df072-91b5-4cc1-b2e6-3fb878bb3392",
+    "timestamp": "2025-12-02 04:16:58.255912",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_beforeTokenTransfer and zero address handling] Does _beforeTokenTransfer at lines 106-108 properly handle edge cases where _from or _to is address(0) (minting/burning)? Can an attacker bypass blacklist by sending to/from zero address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_365a378d-e15e-4e91-a25b-7809a449e6b8",
+    "timestamp": "2025-12-02 04:17:30.514977",
+    "report_generated": false
   }
 ]
