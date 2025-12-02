@@ -3148,5 +3148,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fb20cf2d-8815-4d45-8281-8947fb17eda6",
     "timestamp": "2025-12-02 07:21:38.406241",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] The hook uses multiple conditional branches with `if-else if` chains. Can the ordering of these checks create unexpected behavior? For example, in FULLY_ENABLED state, if a blacklisted MINTER_CONTRACT tries to redeem on behalf of a non-blacklisted user, which branch executes first?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_82f4f614-a0a4-4188-9aab-8b2b11eb1af0",
+    "timestamp": "2025-12-02 07:22:56.455006",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] In WHITELIST_ENABLED state, the minting path (lines 201-202) only checks `!hasRole(BLACKLISTED_ROLE, to)`, not whether `to` is whitelisted. Can non-whitelisted users receive minted iTRY during WHITELIST_ENABLED state, violating the whitelist-only transfer invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b835894b-20c2-462a-9bd5-6ddb82802168",
+    "timestamp": "2025-12-02 07:23:09.877127",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [_beforeTokenTransfer lines 177-222] The hook validates `from == address(0)` for minting and `to == address(0)` for burning. Can an attacker exploit edge cases where both `from` and `to` are address(0), or where neither is address(0) but the operation is still meant to be a mint/burn?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a2915c93-119f-4da6-aac9-e2af81110dc5",
+    "timestamp": "2025-12-02 07:23:24.043952",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addBlacklistAddress lines 73-78] The function uses `uint8 i` as the loop counter. If the `users` array length exceeds 255, will the loop overflow and revert, or will it silently skip addresses beyond index 255, leaving some users unblacklisted when they should be blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c04ac758-1796-4bd6-a98d-2324ca23d042",
+    "timestamp": "2025-12-02 07:23:38.278012",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addBlacklistAddress lines 73-78] When adding a user to the blacklist (line 76), if that user also has WHITELISTED_ROLE, it gets revoked (line 75). However, can a user be both blacklisted and have other roles like MINTER_CONTRACT or DEFAULT_ADMIN_ROLE simultaneously? Does this create conflicts in access control?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99d22378-d19c-4d8e-957d-119c3b1ba038",
+    "timestamp": "2025-12-02 07:23:55.267229",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [removeBlacklistAddress lines 83-87] This function uses `uint8 i` for the loop. Can removing more than 255 addresses at once cause an overflow, potentially leading to incomplete blacklist removal and leaving sanctioned addresses with transfer capabilities?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7e6081fa-1880-4ee6-b641-982303fbe90a",
+    "timestamp": "2025-12-02 07:24:11.954930",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addWhitelistAddress lines 92-96] The function checks `!hasRole(BLACKLISTED_ROLE, users[i])` before granting WHITELISTED_ROLE (line 94). However, if a user is blacklisted, the whitelist grant is silently skipped. Can an admin mistakenly believe a user is whitelisted when they're actually blacklisted, leading to operational issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_89b79018-ec07-4c34-aabb-eb76552aaeba",
+    "timestamp": "2025-12-02 07:24:29.771927",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addWhitelistAddress lines 92-96] Uses `uint8 i` for iteration. Can whitelisting more than 255 addresses in a single transaction cause overflow, preventing legitimate users from being whitelisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_879b4242-e4dc-4ce3-8aa1-244c7dcb52bd",
+    "timestamp": "2025-12-02 07:24:49.575902",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [removeWhitelistAddress lines 101-105] Uses `uint8 i` for iteration. Can removing more than 255 whitelisted addresses cause an overflow issue similar to the blacklist functions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3325d2bd-1543-4acb-8cf9-7938af013040",
+    "timestamp": "2025-12-02 07:25:11.044442",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addBlacklistAddress lines 73-78] When BLACKLIST_MANAGER_ROLE adds addresses to the blacklist, any existing iTRY balances held by those addresses become non-transferable. Can this create a scenario where a large holder is blacklisted, effectively reducing the liquid supply of iTRY and impacting market dynamics?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e6871bf-47a5-4bae-9ae5-0a99faeb3f2b",
+    "timestamp": "2025-12-02 07:25:35.133412",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Blacklist/Whitelist State] If a user is added to the blacklist while they have an active approval for another address to spend their tokens, can the approved spender still transfer tokens on their behalf before _beforeTokenTransfer blocks it, creating a narrow window for blacklist bypass?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_953ee905-4b60-4a3b-80d7-c8cd2c9180be",
+    "timestamp": "2025-12-02 07:25:58.063067",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The function burns tokens from a blacklisted address and mints to a non-blacklisted address (lines 115-116). Does this maintain the iTRY backing invariant? Specifically, does the burn operation properly decrease any tracked totalIssued in iTryIssuer, or does it create unbacked iTRY on the `to` address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dadc396c-5742-4724-9abb-d493699ef77e",
+    "timestamp": "2025-12-02 07:26:23.080575",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The function uses `balanceOf(from)` (line 114) to get the amount to redistribute. Can a blacklisted user front-run this call by burning their tokens (if burn is somehow accessible), resulting in zero redistribution but still emitting the LockedAmountRedistributed event with amount 0?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_68cff688-70a5-444c-a617-867cdd91e38c",
+    "timestamp": "2025-12-02 07:26:48.450468",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The function requires `from` to be blacklisted and `to` to not be blacklisted (line 113). However, can the `to` address be the zero address, another blacklisted address that was just removed from blacklist in the same transaction, or the contract itself, potentially causing unexpected state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_70ffc84e-61ac-4927-88c6-cf4f2100b913",
+    "timestamp": "2025-12-02 07:27:14.900633",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The burn and mint operations (lines 115-116) go through _beforeTokenTransfer. Given the complex logic in that hook, can these internal operations fail unexpectedly, leaving the blacklisted address with their balance intact?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1e999923-656f-4837-a73f-f3cb2a4c0345",
+    "timestamp": "2025-12-02 07:27:42.164994",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The function has `nonReentrant` modifier. Can the burn operation (line 115) trigger callbacks to the `from` address if it's a contract, potentially allowing reentrancy despite the guard?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea41131c-9236-41ab-bbc6-2a0c83ddd7a2",
+    "timestamp": "2025-12-02 07:28:09.709873",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] After redistribution, does the `from` address still have iTRY balance of 0? Can dust amounts remain due to rounding errors, leaving tiny balances locked in blacklisted addresses forever?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7b2b3d27-201b-49eb-95c8-d1826ee3fde5",
+    "timestamp": "2025-12-02 07:28:33.355949",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount lines 112-121] The function only checks blacklist status at the time of execution (line 113). If `to` becomes blacklisted immediately after this check but before minting completes, will the minted tokens be locked in a blacklisted address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e8c88260-5b0b-430a-b251-f10f64124839",
+    "timestamp": "2025-12-02 07:28:58.380914",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] The function can rescue both ETH and ERC20 tokens. Can DEFAULT_ADMIN_ROLE rescue the iTRY token itself from the contract? If so, does this break any invariants related to totalSupply vs balanceOf(address(this))?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8c4f1c0-0ad7-4494-b96b-5904e398061b",
+    "timestamp": "2025-12-02 07:29:24.858854",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] For ETH rescue (lines 137-140), the function uses a low-level call. Can a malicious `to` address (a contract) consume excessive gas or revert, causing the rescue to fail and the TransferFailed error to be thrown?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_077b825d-a76d-4806-9786-ff508c5015c2",
+    "timestamp": "2025-12-02 07:29:51.378428",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] The function validates `to == address(0)` (line 134) and `amount == 0` (line 135) but doesn't check if `token == address(this)`. Can rescuing iTRY tokens held by the contract (potentially from failed transfers) reduce the backing ratio or break accounting in iTryIssuer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8dec4a36-8ff4-45f3-9fbf-b560f59ed257",
+    "timestamp": "2025-12-02 07:30:19.521096",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] For ERC20 rescue (line 143), SafeERC20Upgradeable.safeTransfer is used. Can non-standard ERC20 tokens that return false instead of reverting bypass the safety check, leading to failed rescues being reported as successful?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6fddc97f-02d9-4504-ae05-373f3e1c0da5",
+    "timestamp": "2025-12-02 07:30:47.256303",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] The function has `nonReentrant` modifier. Can the ERC20 safeTransfer call (line 143) trigger callbacks in malicious tokens, potentially re-entering despite the guard?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_511e8017-ba03-4d5e-8f56-76b7f6711486",
+    "timestamp": "2025-12-02 07:31:13.572687",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] If `to` is a blacklisted address and `token` is iTRY, will the safeTransfer succeed? The _beforeTokenTransfer hook might block transfers to blacklisted addresses, causing the rescue to fail.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bc925a0e-b51f-4e32-92de-2211709e5aca",
+    "timestamp": "2025-12-02 07:31:39.879981",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 129-147] Can an attacker donate large amounts of iTRY to the contract and then have an admin rescue them, potentially manipulating token distribution or accounting systems that track contract balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_32b3ba53-cd11-4621-a8f7-c034967c3d64",
+    "timestamp": "2025-12-02 07:32:05.635048",
+    "report_generated": false
   }
 ]
