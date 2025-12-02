@@ -1048,5 +1048,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_434625b6-1678-4483-a25d-418695d5f4ee",
     "timestamp": "2025-12-02 03:32:23.268201",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function, line 255] If unstakeThroughComposer transfers iTRY from the silo to the composer, does this violate blacklist enforcement if the user is blacklisted at the time of unstake?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8c8fc7aa-bec7-4194-b30c-2cb9e2c1cf12",
+    "timestamp": "2025-12-02 03:33:37.890192",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function, line 255] Does unstakeThroughComposer validate that the user has completed cooldown and has sufficient cooldown balance, or can an attacker trigger unstake for a user who hasn't initiated cooldown, causing a revert or incorrect state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2dbc1536-1f83-48aa-90e5-5a6e3866d60d",
+    "timestamp": "2025-12-02 03:33:51.421305",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function, lines 250-252] The function validates user != address(0) and _origin.srcEid != 0 - but does it validate that the user address corresponds to the actual message sender on the spoke chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b5d1aea8-12da-4e5b-a2e4-64c95432b77e",
+    "timestamp": "2025-12-02 03:34:04.951915",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function, line 248] Can the unstakeMsg.user field be manipulated during encoding on the spoke chain to specify a different address than the actual unstake initiator, stealing cooldown assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_44c6898b-12c7-4e4e-ab09-d99d53903030",
+    "timestamp": "2025-12-02 03:34:19.274099",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function, lines 229-233] If msgType is not MSG_TYPE_UNSTAKE, the function reverts with UnknownMessageType - but does this prevent the message from being retried, permanently locking user cooldown assets on the hub?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_968131b1-d68e-464a-9ad6-d79790428f9b",
+    "timestamp": "2025-12-02 03:34:34.490285",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function, lines 226-227] Can message decoding fail or be manipulated to cause abi.decode to return incorrect msgType or unstakeMsg values, allowing an attacker to bypass unstake validation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_525a2716-69e5-4117-bad9-8e9a5ee78bdc",
+    "timestamp": "2025-12-02 03:34:51.053564",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function, lines 214-234] LayerZero's OApp is stated to validate peers before calling _lzReceive - but is there any explicit peer validation in the composer itself, or does it blindly trust the OApp base contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f92ccb10-07f4-4699-bbd2-9b6cde8f155c",
+    "timestamp": "2025-12-02 03:35:09.082526",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken function, lines 190-193] When rescuing ETH (token == address(0)), the low-level call doesn't limit gas forwarded - can this enable reentrancy attacks if 'to' is a malicious contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3b810f1d-3c9a-4b22-8ac2-3c8039a6562a",
+    "timestamp": "2025-12-02 03:35:31.042342",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken function, line 186] The nonReentrant modifier protects against reentrancy during token rescue - but can an attacker front-run a legitimate compose operation to deposit tokens, then have the owner rescue those tokens immediately after?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9157fae6-c291-4fde-8855-52106410f51f",
+    "timestamp": "2025-12-02 03:35:54.646980",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken function, lines 186-200] Can the owner call rescueToken to extract user's wiTRY shares or iTRY assets that are temporarily held by the composer during compose operations, effectively stealing user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9455c4f2-47ce-4380-9b5c-5c7ebc136dec",
+    "timestamp": "2025-12-02 03:36:19.425419",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [receive function, line 176] The contract can receive ETH for LayerZero operations - but is there any validation preventing an attacker from sending excessive ETH to manipulate refund behavior or cause accounting issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2534010e-8837-42d2-b1c1-f123269f10c0",
+    "timestamp": "2025-12-02 03:36:45.415728",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund function, line 161] If msg.value is insufficient for the refund send operation (since some was consumed by the failed compose), will the refund transaction revert, causing a double-failure scenario where funds are stuck?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_acf1ca3f-ae5b-4307-a7e0-f6f69b189a4c",
+    "timestamp": "2025-12-02 03:37:12.575352",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund function, line 159] The extraOptions are set to newOptions() which creates empty TYPE_3 options - can this cause insufficient gas on the refund transaction, permanently locking user funds in the LayerZero endpoint?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b92bb8f-75f0-4497-8c29-36ff87b3c3ec",
+    "timestamp": "2025-12-02 03:37:40.608578",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund function, lines 150-162] Does the refund mechanism validate that refundSendParam.dstEid and refundSendParam.to are correctly extracted from the message, or can message header manipulation redirect refunds to an attacker's address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_57c893b5-8519-479c-b606-91ed5d5fe6c2",
+    "timestamp": "2025-12-02 03:38:09.660297",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_redeemAndSend function, lines 130-140] The function always reverts with SyncRedemptionNotSupported - but is this override complete, or can an attacker find a code path that calls the parent VaultComposerSync._redeemAndSend bypassing this override?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6e794aff-376f-469f-b538-8dbcb72fb784",
+    "timestamp": "2025-12-02 03:38:39.476420",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, line 119] Does _send enforce that ASSET_OFT transfers iTRY to the intended recipient, or can the _sendParam be manipulated to send iTRY to an attacker-controlled address on the destination chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3099a57b-99df-49e5-85b5-78bfd300f879",
+    "timestamp": "2025-12-02 03:39:07.702492",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, line 119] If _send reverts due to insufficient msg.value for LayerZero fees, are the fast-redeemed iTRY assets trapped in the composer contract with no recovery mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99f8fb46-c60f-45ad-a434-c85bc476b01a",
+    "timestamp": "2025-12-02 03:39:37.028706",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, lines 116-117] Overwriting _sendParam.amountLD and minAmountLD with the assets value could violate slippage protection if assets is less than the user's expected minimum - can this cause unexpected value loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c61dfac4-1d40-491f-9c4f-cac54627b8e1",
+    "timestamp": "2025-12-02 03:40:06.113097",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, lines 112-114] If assets returned is 0, the function reverts with NoAssetsToRedeem - but has fastRedeemThroughComposer already burned the user's shares at this point, causing permanent share loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bb8308c4-6f2b-4c27-8dee-bf814dbb778d",
+    "timestamp": "2025-12-02 03:40:35.484581",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, line 110] The redeemer is used for both 'crosschainReceiver' and 'owner' parameters - can this cause issues if the redeemer is blacklisted, causing the fast redeem to fail after shares are burned?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b318789-ca16-4227-9652-b4dd3b5799a9",
+    "timestamp": "2025-12-02 03:41:05.070276",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, line 110] Does fastRedeemThroughComposer validate that the 'owner' parameter equals msg.sender (composer), or can an attacker specify a different owner to fast redeem someone else's shares without authorization?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a3905934-5946-437d-b578-b73e498112bd",
+    "timestamp": "2025-12-02 03:41:34.820706",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function, line 107] Can bytes32ToAddress return a non-zero address that differs from the intended redeemer due to encoding issues, causing fast-redeemed iTRY to be sent to an unintended recipient?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2eb8b6f6-02c4-46c4-985e-b4d6f0438ac5",
+    "timestamp": "2025-12-02 03:42:04.298304",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function, lines 91-96] If assetAmount returned is 0 (due to rounding or share price being very low), does the function still emit CooldownInitiated event with misleading values, and can this be exploited to grief users or manipulate cooldown accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98656fd8-7bf2-43ed-a02b-ca7fcb89b275",
+    "timestamp": "2025-12-02 03:42:35.342378",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function, line 94] Can an attacker initiate cooldown for a different user's address (not _composeFrom) by manipulating the redeemer parameter, allowing them to claim another user's cooldown assets later via unstakeThroughComposer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7029a49a-d2d8-40ad-a807-1f0613596b80",
+    "timestamp": "2025-12-02 03:43:05.061484",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function, line 94] If cooldownSharesByComposer reverts due to the redeemer being blacklisted in iTRY, are the user's wiTRY shares permanently lost since they were already bridged to the hub chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76032795-8a31-46bd-97a1-7f1d79d4a274",
+    "timestamp": "2025-12-02 03:43:36.111511",
+    "report_generated": false
   }
 ]
