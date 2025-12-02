@@ -3598,5 +3598,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d65b5766-ef41-4eee-85ed-eb28be9ef01d",
     "timestamp": "2025-12-02 07:51:54.280206",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [approve function] Can blacklisted users grant new approvals? If approve() doesn't go through _beforeTokenTransfer, can blacklisted addresses still modify allowances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0362a393-c1c9-4888-aa97-d24027f90a6a",
+    "timestamp": "2025-12-02 07:53:10.813488",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [increaseAllowance/decreaseAllowance] Do these functions bypass _beforeTokenTransfer? Can blacklisted users manipulate allowances using these methods even if direct transfers are blocked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_869d2f31-b3c2-41b8-85d4-d07778cbaf37",
+    "timestamp": "2025-12-02 07:53:24.280368",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [transferState variable] Can the transferState be read by external contracts to front-run state changes? For example, can a user monitor transferState and execute a transfer in the same block before it changes to FULLY_DISABLED?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4dbcde76-3c09-444b-8fa5-bcf306efeeef",
+    "timestamp": "2025-12-02 07:53:37.792081",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Role Constants lines 25-33] The role identifiers are public constants. Can external contracts rely on these to check role assignments via hasRole()? Does this expose any information that could be exploited?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7093c59b-350c-463d-b8fa-4aa7289659f5",
+    "timestamp": "2025-12-02 07:53:52.129229",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens line 143] The function uses SafeERC20Upgradeable.safeTransfer. Can this be exploited with tokens that have callbacks (ERC777)? Could malicious tokens re-enter the contract despite nonReentrant modifier?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96b34f7c-5b99-4dcd-8076-8a71bbaab5ab",
+    "timestamp": "2025-12-02 07:54:07.319017",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens lines 137-140] The ETH rescue uses a low-level call with no gas limit specified. Can the receiving contract consume all gas, causing the rescue to fail or leave the contract in an inconsistent state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0e77b959-a754-4942-ac68-c34d6b0f0002",
+    "timestamp": "2025-12-02 07:54:25.695773",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint function line 156] Does _mint() check for totalSupply overflow? In Solidity 0.8.20, arithmetic operations revert on overflow, but can this create a DoS if totalSupply approaches type(uint256).max?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_eb8dc216-3770-4d8f-84d3-02256532bf77",
+    "timestamp": "2025-12-02 07:54:45.583598",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount line 114] The balanceOf(from) is used directly. Can this cause issues if the balance is 0? The function would burn and mint 0 tokens, but emit an event suggesting redistribution occurred.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0df9dbe5-0602-4ef6-b99f-3d5bda0e925f",
+    "timestamp": "2025-12-02 07:55:05.677935",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Loop Counters] All list management functions (addBlacklistAddress, removeBlacklistAddress, addWhitelistAddress, removeWhitelistAddress) use uint8 for loop counters. Can this limit batch operations to 255 addresses, and is this a realistic limitation for large-scale blacklist management?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43129c58-463a-4dbc-8805-97170dda5b51",
+    "timestamp": "2025-12-02 07:55:27.530262",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [BLACKLIST_MANAGER_ROLE vs DEFAULT_ADMIN_ROLE] Both roles can manage blacklists. Can they conflict? For example, can BLACKLIST_MANAGER_ROLE add an address to the blacklist while DEFAULT_ADMIN_ROLE simultaneously removes it, creating race conditions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6b5b940b-4005-4a32-a0ac-7c9792c44748",
+    "timestamp": "2025-12-02 07:55:49.938121",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [WHITELIST_MANAGER_ROLE vs DEFAULT_ADMIN_ROLE] Similar to blacklist, both roles can manage whitelists. Can simultaneous operations create inconsistent state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb871af6-3ac3-46c1-8072-3a0978c238ba",
+    "timestamp": "2025-12-02 07:56:13.519206",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Role Hierarchy] DEFAULT_ADMIN_ROLE can grant and revoke all roles. Can it revoke itself, leaving the contract without an admin? The renounceRole override prevents resignation, but can revokeRole be called on itself?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9873d879-f681-4355-9780-4acb0ad43fbb",
+    "timestamp": "2025-12-02 07:56:37.875074",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount line 117] The function emits LockedAmountRedistributed event. Can monitoring systems rely on this event for accurate accounting? What if the function is called with amount 0 (when from has 0 balance)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_89d9a775-955c-453a-a471-aaeaf680b971",
+    "timestamp": "2025-12-02 07:57:04.150488",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [rescueTokens line 146] The TokenRescued event is emitted. Can this event be used to track all token rescues, or can there be cases where rescues occur without event emission?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_128926ed-09cd-4a00-b6d3-2928f0a73f25",
+    "timestamp": "2025-12-02 07:57:28.845625",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState line 174] The TransferStateUpdated event includes prevState and new state. Can this event be emitted with identical prevState and new state if updateTransferState is called multiple times with the same value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9552b31d-55a2-4310-82d6-a81d5d48fc0c",
+    "timestamp": "2025-12-02 07:57:53.857911",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addMinter/removeMinter lines 56, 61, 66] These functions emit MinterAdded/MinterRemoved events. Can these events be relied upon for tracking minter changes, or can role grants via grantRole bypass event emission?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_37cab207-be1e-49ad-8b65-1356f406105f",
+    "timestamp": "2025-12-02 07:58:19.349738",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [transfer restrictions] If iTRY is staked in a StakediTry vault, can transfers to/from the vault be blocked by blacklist/whitelist restrictions? Specifically, can a blacklisted user's staked iTRY be locked in the vault indefinitely?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_25b95cca-c2ef-4fc9-841a-7e4fb3d061e7",
+    "timestamp": "2025-12-02 07:58:45.636812",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [mint to vault] Can MINTER_CONTRACT mint directly to the StakediTry vault address? If so, does this bypass any staking mechanism validation, potentially inflating the vault's totalAssets without proper share issuance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_efe206b2-31e9-4ca4-b000-8dba4e6782b1",
+    "timestamp": "2025-12-02 07:59:10.359541",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [addBlacklistAddress] Can an attacker who gains BLACKLIST_MANAGER_ROLE blacklist critical addresses like the MINTER_CONTRACT or StakediTry vault, causing a protocol-wide DOS?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fd6b3a0a-7bad-4c9a-9ad5-8ec226da3820",
+    "timestamp": "2025-12-02 07:59:35.271242",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [updateTransferState] Can DEFAULT_ADMIN_ROLE rapidly toggle transferState between FULLY_ENABLED and FULLY_DISABLED, creating unpredictable behavior for users attempting transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8fe9190-0115-441a-b601-57e88bb53f99",
+    "timestamp": "2025-12-02 08:00:00.737248",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [redistributeLockedAmount] Can this function be called repeatedly on the same blacklisted address (which would have 0 balance after first call), wasting gas and emitting misleading events?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e11fd788-3ff0-4d24-b19a-faf965815ce2",
+    "timestamp": "2025-12-02 08:00:24.279707",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [ETH Reception] The contract doesn't define receive() or fallback() functions. Can ETH be accidentally sent to the contract and become stuck? The rescueTokens function can recover it (line 137-140), but is this the intended mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f7a680a7-9e28-42cb-ac57-75315cc3bbf7",
+    "timestamp": "2025-12-02 08:00:48.940025",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Upgradeable Contracts] The contract uses OpenZeppelin's upgradeable contracts. Can storage layout changes during upgrades corrupt the transferState variable or role assignments, leading to incorrect blacklist/whitelist enforcement?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_656979a4-21bd-46e3-bfc6-5cb08051217b",
+    "timestamp": "2025-12-02 08:01:14.277716",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [initialize function] If the contract is upgraded, can initialize() be called again to reset the state? The initializer modifier should prevent this, but can storage collisions occur?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6fe7f828-0906-4ed5-889e-49a5d66b9af8",
+    "timestamp": "2025-12-02 08:01:36.258589",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 52] The check `if (admin == address(0) || minterContract == address(0))` prevents zero addresses in initialization. However, can this be bypassed by granting roles to address(0) after initialization via addMinter()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5ef5419e-c4c2-45ae-b8a1-c924eb52fac0",
+    "timestamp": "2025-12-02 08:01:59.412828",
+    "report_generated": false
   }
 ]
