@@ -4498,5 +4498,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_044a3e96-1323-42fc-bd3a-77f9b1021fed",
     "timestamp": "2025-12-02 07:38:37.997950",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [withdraw function, line 58] The ensureCooldownOff modifier reverts if cooldownDuration != 0. But withdraw() also calls super.withdraw() which has other checks. If cooldownDuration is 0 but the user has an active cooldown with cooldownEnd in the future, can they call withdraw() to bypass the cooldown entirely since unstake() would also allow immediate claiming?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00de1607-5ed6-49c1-a16d-bff2781e9a5c",
+    "timestamp": "2025-12-02 07:39:51.943056",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [setCooldownDuration function, line 123] The validation only checks 'duration > MAX_COOLDOWN_DURATION', allowing duration to be set to 0. When duration is 0, the modifiers ensureCooldownOn/Off change behavior significantly. Can this state transition be exploited by users who time their transactions around the cooldownDuration change?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d12ee620-7f6e-4a6b-946a-84321877dc84",
+    "timestamp": "2025-12-02 07:40:05.338207",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 81] The function reads cooldowns[msg.sender] into storage. If the silo is compromised and silo.withdraw() succeeds but sends iTRY to the wrong address, the cooldown state is still cleared, causing permanent fund loss with no recovery path. Is there any validation of the receiver address or silo behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_135bbe34-74aa-4fa1-8c9c-bfcda7ddbd4d",
+    "timestamp": "2025-12-02 07:40:18.825811",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, lines 114-115] If a user calls cooldownShares() repeatedly with small amounts, does each call reset the cooldownEnd timer for ALL accumulated underlyingAmount? This would mean the first cooldown amounts are held hostage to subsequent cooldown calls, effectively creating an infinite lockup if the user keeps adding to their cooldown?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ac1e9a00-2116-4589-9f62-8a8fb8238472",
+    "timestamp": "2025-12-02 07:40:32.974940",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, lines 101-102] When resetting cooldownEnd and accumulating underlyingAmount, there is no check for an existing cooldown. Can a user front-run their own cooldown expiry by calling cooldownAssets() again just before block.timestamp >= cooldownEnd, resetting the timer and delaying their ability to claim by another cooldownDuration period?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6affff23-5758-44e5-836b-490aab63aada",
+    "timestamp": "2025-12-02 07:40:47.821922",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 88] The silo.withdraw(receiver, assets) transfers iTRY directly to the receiver. Does this trigger any _beforeTokenTransfer hooks in the iTRY token that could block the transfer if the receiver is blacklisted? If so, are the cooldown state changes (lines 85-86) already committed, causing permanent loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_382d6e86-c70d-418f-88eb-137afa7bb5b1",
+    "timestamp": "2025-12-02 07:41:03.898878",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 117] When _withdraw() transfers assets to address(silo), does the base contract's totalAssets() implementation correctly subtract the silo balance? Or does totalAssets() only check the vault's iTRY balance, incorrectly including silo funds and inflating share prices?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_739d0028-4779-40a8-99c7-048d146a7bbd",
+    "timestamp": "2025-12-02 07:41:21.827378",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 104] The _withdraw() call burns shares and transfers iTRY to the silo. Does this properly update totalAssets() in the base contract to exclude the cooldown-ed iTRY from vault calculations? If not, could share price calculations become inflated, benefiting remaining stakers at the expense of cooldown users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e0ba980-1881-40af-95ea-bed21ac475ae",
+    "timestamp": "2025-12-02 07:41:40.898247",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 110] Does maxRedeem(msg.sender) consider the total supply MIN_SHARES requirement? If a user is the only staker and tries to cooldown all their shares, could this violate the MIN_SHARES protection (1 ether per base contract) and break the vault's share price protection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2bc56787-e561-4c5e-a919-48b176600b90",
+    "timestamp": "2025-12-02 07:42:02.226239",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 97] The maxWithdraw() check prevents users from cooldown-ing more than their share balance. But does maxWithdraw() account for any minimum shares requirement (MIN_SHARES from base contract)? Can a user cooldown all but 1 wei of shares, violating the MIN_SHARES invariant and exposing the vault to donation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df47c93e-9dad-4316-a2a5-6917d6152525",
+    "timestamp": "2025-12-02 07:42:24.633643",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [setCooldownDuration function, line 128] When cooldownDuration is updated, the change is immediate and affects new cooldown initiations. Can users with pending cooldowns exploit this by waiting for a favorable cooldownDuration change before calling unstake(), effectively gaming the system based on governance actions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_839a3c15-bdbc-4a08-8fe0-5f99497de337",
+    "timestamp": "2025-12-02 07:42:48.485456",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, lines 80-92] The unstake() function has no nonReentrant modifier explicitly, though it calls silo.withdraw(). If the silo or iTRY token has a callback that re-enters unstake(), could this allow double-withdrawal before the cooldown state is cleared?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12cc27e1-0987-47c9-b8b2-b0647a15d504",
+    "timestamp": "2025-12-02 07:43:12.774755",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 117] Does the _withdraw() call validate that msg.sender is not in cooldown with a different address's redeemer slot (as could happen in StakediTryCrosschain.sol with composer functionality)? Could this cause cooldown state corruption if the contracts are used together?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_059693b0-7067-4291-a8b3-0eb8eebd5323",
+    "timestamp": "2025-12-02 07:43:38.355275",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 104] The _withdraw() function from the base contract includes nonReentrant modifier and burns shares. If _withdraw() succeeds but the subsequent silo.withdraw() later fails in unstake(), the user has permanently burned shares for cooldown assets they can never claim. Is there any recovery mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43191b44-13b2-472b-a491-6e57038800ee",
+    "timestamp": "2025-12-02 07:44:04.779455",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [silo immutable, line 45] The constructor creates 'new iTrySilo(address(this), address(_asset))'. If the iTrySilo constructor has any initialization logic that could fail or be exploited, could this cause the entire StakediTryV2 deployment to be vulnerable or unusable?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c8f264f6-d672-45ce-83d2-2d44cc9fdfcc",
+    "timestamp": "2025-12-02 07:44:30.703354",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 84] The condition allows unstaking when 'cooldownDuration == 0' regardless of cooldownEnd timestamp. If an admin sets cooldownDuration to 0 temporarily to allow emergency withdrawals, then sets it back to a non-zero value, users who didn't notice might miss their opportunity. Is this intentional, or does it create unfair advantage for monitoring bots?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_be4ec541-a84b-4fb4-be6f-2b7e1d75ae0a",
+    "timestamp": "2025-12-02 07:44:56.956949",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, lines 114-115] When cooldownEnd is reset and underlyingAmount is accumulated, the contract assumes += is safe. Can a user exploit precision loss in previewRedeem() to accumulate slightly more underlyingAmount than the burned shares are worth, slowly draining the silo over many cooldown cycles?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_65907a0b-6bd8-4aa4-b2ac-ca77c2e9c354",
+    "timestamp": "2025-12-02 07:45:23.523901",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, lines 101-102] The cooldownEnd is set before underlyingAmount is accumulated. If a user has an existing cooldown with underlyingAmount > 0 and cooldownEnd in the future, calling cooldownAssets() resets cooldownEnd to a new timestamp. Does this mean all accumulated underlyingAmount (old + new) now becomes claimable at the new cooldownEnd, potentially much earlier than intended for the original amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_06d03a04-d6b9-48c7-8590-9461cec337eb",
+    "timestamp": "2025-12-02 07:45:49.393825",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [unstake function, line 82] The function reads userCooldown.underlyingAmount into a memory variable 'assets'. If the silo.withdraw() call reverts due to insufficient balance but the cooldown state is already cleared (lines 85-86), could this cause a situation where the user's cooldown is cleared but they received no assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b7ed4930-2bde-4abc-acff-7d10a4ad4cd1",
+    "timestamp": "2025-12-02 07:46:14.753782",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownShares function, line 112] Does previewRedeem(shares) use the same rounding direction as the actual redemption in _withdraw()? Could inconsistent rounding cause the underlyingAmount accumulated in the cooldown to differ from the actual assets transferred to the silo, leading to discrepancies when unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f02f12e3-5d9d-47ce-8c92-969fde86eba4",
+    "timestamp": "2025-12-02 07:46:40.247346",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [cooldownAssets function, line 99] The previewWithdraw(assets) call converts assets to shares. If the share price has increased due to yield distribution since the user checked their balance, could previewWithdraw() return a larger share amount than the user owns, causing the _withdraw() call to revert and preventing cooldown initiation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ef55031d-7404-4d57-9a4d-6fbb512a46a3",
+    "timestamp": "2025-12-02 07:47:07.137467",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [ensureCooldownOn modifier, lines 35-38] The ensureCooldownOn modifier is used by cooldownAssets() and cooldownShares(). If cooldownDuration is set to 0, these functions become uncallable. Can this create a griefing scenario where users cannot initiate new cooldowns after an admin sets cooldownDuration to 0, even if they want to use the cooldown mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_db7ed709-016b-4928-a039-e6599dcdea5f",
+    "timestamp": "2025-12-02 07:47:34.356468",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [ensureCooldownOff modifier, lines 29-32] Does the ensureCooldownOff modifier properly prevent all withdrawal paths when cooldown is enabled, or can users bypass it through inheritance hierarchy by calling functions from base contracts directly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43d492ea-49be-4f5c-9a94-8fc40c096bad",
+    "timestamp": "2025-12-02 07:48:02.077025",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [constructor, lines 40-47] The constructor sets cooldownDuration = MAX_COOLDOWN_DURATION (90 days) by default. Does this mean that the first users who stake immediately face a 90-day lockup period unless an admin calls setCooldownDuration()? Can this surprise users who expected standard ERC4626 instant withdrawal?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fcdff0c3-6dff-4eb8-8744-e5716b77119a",
+    "timestamp": "2025-12-02 07:48:30.550626",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTryCooldown.sol] [silo immutable, line 22] The silo is created in the constructor and is immutable. If the silo contract has a vulnerability or needs to be upgraded, there is no way to migrate cooldown funds to a new silo. Can this lead to permanent fund loss if the silo is compromised or contains a bug?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_42df9dda-9b53-407d-b18b-867ef88b5c2c",
+    "timestamp": "2025-12-02 07:49:02.633450",
+    "report_generated": false
   }
 ]
