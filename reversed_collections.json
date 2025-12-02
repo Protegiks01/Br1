@@ -2098,5 +2098,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_faeb1a41-f4cb-4694-bac6-08ab307a1c90",
     "timestamp": "2025-12-02 04:48:48.869508",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [Cross-chain share conservation] The hub chain uses wiTryOFTAdapter with lock/unlock pattern (shares remain in totalSupply), while spoke chain uses mint/burn pattern. Can an attacker exploit this asymmetry to create shares on spoke chain without corresponding locked shares on hub chain, inflating total share supply?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f3f0edde-8d60-4b24-a6d9-2bc1ac4850f3",
+    "timestamp": "2025-12-02 04:49:56.476945",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit and _beforeTokenTransfer interaction] When _credit calls super._credit(owner(), _amountLD, _srcEid) at line 93, does this trigger _beforeTokenTransfer? If so, and if owner() is blacklisted, does the transaction revert, causing all incoming cross-chain transfers to blacklisted users to fail permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_11159b15-279b-4d13-bc4d-0abfe0ef9c3b",
+    "timestamp": "2025-12-02 04:50:10.152947",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [redistributeBlackListedFunds line 119] The NotBlackListed() revert at line 119 only checks if _from is blacklisted, but doesn't validate _amount. Can owner() call this with _amount exceeding balanceOf(_from), causing _transfer to revert with blackList[_from] = false, creating the blacklist removal vulnerability?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_739ea40f-80b9-4d76-9455-56536c565dee",
+    "timestamp": "2025-12-02 04:50:23.579044",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [updateBlackList line 72] Can an attacker who gains temporary control of the blackLister role (e.g., via compromised multisig key) add legitimate users to the blacklist, then trigger cross-chain transfers to those users, causing their shares to be redirected to owner() via _credit's blacklist logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a2c10e42-7066-4ed4-a62f-9057ffd5fe80",
+    "timestamp": "2025-12-02 04:50:37.892362",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [State variable blackLister line 30] If blackLister is never set (remains address(0) after deployment), does the updateBlackList function at line 71 allow any caller to update the blacklist since msg.sender != address(0) check would pass for owner() but fail for regular users, creating an access control vulnerability?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4865ed83-c414-4773-bf3e-d7cbde599380",
+    "timestamp": "2025-12-02 04:50:53.205939",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [Constructor lines 52-54] The constructor doesn't initialize any blacklist state or perform MIN_SHARES-style protection. Can a first depositor on the spoke chain perform a share price manipulation attack similar to ERC4626 inflation attacks, even though shares are minted via LayerZero messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_67f7fd63-0298-4a31-a893-cab91c48dcad",
+    "timestamp": "2025-12-02 04:51:10.327141",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_beforeTokenTransfer integration with OFT] Does _beforeTokenTransfer correctly handle LayerZero's internal transfers during send/receive operations? Can the blacklist checks at lines 106-108 revert legitimate cross-chain operations if msg.sender is the LayerZero endpoint but _from or _to is blacklisted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c74db8e0-7b90-46f5-ac35-0ba451d7b392",
+    "timestamp": "2025-12-02 04:51:28.672032",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_beforeTokenTransfer line 106-107] If a blacklisted user is the sender (_from), can they still burn their shares (to == address(0)) to reduce their balance before redistributeBlackListedFunds is called, reducing the amount available for redistribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b0d44676-5ce4-4898-8635-07b73a2f8e56",
+    "timestamp": "2025-12-02 04:51:48.362096",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [Inherited OFT _debit function] When a user sends shares from spoke chain back to hub chain, does the inherited _debit function from OFT properly burn shares, or can an attacker exploit a minting/burning asymmetry to inflate total share supply across chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99786b2c-7d3f-4f4d-8cf7-7810d427f39d",
+    "timestamp": "2025-12-02 04:52:10.434027",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [Inherited OFT functionality] Does the wiTryOFT contract properly validate LayerZero peer configuration? Can an attacker set up a malicious peer on another chain to mint unlimited shares on this spoke chain, violating share supply invariants?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_21df66f4-8c8b-4dc0-9d48-63807aa7f592",
+    "timestamp": "2025-12-02 04:52:32.754366",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit function line 92] When _credit redirects shares to owner() due to blacklist, does the RedistributeFunds event emission provide sufficient information for off-chain tracking, or can this discrepancy between LayerZero message (intended recipient) and actual recipient (owner) cause loss of funds if users rely on cross-chain message data?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8bd84634-4c3c-46f4-a01f-3ebfaad6abc5",
+    "timestamp": "2025-12-02 04:52:55.029271",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit function lines 84-97] Does the _credit function's return value at line 93 (crediting owner instead of _to) correctly update LayerZero's internal accounting, or can this mismatch between intended recipient and actual recipient cause share supply inconsistencies across chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b79e1fd7-fdc2-4547-a089-d5ca2b08d751",
+    "timestamp": "2025-12-02 04:53:17.388841",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [setBlackLister lines 60-63] If the owner accidentally sets blackLister to address(0), does line 71's check (msg.sender != blackLister) still allow owner() to update the blacklist, or does it create a permanent DoS where no one can manage the blacklist until a new blackLister is set?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e948b3e8-b7cf-4b2a-8bb7-6ae9d563048a",
+    "timestamp": "2025-12-02 04:53:41.692971",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [updateBlackList lines 70-74] Can an attacker exploit a race condition where the blackLister role is changed via setBlackLister while updateBlackList is being called, potentially allowing unauthorized blacklist modifications if the old blackLister's transaction is still pending?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_17420a55-7004-42e3-b72e-a4aee76e553c",
+    "timestamp": "2025-12-02 04:54:06.547457",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [redistributeBlackListedFunds line 123] If the _transfer call at line 123 reverts (e.g., due to owner being blacklisted or insufficient balance), does the function leave blackList[_from] = false permanently, accidentally removing the blacklist entry and allowing the sanctioned user to freely transfer shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7478a83b-733e-43a1-94fc-966d629bfed8",
+    "timestamp": "2025-12-02 04:54:32.603108",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [redistributeBlackListedFunds lines 122-124] Does temporarily setting blackList[_from] = false at line 122 to enable _transfer create a reentrancy vector if the share token's _transfer function has callbacks (like ERC777-style hooks in base OFT), allowing the blacklisted address to perform unauthorized operations mid-redistribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_eed9dacd-d083-4c6f-b934-3f8961e90a43",
+    "timestamp": "2025-12-02 04:55:00.168045",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [redistributeBlackListedFunds lines 117-127] Can an attacker front-run the redistributeBlackListedFunds transaction by transferring shares out of the blacklisted address during the brief moment when blackList[_from] is set to false at line 122, escaping blacklist enforcement?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aee1690f-dd8a-43e2-9378-44c42304c727",
+    "timestamp": "2025-12-02 04:55:28.011418",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_beforeTokenTransfer line 108] The _beforeTokenTransfer function checks blackList[msg.sender], but in LayerZero's _credit flow, who is msg.sender - the LayerZero endpoint or the intended recipient? Can this enable a blacklisted user to receive shares via cross-chain transfer if msg.sender is not the blacklisted address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_87b07968-952c-4be7-8a3e-29cb31639b00",
+    "timestamp": "2025-12-02 04:55:54.906028",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_beforeTokenTransfer lines 105-110] Does the _beforeTokenTransfer hook properly validate all transfer paths including minting (from == address(0)), burning (to == address(0)), and normal transfers, or can a blacklisted user bypass restrictions during specific token lifecycle events?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2066741d-1a44-4870-b34e-e70bfcc81d2a",
+    "timestamp": "2025-12-02 04:56:23.374427",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit function lines 91-93] If the owner() address itself becomes blacklisted, does the _credit function's redirect logic at line 93 create a recursive call or revert, causing all incoming cross-chain transfers to fail and permanently lock shares on the hub chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_38a5fd72-cb30-4ebb-99c6-502c6aa13f1c",
+    "timestamp": "2025-12-02 04:56:51.931365",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryOFT.sol] [_credit function lines 84-97] Can an attacker exploit the _credit function's blacklist redirection logic to cause shares intended for a legitimate user to be permanently redirected to the owner, resulting in theft of cross-chain transferred shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93ec621e-7c66-40d2-bd27-c579b59e6c58",
+    "timestamp": "2025-12-02 04:57:20.213530",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [receive function - Line 263] The comment states 'Accept LayerZero refunds silently'. If LayerZero sends refunds with msg.data attached, does this function still accept them, or",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93863199-0ced-43b5-8615-204fcb305e3b",
+    "timestamp": "2025-12-02 04:57:47.783320",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [getHubPeer function - Line 241] The function is a simple view returning peers[hubEid]. If this is called before setPeer, does it return bytes32(0), and should calling code validate this return value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a940f23e-13cb-4db4-a8c7-c720b925803b",
+    "timestamp": "2025-12-02 04:58:13.758851",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [_combineOptions function - Line 313] The condition checks _extraOptions.length <= 2, treating 2-byte options as empty. Is this correct for TYPE_3 headers which are exactly 2 bytes (0x0003)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f0df1c73-ddbf-4bf1-91aa-76e6c353b588",
+    "timestamp": "2025-12-02 04:58:40.405203",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 134] The fee validation uses strict inequality (<). Does this allow msg.value to equal fee.nativeFee exactly, or should it require msg.value > fee.nativeFee to account for potential fee increases?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85b5ba22-2cf4-4cde-808c-8c3549b17304",
+    "timestamp": "2025-12-02 04:59:06.529047",
+    "report_generated": false
   }
 ]
