@@ -3298,5 +3298,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d46bb20-6a49-43e9-92fe-35e0894044ae",
     "timestamp": "2025-12-02 06:13:46.302834",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [MIN_FAST_REDEEM_FEE line 26] The minimum fee is 1 basis point (0.01%). For small redemptions where assets * 1 / 10000 rounds to zero, will the transaction revert at line 145, and can this be exploited to grief small-balance users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a90e5c9b-9803-44cc-9b38-c3309e74d6c4",
+    "timestamp": "2025-12-02 06:14:49.450984",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] If fastRedeemFeeInBPS is updated between a user's preview calculation and transaction execution, can the user pay a significantly different fee than expected, and is there slippage protection for fee changes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b861cb51-2911-43ab-bafb-3702ad03b6dd",
+    "timestamp": "2025-12-02 06:15:02.998206",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemFee line 104-105] The validation `if (feeInBPS < MIN_FAST_REDEEM_FEE || feeInBPS > MAX_FAST_REDEEM_FEE)` allows fees from 1 to 2000 basis points (0.01% to 20%). Can the admin set a 0.01% fee that rounds to zero feeAssets for small redemptions, bypassing the zero fee check at line 145?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6d458c7f-5acb-471a-9419-22d0853302f6",
+    "timestamp": "2025-12-02 06:15:16.679998",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [constructor line 49] The constructor sets fastRedeemFeeInBPS to MAX_FAST_REDEEM_FEE (20%), which is very high. Can users be surprised by this default and lose 20% of their assets if they don't check the fee before fast redeeming?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c1d952f9-c80b-408e-baf5-9a80043634a8",
+    "timestamp": "2025-12-02 06:15:32.448874",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemFee line 103-111] When fastRedeemFeeInBPS is updated via setFastRedeemFee(), can users observe the pending transaction and sandwich it by fast redeeming at the old (lower) fee before the update, then immediately re-staking to exploit fee arbitrage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29657cbc-045b-4aec-af17-ba3b90ed84a5",
+    "timestamp": "2025-12-02 06:15:47.699179",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] Can an attacker who gains temporary control of the treasury address (e.g., through a compromised multisig) front-run treasury changes to redirect fees, or does the protocol have timelock protection for treasury updates?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fda04a06-d867-4e9d-9096-672c312d5e67",
+    "timestamp": "2025-12-02 06:16:03.840758",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemTreasury line 117] The check `if (treasury == address(0)) revert InvalidZeroAddress()` prevents setting treasury to zero, but does it prevent setting treasury to the StakediTry vault address itself, which could cause accounting errors or circular transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a3e50311-1412-4ba1-adb5-c16bca0bd027",
+    "timestamp": "2025-12-02 06:16:23.952269",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] If fastRedeemTreasury is set to a contract address that reverts on iTRY token receipt (non-standard ERC20 receiver), will all fast redemptions permanently fail, causing denial of service for the fast redemption feature?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_db41d877-f220-46c3-82d0-5fa1f30d1338",
+    "timestamp": "2025-12-02 06:16:44.382750",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [constructor line 42-50] Does the constructor validate that _fastRedeemTreasury is not the zero address at line 45, but fails to validate it's not the contract itself or other critical addresses like the silo, potentially causing fees to be sent to addresses where they get locked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85201239-4a26-4feb-888e-f7235b6e83b4",
+    "timestamp": "2025-12-02 06:17:06.611873",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemTreasury line 116-122] When the admin changes fastRedeemTreasury address via setFastRedeemTreasury(), can in-flight fast redemption transactions still send fees to the old treasury address if they read the storage before the update, causing fee loss or misdirection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0edad67b-c4c1-4cbb-b5dd-ce984bec60a6",
+    "timestamp": "2025-12-02 06:17:32.788558",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 76-90] If a receiver reenters fastWithdraw() during the iTRY transfer, can they exploit the fact that shares are burned in the first call but the state hasn't fully settled, allowing double-spending of shares across nested calls?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7df7f68b-2f00-4a70-94c9-2bcdb2243fe4",
+    "timestamp": "2025-12-02 06:17:57.894864",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Since _redeemWithFee() makes external calls via _withdraw() which transfers iTRY tokens, can reentrancy during these transfers manipulate the totalAssets() calculation, causing share price manipulation that benefits the attacker in subsequent operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_645db1f2-7d9b-48b8-b128-ac2b2417f5ff",
+    "timestamp": "2025-12-02 06:18:23.988188",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57-71] Does fastRedeem() have reentrancy protection beyond the parent contract's nonReentrant modifier, or can cross-function reentrancy occur where a malicious receiver reenters through fastWithdraw(), cooldownShares(), or other vault functions during the fast redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6f1c7c0d-5378-4011-8914-9e324fa94fb5",
+    "timestamp": "2025-12-02 06:18:50.475770",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 155] Can a malicious receiver contract reenter fastRedeem() during the iTRY transfer at line 155, after shares are burned but before state updates complete, exploiting stale share prices or balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c669c5ef-f6e3-4556-a2e7-cfe7db92c367",
+    "timestamp": "2025-12-02 06:19:18.715049",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When _withdraw() transfers iTRY to fastRedeemTreasury, if the treasury is a malicious contract, can it reenter fastRedeem() during the transfer at line 152 before the second _withdraw() at line 155 completes, potentially draining the vault or manipulating share prices?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8df490d3-2c7a-4456-b71f-8ee79b32f8dc",
+    "timestamp": "2025-12-02 06:19:46.060669",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] Since two _withdraw() calls are made with the same owner and caller, does the allowance get double-spent (deducted twice), or does only the first _withdraw() deduct allowance, potentially allowing the second withdrawal to bypass approval checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c453f708-2343-435b-b43b-914575707d24",
+    "timestamp": "2025-12-02 06:20:12.711141",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57] Can an attacker front-run a legitimate fast redemption transaction by calling fastRedeem() with the same owner but different receiver (having obtained approval through phishing), redirecting the iTRY assets to the attacker's address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55ad176e-6b11-4797-b935-0d2ab289098a",
+    "timestamp": "2025-12-02 06:20:38.274713",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 82] If maxWithdraw(owner) returns a value based on the owner's balance but doesn't validate caller's approval, can an attacker call fastWithdraw() for an owner without approval, stealing their iTRY assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e308a9ce-87fd-421b-9051-20a27315929a",
+    "timestamp": "2025-12-02 06:21:04.169622",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When _withdraw() is called with `_msgSender()` as the caller parameter, does it properly deduct allowance from the owner's approval to the caller, or can an attacker call fastRedeem() multiple times with the same approval, draining the owner's shares beyond the approved amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3a658388-4d9e-4b55-9144-4be04e2c8152",
+    "timestamp": "2025-12-02 06:21:29.236636",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] Does the maxRedeem(owner) check at line 63 properly account for both the owner's share balance AND their approval to the caller, or can a malicious caller with zero approval bypass the check and steal shares if maxRedeem() doesn't validate allowance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dee929b8-7db3-446f-a1be-9030a4579cd6",
+    "timestamp": "2025-12-02 06:21:54.788126",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 155] When _withdraw() is called with the receiver parameter, does it validate that the receiver is not blacklisted in the iTry token's _beforeTokenTransfer hook, or is there a path where iTRY transfers to blacklisted addresses during fast redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aea42bd5-e495-4eb0-9f7c-27d3d369b02f",
+    "timestamp": "2025-12-02 06:22:21.612209",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57-71] Does the fast redemption flow properly enforce that both the owner and receiver are not blacklisted, or can a blacklisted owner approve a non-blacklisted caller to fast redeem their shares, bypassing the restriction on blacklisted addresses accessing their funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7427daae-89a3-495f-b770-bafe320321d3",
+    "timestamp": "2025-12-02 06:22:50.384719",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When _withdraw() transfers iTRY to fastRedeemTreasury, if the treasury address becomes blacklisted, will fast redemptions permanently fail, locking all users out of fast redemption functionality?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f6c0a8e2-da59-4e6e-bed0-beb4388b975f",
+    "timestamp": "2025-12-02 06:23:19.299808",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 76] Can a user with FULL_RESTRICTED_STAKER_ROLE call fastWithdraw() with themselves as receiver to extract iTRY despite being blacklisted, since the _withdraw() calls in _redeemWithFee() might not properly validate the receiver in the blacklist check?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3bc67d00-d282-4a09-9850-9e3566054b7d",
+    "timestamp": "2025-12-02 06:23:44.188545",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57] Does fastRedeem() check if the `receiver` address is blacklisted (has FULL_RESTRICTED_STAKER_ROLE) before transferring iTRY assets, or can a blacklisted user bypass transfer restrictions by having a non-blacklisted user fast redeem on their behalf with receiver set to the blacklisted address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4511860c-a32a-4b40-a525-5d6931b8656c",
+    "timestamp": "2025-12-02 06:24:10.915644",
+    "report_generated": false
   }
 ]
