@@ -2548,5 +2548,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa0bbfc4-71ee-4410-b331-2dce13e295ae",
     "timestamp": "2025-12-02 05:20:03.747610",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 126] The OptionsBuilder.newOptions() creates a TYPE_3 options header, then addExecutorLzReceiveOption appends gas and native value. If LayerZero changes its options format in a future version, does this hardcoded structure become incompatible?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_75497aa9-33bd-4590-bdac-c2bf39763ac3",
+    "timestamp": "2025-12-02 05:21:19.054397",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 121] The ABI encoding of (MSG_TYPE_UNSTAKE, message) creates a specific payload structure. If the hub's wiTryVaultComposer._lzReceive expects the payload in a different format (e.g., with additional fields or different ordering), does decoding fail and revert the message?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d2940ab3-7765-4ef6-a35d-65bb4f71ef72",
+    "timestamp": "2025-12-02 05:21:32.552386",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [setFeeBufferBPS function - Line 250] The function validates newBufferBPS >= 500 (min 5%), but if the hub's fee structure changes significantly, can this minimum become too low, causing users who use quoteUnstakeWithBuffer to still underpay and have their messages fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0cafd88e-782a-48f7-9850-0514978f06e1",
+    "timestamp": "2025-12-02 05:21:46.648670",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [_combineOptions function - Line 308] If enforced options are empty (length == 0), the function returns extraOptions directly. If extraOptions contain malicious or malformed data, does this bypass any validation that enforcedOptions would normally provide?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3b4eeb2-9dd0-45cc-9585-97e7712b0a42",
+    "timestamp": "2025-12-02 05:22:00.743900",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 114] The validation returnTripAllocation == 0 prevents zero values, but does it prevent extremely small values (e.g., 1 wei) that are technically non-zero but insufficient for hub execution, causing return message failures?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e1d68577-182c-422a-bdd6-1c242468dd44",
+    "timestamp": "2025-12-02 05:22:16.112493",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithReturnValue function - Line 173] The quote uses a dummy UnstakeMessage with address(0) as user. If the hub's message handling has different gas costs for zero vs. non-zero addresses (due to storage operations), does this cause quote inaccuracy?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4b67d8cc-c181-43c2-aff2-cf4d10902333",
+    "timestamp": "2025-12-02 05:22:32.709293",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [receive function - Line 263] The function accepts ETH without any access control. Can an attacker send large amounts of ETH to the contract, then call rescueToken to extract it (if they compromise the owner), or use it to grief the owner by forcing them to handle unexpected funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_af474304-4f4b-4343-993e-3a47cec7129c",
+    "timestamp": "2025-12-02 05:22:51.244386",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 148] The emitted event includes the GUID from LayerZero, but if LayerZero reuses GUIDs across different chains or message types, can offchain systems misinterpret unstake events as duplicates or conflate them with other operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a47eac2c-1aa8-4834-a827-3ae676086f7f",
+    "timestamp": "2025-12-02 05:23:10.964937",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 131] The _quote function is called to estimate fees, but if the LayerZero endpoint's fee structure changes between quote and execution (due to network congestion or protocol updates), can the transaction revert even when msg.value equals the quoted amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2821e194-122a-4a4e-ace5-a32fb0a5c236",
+    "timestamp": "2025-12-02 05:23:32.104592",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [rescueToken function - Line 286] The function uses SafeERC20.safeTransfer for ERC20 tokens, but if a malicious token is sent to the contract and the owner tries to rescue it, can the token's transfer function reenter rescueToken and bypass the nonReentrant guard to drain other tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_148ca54e-459a-43f5-9197-f6d0965c351d",
+    "timestamp": "2025-12-02 05:23:53.566012",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [setPeer function - Line 230] The function enforces eid == hubEid, preventing multiple peer configurations. If the protocol later needs to support multiple hub chains for redundancy, does this restriction force a contract redeployment and migration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_665a32bb-4c53-496b-b773-7c8d6bf2fc24",
+    "timestamp": "2025-12-02 05:24:16.460769",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [LZ_RECEIVE_GAS constant - Line 63] The gas limit is hardcoded to 350000. If future protocol upgrades on the hub increase gas consumption for cooldown processing or iTRY transfers, does this fixed limit cause all unstake messages to fail until UnstakeMessenger is redeployed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7d18d292-9125-4e44-a42d-c674899f895a",
+    "timestamp": "2025-12-02 05:24:40.721986",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 120] The UnstakeMessage.extraOptions is set to empty TYPE_3 options. If the hub needs these options to calculate return trip fees accurately, does passing empty options cause the hub's quoteUnstakeReturn to underestimate fees, resulting in failed return trips?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69c02979-55c5-49fd-b84d-0d321cbb5bfc",
+    "timestamp": "2025-12-02 05:25:06.475699",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithBuffer function - Line 214] The buffer multiplication could cause precision loss due to integer division. If (nativeFee * (10000 + feeBufferBPS)) is not perfectly divisible by 10000, does the recommendedFee underestimate the required amount, causing unstake failures?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a3ba72cf-9fc4-4c8f-adef-8001608d030b",
+    "timestamp": "2025-12-02 05:25:33.082851",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Lines 108-151] The entire unstake flow assumes LayerZero delivers messages reliably, but if a LayerZero message is lost, delayed, or reordered, can users end up with failed unstakes where their cooldown is not initiated on the hub, and they cannot retry without paying fees again?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_554b3c40-8732-412f-80f5-cd79ccea0f9e",
+    "timestamp": "2025-12-02 05:26:00.631095",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [MSG_TYPE_UNSTAKE constant - Line 55] The message type is hardcoded as 1. If the hub's wiTryVaultComposer expects a different message type or if there's a version mismatch, does the message get routed incorrectly or rejected, locking user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5fa4754-937c-411b-8589-b3f3b27662b2",
+    "timestamp": "2025-12-02 05:26:28.538675",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [_combineOptions function - Line 318] When combining options, the function slices extraOptions starting from index 2 to skip the TYPE_3 header. If extraOptions is exactly 2 bytes (only the header), does the slice operation create empty bytes that cause LayerZero execution to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1843ac3a-e33c-4bb6-b5c8-8090feb10868",
+    "timestamp": "2025-12-02 05:26:56.110092",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 139] The _lzSend function is called with the refund address set to msg.sender. If msg.sender is a contract that was destroyed via selfdestruct after calling unstake(), where does the refund go, and is it permanently lost?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df344c6a-4073-44ea-8ba1-4e769019dd94",
+    "timestamp": "2025-12-02 05:27:23.561014",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 110] The contract checks peers[hubEid] but doesn't validate that the hub chain is actually operational or that the endpoint is correct. Can users lose funds by unstaking when the hub chain is experiencing downtime or consensus issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7595a396-1d3c-4223-8e4d-93e3fbc1e80c",
+    "timestamp": "2025-12-02 05:27:51.136821",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [feeBufferBPS state variable - Line 70] The feeBufferBPS is initialized to 1000 (10%) but can be changed by the owner. If the owner sets it to the maximum 5000 (50%), does this cause users to significantly overpay fees, with the excess being captured as refunds that the owner can later rescue?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6d2cfb07-8709-4bd0-abdf-fa98b315a995",
+    "timestamp": "2025-12-02 05:28:20.155962",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithReturnValue function - Line 184] The function uses _quote with payInLzToken=false hardcoded. If the protocol later needs to use lzToken for fee payment, can users still get accurate quotes, or would all quotes be incorrect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d895ab68-bbe5-41ec-9a28-ad4aca1f6a21",
+    "timestamp": "2025-12-02 05:28:49.767577",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 148] The event emission happens after _lzSend returns successfully, but if LayerZero message delivery fails on the hub side (after being accepted on the spoke), does the emitted event mislead users into thinking their unstake succeeded when it actually failed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a9b3a4c-318d-4e53-a329-b2a9b928f086",
+    "timestamp": "2025-12-02 05:29:19.280230",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [rescueToken function - Line 282] The rescueToken function can transfer ETH via low-level call. If the 'to' address is a contract that reverts in its receive function, does the entire rescueToken transaction revert, preventing the owner from rescuing legitimately stuck ETH?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96efe08e-fa63-4851-a834-c0c4a7b83e88",
+    "timestamp": "2025-12-02 05:29:48.088560",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 128] The _combineOptions function is called to merge enforced and caller options. If the owner sets malicious enforcedOptions that override the returnTripAllocation, can the owner steal the native value intended for return trip execution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2d9f3edb-3333-4e7f-a87b-6f91b91b1aef",
+    "timestamp": "2025-12-02 05:30:17.283483",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [_slice function - Lines 328-334] The _slice function iterates over bytes without bounds checking. If _start + _length exceeds _bytes.length, does this cause out-of-bounds access that reverts message sending or creates malformed LayerZero options?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96a00c49-da74-4824-a04e-6202968d0798",
+    "timestamp": "2025-12-02 05:30:47.123365",
+    "report_generated": false
   }
 ]
