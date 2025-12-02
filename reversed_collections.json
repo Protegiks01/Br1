@@ -4798,5 +4798,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_31ee2504-8484-4606-8fce-8e4c4aa0b8c8",
     "timestamp": "2025-12-02 07:59:35.978440",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [yield aggregator integration] If StakediTry is integrated into a yield aggregator, could the aggregator's deposit/withdrawal patterns exploit the vesting mechanism to extract more yield than time-weighted fair share?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea002d13-e784-45e5-a83e-ddf203f10165",
+    "timestamp": "2025-12-02 08:18:36.266022",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [flash loan attacks] Could an attacker use flash loans to borrow large amounts of iTRY, deposit into StakediTry to temporarily inflate totalSupply, manipulate some dependent protocol logic, then withdraw and repay in the same transaction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d77595a5-a427-42d7-b8aa-61e08e3538ae",
+    "timestamp": "2025-12-02 08:18:49.291034",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 composability] Since StakediTry is an ERC4626 vault, it could be wrapped by another ERC4626 vault. Could an attacker create a malicious wrapper that manipulates totalAssets() views to extract value from inner StakediTry vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4f2f5282-7dd3-4843-9383-6e853c8ee987",
+    "timestamp": "2025-12-02 08:19:03.113011",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 standard compliance] If StakediTry is used across multiple chains with different ERC4626 implementations, could subtle differences in rounding or preview functions create arbitrage opportunities between chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_21cca8c1-3dfc-4a92-a964-055d4d9134c3",
+    "timestamp": "2025-12-02 08:19:18.575665",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [contract upgradeability] While StakediTry itself isn't marked upgradeable, if deployed behind a proxy, could an upgrade that changes storage layout corrupt vestingAmount, lastDistributionTimestamp, or vestingPeriod, breaking the vesting mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ebde9b6e-8bd4-4a54-be68-841a83f5400e",
+    "timestamp": "2025-12-02 08:19:33.312446",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [chain fork handling] If the blockchain forks and vestingAmount is set differently on each fork, could users exploit arbitrage between forks by depositing on one and withdrawing on the other based on totalAssets() discrepancies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b15dd6b-46b3-46e1-8197-f4ba0212ccbc",
+    "timestamp": "2025-12-02 08:19:50.663984",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [FULL_RESTRICTED role enumeration] The _beforeTokenTransfer() hook checks hasRole() for FULL_RESTRICTED_STAKER_ROLE on every transfer. If AccessControl's role checking becomes expensive with many role holders, could this cause gas DOS for all wiTRY transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2e66ca8d-54fe-4410-90aa-57cc3279ac90",
+    "timestamp": "2025-12-02 08:20:08.234015",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [getUnvestedAmount gas cost] The getUnvestedAmount() function is called in totalAssets() which is called frequently. If block.timestamp manipulation or high computation in the vesting calculation causes excessive gas, could this DOS all deposits/withdrawals that need totalAssets()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_21337776-f1af-40f5-840d-ce823bfa1ee4",
+    "timestamp": "2025-12-02 08:20:28.848141",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_checkMinShares DOS] The _checkMinShares() function at line 228 is called after every deposit and withdrawal. Could an attacker repeatedly trigger this check to cause high gas consumption, making deposits/withdrawals economically unfeasible for normal users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55bc2fc2-e1fc-4c93-ae99-c5dd83c8b3e2",
+    "timestamp": "2025-12-02 08:20:50.099748",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod bounds] The setVestingPeriod() function validates _vestingPeriod is between MIN_VESTING_PERIOD and MAX_VESTING_PERIOD at line 96. However, does the check use <= correctly? Could an off-by-one error allow setting vestingPeriod to exactly 0 or 30 days + 1 second?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_731511bd-277f-4e5b-b7d3-2ea8bc1a2239",
+    "timestamp": "2025-12-02 08:21:11.907745",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount validation] At line 169, redistributeLockedAmount() checks hasRole() for both 'from' and 'to'. What if 'from' == 'to'? Would this allow burning and re-minting to the same address, possibly resetting cooldown states in child contracts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b10d459f-7362-4f2a-be62-10ccf4dca26c",
+    "timestamp": "2025-12-02 08:21:36.560556",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [addToBlacklist target validation] The addToBlacklist() function uses notOwner(target) modifier at line 129 to prevent blacklisting owner. However, could the owner address be a contract that delegates ownership, allowing indirect blacklisting of the effective owner?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6fdc2a8a-5f5c-494a-ae3e-b4118348bafe",
+    "timestamp": "2025-12-02 08:22:02.059596",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards amount parameter] The transferInRewards() function has a notZero(amount) modifier at line 113. However, could an attacker call it with amount = 1 wei repeatedly to update lastDistributionTimestamp frequently, preventing the vesting period from completing and locking existing unvested amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6e8582b8-843d-4a1e-8700-87f32ffa0c0a",
+    "timestamp": "2025-12-02 08:22:28.021625",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [protocol insolvency] If the iTRY token becomes insolvent (total supply > backing), does StakediTry's totalAssets() correctly reflect this? Or could stakers believe their wiTRY shares are worth more than the actual recoverable iTRY, causing bank-run scenarios?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ae08c936-cb88-4c3c-b7ff-eae68c76f5d9",
+    "timestamp": "2025-12-02 08:22:55.775429",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [initial state edge case] If the contract is deployed but no rewards are ever distributed (transferInRewards() never called), lastDistributionTimestamp remains 0. Does getUnvestedAmount() handle this correctly, or could it cause issues with totalAssets() calculation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_535bcc88-f74c-40bd-9f5a-d03e314dce56",
+    "timestamp": "2025-12-02 08:23:24.100764",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [zero address checks] The constructor checks for zero addresses at line 78. However, do other functions like redistributeLockedAmount() properly validate the 'to' parameter against zero address attacks beyond line 175's special case logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ef5254d8-2af5-4bec-8d06-a4dd654908dc",
+    "timestamp": "2025-12-02 08:23:52.678466",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [rescueTokens safety, lines 154-161] The rescueTokens() function at line 159 prevents rescuing asset() (iTRY) but allows rescuing any other tokens. Could an attacker send malicious ERC20 tokens that revert on transfer, DOSing the rescueTokens() function and preventing recovery of legitimately stuck tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_40c35036-2d03-4468-b146-586bf8afdcd7",
+    "timestamp": "2025-12-02 08:24:20.721058",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [share price calculation] If totalAssets() returns a very small value (e.g., 1 wei) and totalSupply is MIN_SHARES (1 ether), the share price is extremely low. Could an attacker exploit this by withdrawing most assets, leaving dust, then depositing to mint shares at inflated rate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d704d982-1fed-4f39-83c7-dcf4e7c05a0b",
+    "timestamp": "2025-12-02 08:24:48.600221",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [getUnvestedAmount rounding, line 210] The division `(deltaT * vestingAmount) / vestingPeriod` truncates. Over many vesting periods, could accumulated rounding errors cause a significant portion of vestingAmount to never become vested, effectively locking protocol yield forever?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_39766ed5-53c7-496b-ae30-8f030495abfc",
+    "timestamp": "2025-12-02 08:25:15.582679",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 rounding] The inherited ERC4626 implementation has specific rounding rules (round down for conversions favoring users, round up favoring protocol). Could an attacker exploit rounding by making many tiny deposits/withdrawals to accumulate dust that becomes significant over time?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b01eb29-0c13-41c7-a954-abd701b50e83",
+    "timestamp": "2025-12-02 08:25:43.159698",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [silo integration assumption] The base StakediTry doesn't have a silo reference, but StakediTryCooldown creates one. Does base StakediTry.totalAssets() need to be overridden to account for cooldown funds in silo? Or is the base contract unusable without cooldown extensions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1423baf5-e11b-4d4f-82c5-0f86d4b87972",
+    "timestamp": "2025-12-02 08:26:10.825167",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [constructor initialization] The StakediTry constructor at lines 73-86 initializes roles and vestingPeriod. If a child constructor like StakediTryV2 modifies these values or grants additional roles, could this create security holes where base StakediTry assumptions are violated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a10e4ad5-6699-4b42-ad27-86a2c55444fb",
+    "timestamp": "2025-12-02 08:26:38.898839",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets override] If child contracts like StakediTryCooldown override totalAssets() to include iTrySilo balance, but base StakediTry.totalAssets() only checks this contract's iTRY balance at line 193, could there be inconsistencies during upgrade transitions or when calling parent vs child functions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c1f0b4b-5679-4b07-b212-96bafbba62e9",
+    "timestamp": "2025-12-02 08:27:03.444503",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [virtual functions] Functions like _beforeTokenTransfer() are marked virtual at line 292, allowing child contracts to override. If StakediTryCooldown or other extensions override key functions incorrectly, could they break invariants that StakediTry assumes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99418176-b9c4-444e-82f1-068aeadb8717",
+    "timestamp": "2025-12-02 08:27:25.389272",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [permit functionality] Since StakediTry inherits ERC20Permit, could a FULL_RESTRICTED user sign permits offline and have them executed later when their restriction is lifted? Or could they social engineer others to accept their permits and transfer on their behalf?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12ccfae8-93f6-41a5-89e7-0c88331041aa",
+    "timestamp": "2025-12-02 08:27:49.564509",
+    "report_generated": false
   }
 ]
