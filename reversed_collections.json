@@ -1198,5 +1198,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76032795-8a31-46bd-97a1-7f1d79d4a274",
     "timestamp": "2025-12-02 03:43:36.111511",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function, line 94] Does cooldownSharesByComposer validate that the composer has sufficient wiTRY balance before burning shares, or can this function be called with an arbitrary _shareAmount leading to an underflow or revert that locks user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7181ad8d-d272-4f80-bb6e-55029b2cb778",
+    "timestamp": "2025-12-02 03:44:58.543304",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function, line 92] Can the bytes32ToAddress conversion result in address(0) even after the zero-check on line 93, allowing cooldown initiation for an invalid redeemer address that could permanently lock assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00c03e2d-8c8e-492a-98f6-6707b9d08a5f",
+    "timestamp": "2025-12-02 03:45:11.926696",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose function, lines 74-79] Can an attacker send wiTRY shares with an oftCmd that is neither 'INITIATE_COOLDOWN' nor 'FAST_REDEEM' but passes the keccak256 comparison due to hash collision or encoding manipulation, bypassing the intended cooldown mechanism?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7ef1da08-5e0f-4187-93b1-4c9e3ded4890",
+    "timestamp": "2025-12-02 03:45:26.233934",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose function, lines 68-69] If msg.value is exactly equal to minMsgValue but LayerZero fees increase between quote and execution, could the transaction fail silently or cause the user to lose their wiTRY shares without receiving iTRY back?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bf21dd4e-dfd3-48af-99cf-7794ac3461e9",
+    "timestamp": "2025-12-02 03:45:40.668505",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose function, line 66] Can a malicious actor bypass the OnlySelf check by directly calling handleCompose() from an external contract, potentially manipulating the compose flow without going through the LayerZero endpoint?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74ff8b28-ff2d-4baf-b307-bfac10964580",
+    "timestamp": "2025-12-02 03:45:55.967486",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [State consistency] Between _debit() locking shares and the LayerZero message being sent, could the adapter's state be manipulated to cause shares to be locked but message never sent, permanently trapping shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fbeb4287-3c30-47a3-a8d2-297aae31357b",
+    "timestamp": "2025-12-02 03:46:12.430347",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Event emission] Does the adapter emit events for lock/unlock operations that enable off-chain monitoring, or could malicious operations go undetected?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_16fb58c7-02ad-4ba8-8c4f-ad86bbc523a7",
+    "timestamp": "2025-12-02 03:46:30.597134",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [External call safety] Are all external calls (to vault, LayerZero endpoint) protected against reentrancy and unexpected return values?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_63b2b015-7f60-4006-bb91-66469bcc7108",
+    "timestamp": "2025-12-02 03:46:49.776802",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Self-destruct interaction] Could someone self-destruct a contract to force-send ETH to the adapter, breaking accounting or enabling attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_af796c48-bd28-49aa-955f-3abdf90a00b1",
+    "timestamp": "2025-12-02 03:47:10.755353",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Fallback function] Does the adapter implement a fallback/receive function for native token payments, and could sending ETH directly to the adapter cause it to be stolen or locked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e782345e-a6d5-456f-a1d6-16ded912841e",
+    "timestamp": "2025-12-02 03:47:32.986057",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Share transfer hook] Does the wiTRY token have a transfer hook that could revert during lock/unlock operations, and could this be exploited to create inconsistent state between message sending and share locking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_17c9863b-11f5-408f-bc71-1cfc7d27b343",
+    "timestamp": "2025-12-02 03:47:56.228283",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Recipient validation] When encoding the recipient address for L2, does the adapter validate it's not address(0) or a contract that cannot receive shares, preventing accidental loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ad65300-c859-4d1d-9d07-82c27a3fc063",
+    "timestamp": "2025-12-02 03:48:21.127464",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Destination chain validation] Does send() validate that the destination chain ID is a supported spoke chain with a valid peer, or could users lose shares by sending to unsupported chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b07f154e-8c27-45e1-a598-b6d36301cad5",
+    "timestamp": "2025-12-02 03:48:46.768280",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Quote accuracy] When users call quoteSend() to estimate messaging fees before calling send(), is the quote guaranteed to be accurate, or could fee changes between quote and send cause transaction failures?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8ab16ddc-e187-47d1-9ff9-d5e47d43dbad",
+    "timestamp": "2025-12-02 03:49:13.986646",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Compatibility with vault versions] Does the adapter ensure compatibility with the specific StakediTryCrosschain implementation, or could using it with a different vault version cause security issues?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_241e30cd-3b25-409f-8e07-e7c0de9e99d0",
+    "timestamp": "2025-12-02 03:49:41.903567",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Upgrade safety] If the vault contract is upgraded while shares are locked in the adapter, could this break the lock/unlock mechanism and permanently trap shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e1ddcd1b-cc85-4a87-a279-cf0dff12bd32",
+    "timestamp": "2025-12-02 03:50:09.978249",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Admin recovery] Can the owner call emergency functions to recover locked shares if messages fail, and could this recovery mechanism be abused to steal user shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71561e5c-9d61-4b02-ae37-d378aed2d872",
+    "timestamp": "2025-12-02 03:50:37.597270",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Lock expiration] Do locked shares in the adapter have an expiration time after which they can be recovered if the L2 message never arrives, or are they locked indefinitely?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2424cc41-c084-4ef0-aa87-2847dcda2bb9",
+    "timestamp": "2025-12-02 03:51:06.262314",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Refund mechanism] If users overpay LayerZero fees, does the adapter refund excess native tokens, or are they lost/stolen?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d409d6fb-3829-4f2c-9457-b9aa063cdf59",
+    "timestamp": "2025-12-02 03:51:35.279325",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Native token handling] Does the adapter handle native token (ETH) for fee payments securely, or could reentrancy during ETH transfers allow stealing locked shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_396acdce-d0a0-48cc-a727-8a20447910aa",
+    "timestamp": "2025-12-02 03:52:05.725087",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Fee recipient] Who receives the LayerZero messaging fees paid during send() operations - could a malicious fee recipient drain user funds by setting excessively high fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_70c7f300-ab65-407e-95aa-193228faa29c",
+    "timestamp": "2025-12-02 03:52:38.582726",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Slippage protection] When bridging shares, does the user specify a minimum amount they expect to receive on L2 accounting for fees and slippage, or could unexpected fees cause them to receive much less than anticipated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9c25777e-d79e-44ff-a494-ea4b2669efd6",
+    "timestamp": "2025-12-02 03:53:12.362431",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Partial fills] Does the adapter support partial bridging where a user requests to bridge X shares but only Y<X shares are available to lock, or must the entire amount be available or the transaction reverts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5cad2f75-49ac-4913-9b44-1a6ee9dfef9c",
+    "timestamp": "2025-12-02 03:53:42.383249",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Withdrawal priority] If multiple users try to bridge shares from L2->L1 simultaneously but the adapter has insufficient locked shares to unlock, who gets priority, and could this enable front-running or griefing attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_42df7cbd-2397-4ccc-85c4-7d2ad7da09fc",
+    "timestamp": "2025-12-02 03:54:12.191090",
+    "report_generated": false
+  },
+  {
+    "question": "[File: wiTryOFTAdapter.sol] [Total assets calculation] Since locked shares remain in the adapter's balance, does the vault's totalAssets() calculation incorrectly include these locked shares, inflating the share price for remaining L1 users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9ebf21a0-f139-4455-9b6d-1abedd5e8aba",
+    "timestamp": "2025-12-02 03:54:43.007004",
+    "report_generated": false
   }
 ]
