@@ -2698,5 +2698,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96a00c49-da74-4824-a04e-6202968d0798",
     "timestamp": "2025-12-02 05:30:47.123365",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithBuffer function - Line 210] The function calls this.quoteUnstakeWithReturnValue() externally. If the contract is paused or if quoteUnstakeWithReturnValue reverts for any reason, does this cause quoteUnstakeWithBuffer to revert and prevent users from getting accurate fee quotes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_77f5784d-3797-4bbe-bd34-08b1530e54e9",
+    "timestamp": "2025-12-02 05:32:00.322234",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 120] The msg.sender is encoded directly as the user in the UnstakeMessage. If the hub's wiTryVaultComposer assigns cooldown to this user via cooldownSharesByComposer, but the user doesn't have completed cooldown on the hub, does unstakeThroughComposer revert and lock the unstake request permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_755760d8-15f8-4de5-95cc-ca39fb6f1806",
+    "timestamp": "2025-12-02 05:32:13.765914",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [setPeer function - Line 231] The function validates peer != bytes32(0), but does it prevent setting a peer to the spoke chain's own address, which could create a circular message loop that drains user fees without executing unstakes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6ae51ac3-8d82-4c78-b640-2e221e29ce4a",
+    "timestamp": "2025-12-02 05:32:27.523556",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Lines 126-128] The addExecutorLzReceiveOption specifies LZ_RECEIVE_GAS as 350000, but if the hub's wiTryVaultComposer._handleUnstake requires more gas to complete (due to cooldown validation, silo withdrawal, and return message sending), does the transaction revert and lock user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aad4d5e9-ca7c-4454-bd18-3138d96d91de",
+    "timestamp": "2025-12-02 05:32:43.258278",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [receive function - Line 263] The receive() function accepts ETH refunds from LayerZero silently, but if multiple users unstake simultaneously and LayerZero refunds accumulate in the contract, can a griefing attacker call rescueToken() repeatedly to drain these refunds before they can be redistributed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7774e873-a62f-4f1d-9cb5-8f902a2abc0a",
+    "timestamp": "2025-12-02 05:32:59.149470",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 131] The _quote function is called with payInLzToken=false, but if LayerZero requires lzToken payment on certain chains, does this cause quote failures that prevent users from unstaking even when they have sufficient native tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c33a5bb5-02f4-441e-b4d6-b654ab0ddd0c",
+    "timestamp": "2025-12-02 05:33:16.440734",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithReturnValue function - Line 174] The dummy message uses address(0) as the user. If the hub's message handling logic validates user != address(0), does the quote accurately reflect execution costs, or could actual unstake transactions cost more and revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_11c71235-72bf-44cb-9f53-12480279cec9",
+    "timestamp": "2025-12-02 05:33:35.696520",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 118] The extraOptions field in UnstakeMessage is set to OptionsBuilder.newOptions() (empty TYPE_3 header). If the hub's return trip requires specific gas or execution options, does using empty options cause the hub→spoke message to fail and permanently lock unstaked iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d87a0a5-bc32-4348-903d-9ad696fe3034",
+    "timestamp": "2025-12-02 05:33:54.476007",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [constructor - Line 84] The constructor validates hubEid != 0, but can an attacker deploy the contract with a hubEid pointing to a non-existent or malicious chain, causing all unstake messages to be sent to the wrong destination?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55897df9-b99d-473f-ad38-6d9912cbee15",
+    "timestamp": "2025-12-02 05:34:15.678195",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 148] The UnstakeRequested event emits msg.value - fee.nativeFee as excessRefunded, but if the _lzSend call reverts after emitting this event (due to reentrancy guard or other checks), does the event mislead offchain systems about successful unstake requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12f7ccfc-29ee-44dc-98ad-d1e8ff0a1d49",
+    "timestamp": "2025-12-02 05:34:38.967229",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [_combineOptions function - Lines 300-319] If enforcedOptions and _extraOptions both contain TYPE_3 headers, does the concatenation create malformed options that cause LayerZero message execution to fail on the hub, permanently locking user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b9e675c5-b215-4020-968a-b36a1b95274f",
+    "timestamp": "2025-12-02 05:35:02.552503",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 108] The function uses nonReentrant modifier, but since it makes an external call to _lzSend which interacts with the LayerZero endpoint, can a malicious endpoint contract reenter unstake() before the first call completes, causing double message sends and double fee charges?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df56e2f6-7fd3-47cf-ac16-a956cd1772a5",
+    "timestamp": "2025-12-02 05:35:27.190365",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 121] The payload encoding uses abi.encode(MSG_TYPE_UNSTAKE, message), but if the wiTryVaultComposer on the hub expects a different encoding format or message structure, does the message decoding fail and permanently lock the user's msg.value without delivering the unstake request?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3ce2ac10-03a5-415e-ae9a-a35bcdfa36ef",
+    "timestamp": "2025-12-02 05:35:52.827781",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [rescueToken function - Lines 276-290] The rescueToken function can rescue both ETH and ERC20 tokens, but can the owner use this to drain accumulated LayerZero refunds that legitimately belong to users who overpaid fees, effectively stealing user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_061255f0-b448-418c-be26-5857b4cacfe9",
+    "timestamp": "2025-12-02 05:36:19.376701",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [setFeeBufferBPS function - Line 249] The owner can adjust feeBufferBPS between 5% and 50%, but does changing this value mid-flight cause users who already received quotes with the old buffer to underpay fees when they call unstake(), resulting in failed message delivery?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_22c9ccd8-66c7-4914-9292-0a8d2211fe3a",
+    "timestamp": "2025-12-02 05:36:46.863937",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [setPeer function - Line 229] The function allows the owner to set the hub peer, but if the owner is compromised or makes an error, can they set an incorrect peer address that routes all future unstake messages to a malicious contract that steals user cooldowns?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_37fbabb5-43f0-409e-ad4a-db150fe6df81",
+    "timestamp": "2025-12-02 05:37:13.123778",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithBuffer function - Line 214] The buffer calculation (nativeFee * (10000 + feeBufferBPS)) / 10000 could overflow if nativeFee is extremely large. Does this cause the quote to revert or return an incorrect recommendedFee that misleads users about the required msg.value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_58797e58-17bd-465b-bcb4-9f37bbcee009",
+    "timestamp": "2025-12-02 05:37:40.978378",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [quoteUnstakeWithReturnValue function - Line 180] The quote function casts returnTripValue to uint128 without validation. If an attacker queries the quote with a value exceeding uint128 max, does the truncated value cause underquoted fees that result in failed message delivery and loss of user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c72fcbed-6533-48e4-a06d-a85a87eb6de9",
+    "timestamp": "2025-12-02 05:38:08.857472",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 110] The hubPeer validation checks if peers[hubEid] == bytes32(0), but if the owner accidentally sets the peer to a malicious contract address, can an attacker on the hub chain receive unstake messages and steal user cooldowns by assigning them to attacker-controlled redeemer addresses?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e4d6be21-0d7f-4f22-81e5-acb12b9aee12",
+    "timestamp": "2025-12-02 05:38:37.293344",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Lines 139-145] The _lzSend function refunds excess msg.value to msg.sender, but if msg.sender is a contract without a receive() or fallback() function, does the refund fail and cause the entire unstake transaction to revert, blocking users from unstaking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48052719-a212-4843-ae07-7db1ee173c54",
+    "timestamp": "2025-12-02 05:39:04.955333",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 134] The fee validation checks if msg.value >= fee.nativeFee, but since fee.nativeFee already includes returnTripAllocation, can gas price fluctuations between quote time and execution time cause the transaction to revert even when the user sends the quoted amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3809d952-8b5c-4a11-a930-5d0b3f0eb318",
+    "timestamp": "2025-12-02 05:39:33.184039",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Lines 126-127] The casting of returnTripAllocation to uint128 is marked as safe with a comment, but if returnTripAllocation exceeds 2^128-1, does the unsafe typecast cause silent truncation that results in insufficient native value being forwarded to the hub for the return trip?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_816b5dd4-6665-4a4b-9f23-561f709f0123",
+    "timestamp": "2025-12-02 05:39:59.835007",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 114] If returnTripAllocation is set to zero, the function reverts with InvalidReturnTripAllocation. However, can an attacker provide a very small non-zero value (e.g., 1 wei) that causes the hub→spoke return message to fail due to insufficient gas, permanently locking the user's unstaked iTRY on the hub chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dad4898b-fce2-431e-aeec-91c5ac087c44",
+    "timestamp": "2025-12-02 05:40:25.448954",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 120] The UnstakeMessage encodes msg.sender as the user address, but does this prevent a malicious contract from calling unstake() and manipulating the extraOptions field to redirect the return trip iTRY to a different address controlled by the attacker?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7dfc676b-24fd-4302-b351-12f8dab94ab0",
+    "timestamp": "2025-12-02 05:40:52.939182",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/UnstakeMessenger.sol] [unstake function - Line 108] Can a user call unstake() without owning any wiTRY shares on the hub chain, causing the hub's cooldownSharesByComposer or unstakeThroughComposer to revert and permanently lock the user's msg.value since LayerZero messages are not automatically rolled back?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b4235c30-374a-45f9-a87f-06f96b3368a3",
+    "timestamp": "2025-12-02 05:41:22.328083",
+    "report_generated": false
   }
 ]
