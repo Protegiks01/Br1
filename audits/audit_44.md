@@ -1,217 +1,191 @@
 ## Title
-Blacklist Bypass via `redeemFor` Recipient Validation Failure Allows Sanctioned Users to Extract DLF Collateral
+Whitelist Bypass in Cross-Chain Minting Allows Non-Whitelisted Users to Receive iTRY Tokens on Spoke Chains
 
 ## Summary
-The `redeemFor` function in `iTryIssuer.sol` validates that the caller (`msg.sender`) is whitelisted but fails to validate the `recipient` parameter against the iTRY blacklist. This allows whitelisted users to redeem iTRY and send the underlying DLF collateral to blacklisted addresses, enabling sanctioned users to extract value from the protocol.
+The `iTryTokenOFT` contract on spoke chains fails to enforce whitelist restrictions during cross-chain minting operations. In `WHITELIST_ENABLED` state, tokens can be minted to non-whitelisted addresses via LayerZero bridging, directly violating the protocol's documented whitelist enforcement invariant.
 
 ## Impact
-**Severity**: Medium
+**Severity**: High
+
+This vulnerability completely bypasses the whitelist access control mechanism on spoke chains, allowing any non-whitelisted user to receive iTRY tokens through cross-chain transfers. This undermines the protocol's regulatory compliance framework and could allow sanctioned addresses or non-KYC users to hold iTRY when the protocol explicitly intends to restrict access. The whitelist mechanism is a critical security control for the protocol, and its bypass represents a complete failure of this access control layer on spoke chains.
 
 ## Finding Description
-**Location:** `src/protocol/iTryIssuer.sol` - `redeemFor` function (lines 318-370) [1](#0-0) 
 
-**Intended Logic:** The redemption system should prevent blacklisted users from extracting value from the protocol. The `redeemFor` function is designed to allow whitelisted users to redeem iTRY tokens for DLF collateral, with access control enforced via the `onlyRole(_WHITELISTED_USER_ROLE)` modifier.
+**Location:** [1](#0-0) 
 
-**Actual Logic:** The function only validates that `msg.sender` (the caller) is whitelisted, but performs no validation on the `recipient` parameter. The iTRY tokens are burned from `msg.sender`, while DLF collateral is sent to `recipient` without checking if `recipient` is blacklisted on iTRY. [2](#0-1) 
+**Intended Logic:** 
+According to the protocol's documented invariants, specifically stated in the README: "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state." [2](#0-1) 
 
-This creates an asymmetry with the `mintFor` function, where the iTRY token's `_beforeTokenTransfer` hook validates that the recipient is not blacklisted: [3](#0-2) 
+The `_beforeTokenTransfer` hook should verify that recipients of minted tokens are whitelisted when the contract is in `WHITELIST_ENABLED` state.
 
-However, for redemptions, no such check exists in `iTryIssuer`, and the protection relies entirely on the external DLF token's blacklist (if any), which is a separate system from iTRY's blacklist managed by different roles. [4](#0-3) 
+**Actual Logic:** 
+The minting validation in `WHITELIST_ENABLED` state only checks that the recipient is not blacklisted but does NOT verify whitelist status. [3](#0-2) 
+
+This is inconsistent with the normal transfer case, which correctly requires all parties to be whitelisted. [4](#0-3) 
 
 **Exploitation Path:**
-1. User A (blacklisted on iTRY for sanctions/compliance reasons) wants to extract value from the protocol
-2. User A coordinates with User B (whitelisted and owns iTRY tokens)
-3. User B calls `issuer.redeemFor(userA_address, iTRY_amount, minOut)`
-4. User B's iTRY is burned (valid since User B is whitelisted)
-5. DLF collateral is transferred to User A
-6. If User A is not blacklisted on the DLF token OR if the DLF blacklist is not synchronized with iTRY's blacklist, the transfer succeeds
-7. User A successfully receives valuable DLF assets despite being sanctioned on iTRY
+1. **Setup**: iTryTokenOFT on spoke chain (e.g., MegaETH) is set to `WHITELIST_ENABLED` state by owner to restrict token access
+2. **Precondition**: Attacker has iTRY tokens on hub chain (Ethereum) but their address is NOT whitelisted on the spoke chain
+3. **Trigger**: Attacker calls `send()` on iTryTokenOFTAdapter (hub chain), specifying their non-whitelisted spoke chain address as recipient
+4. **Lock & Message**: iTryTokenOFTAdapter locks iTRY on hub chain and sends LayerZero message to spoke chain
+5. **Receive**: LayerZero endpoint on spoke chain receives message and calls into iTryTokenOFT
+6. **Mint**: Internal OFT `_credit()` function calls `_mint()` which triggers `_beforeTokenTransfer` hook with `msg.sender == minter` (LayerZero endpoint), `from == address(0)`, and `to == attacker`
+7. **Bypass**: The check at lines 160-161 passes because the conditions are met: minter is calling, it's a mint operation, and recipient is not blacklisted
+8. **Result**: Tokens are successfully minted to the attacker's non-whitelisted address on spoke chain, violating the whitelist enforcement invariant
 
-**Security Property Broken:** This violates the protocol's blacklist enforcement intent. While the invariant states "Blacklisted users cannot send/receive/mint/burn iTry tokens in any case," the broader security goal from the README's "Areas of concern" is to prevent "blacklist/whitelist bugs that would impair rescue operations in case of hacks or similar black swan events." Allowing blacklisted users to receive the underlying collateral defeats the purpose of the sanctioning system. [5](#0-4) 
+**Security Property Broken:**
+This directly violates the documented invariant: "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state." [2](#0-1) 
+
+**Code Evidence - Hub Chain Protection:**
+On the hub chain, the `iTryIssuer` contract enforces whitelist at the application level through the `onlyRole(_WHITELISTED_USER_ROLE)` modifier on minting functions. [5](#0-4) 
+
+This provides defense-in-depth on the hub chain, even though the underlying `iTry` token contract has the same vulnerability. [6](#0-5) 
+
+**Spoke Chain Vulnerability:**
+However, on spoke chains, there is NO equivalent issuer contract. The LayerZero OFT minting is the ONLY entry point for iTRY tokens, and it completely bypasses the whitelist check.
 
 ## Impact Explanation
-- **Affected Assets**: DLF collateral tokens held in custody by the protocol
-- **Damage Severity**: Blacklisted/sanctioned users can extract value from the protocol by receiving DLF collateral through a whitelisted proxy. The severity depends on whether the DLF token's blacklist is synchronized with iTRY's blacklist - if not synchronized or if DLF has no blacklist in production, the bypass is complete.
-- **User Impact**: Any blacklisted user with access to a whitelisted user can extract their proportional share of DLF collateral, circumventing compliance/sanctions controls. This affects the protocol's ability to freeze assets of malicious actors or comply with regulatory requirements.
+
+**Affected Assets**: iTRY tokens on all spoke chains (MegaETH and any other L2 deployments)
+
+**Damage Severity**:
+- Complete bypass of whitelist controls on spoke chains
+- Non-whitelisted users can receive unlimited amounts of iTRY tokens via cross-chain bridging
+- Regulatory compliance requirements may be violated if restricted addresses (e.g., sanctioned entities, non-KYC users) can bypass the whitelist
+- The whitelist mechanism becomes effectively meaningless on spoke chains, as users can trivially receive tokens by bridging from the hub chain
+
+**User Impact**: 
+All iTRY token holders are affected as the whitelist mechanism is a critical security control and regulatory compliance tool. The protocol's ability to restrict token access to approved participants is completely undermined on spoke chains.
+
+**Trigger Conditions**: 
+Any user can trigger this with a single cross-chain transaction from the hub chain to a spoke chain, as long as their address is not explicitly blacklisted (being non-whitelisted is sufficient to exploit).
 
 ## Likelihood Explanation
-- **Attacker Profile**: A blacklisted user who can coordinate with or coerce a whitelisted user (could be an accomplice, compromised account, or social engineering victim)
-- **Preconditions**: 
-  - Attacker must be blacklisted on iTRY
-  - A whitelisted user must own iTRY tokens
-  - Either: (a) DLF token has no blacklist, or (b) DLF blacklist is not synchronized with iTRY blacklist
-- **Execution Complexity**: Single transaction - the whitelisted accomplice calls `redeemFor` with the blacklisted user's address as the recipient
-- **Frequency**: Can be exploited as many times as the whitelisted user has iTRY to redeem
+
+**Attacker Profile**: Any user who holds iTRY tokens on the hub chain and has a non-whitelisted address on the spoke chain
+
+**Preconditions**:
+1. iTryTokenOFT on spoke chain must be in `WHITELIST_ENABLED` state (protocol will use this mode for regulatory compliance)
+2. Attacker must have iTRY balance on hub chain (easily obtainable through normal minting)
+3. Attacker's spoke chain address must not be blacklisted (but not whitelisted either - the common case)
+
+**Execution Complexity**: 
+Single cross-chain transaction - straightforward call to `send()` on iTryTokenOFTAdapter with spoke chain address as recipient. No special timing, ordering, or advanced techniques required.
+
+**Economic Cost**: 
+Only LayerZero bridging fees and gas costs (minimal), no capital lockup or other barriers
+
+**Frequency**: 
+Can be exploited continuously by any user meeting the preconditions, unlimited number of times
+
+**Overall Likelihood**: HIGH - If the spoke chain operates in `WHITELIST_ENABLED` mode, this bypass is trivially executable by any non-whitelisted user with hub chain iTRY.
 
 ## Recommendation
 
-Add recipient blacklist validation in the `redeemFor` function before processing the redemption:
+**Primary Fix:**
+Modify the `_beforeTokenTransfer` function in `iTryTokenOFT.sol` to enforce whitelist status during minting operations in `WHITELIST_ENABLED` state: [3](#0-2) 
 
-```solidity
-// In src/protocol/iTryIssuer.sol, function redeemFor, after line 325:
+Add `&& whitelisted[to]` check to line 160 (minting condition) and line 164 (owner redistribution minting).
 
-// CURRENT (vulnerable):
-// No validation of recipient's blacklist status
+**Secondary Fix:**
+Apply the same fix to the hub chain `iTry.sol` contract for defense-in-depth, even though it's currently mitigated by `iTryIssuer`: [7](#0-6) 
 
-// FIXED:
-function redeemFor(address recipient, uint256 iTRYAmount, uint256 minAmountOut)
-    public
-    onlyRole(_WHITELISTED_USER_ROLE)
-    nonReentrant
-    returns (bool fromBuffer)
-{
-    // Validate recipient address
-    if (recipient == address(0)) revert CommonErrors.ZeroAddress();
-    
-    // ADD THIS CHECK: Validate recipient is not blacklisted on iTRY
-    if (iTryToken.hasRole(iTryToken.BLACKLISTED_ROLE(), recipient)) {
-        revert RecipientBlacklisted(recipient);
-    }
-    
-    // ... rest of function logic
-}
-```
+Add `&& hasRole(WHITELISTED_ROLE, to)` check to lines 201-202 (minting condition) and lines 205-206 (admin redistribution minting).
 
-Alternative mitigation: If the protocol intends to allow whitelisted users to redeem on behalf of others, add explicit documentation and consider implementing a separate `redeemToBlacklisted` function that requires additional admin approval for exceptional cases.
+**Additional Mitigations**:
+- Add invariant tests verifying that minting in `WHITELIST_ENABLED` state always requires the recipient to be whitelisted
+- Consider implementing address whitelist synchronization between hub and spoke chains via LayerZero messaging
+- Document that whitelist management must be performed on ALL chains before enabling `WHITELIST_ENABLED` mode
 
 ## Proof of Concept
 
-```solidity
-// File: test/Exploit_RedeemForBlacklistBypass.t.sol
-// Run with: forge test --match-test test_RedeemForBlacklistBypass -vvv
+The provided PoC demonstrates the vulnerability by:
+1. Deploying `iTryTokenOFT` on a spoke chain and setting it to `WHITELIST_ENABLED` state
+2. Setting the LayerZero endpoint as the minter
+3. Whitelisting only a legitimate user (not the attacker)
+4. Simulating the LayerZero endpoint (minter) minting tokens to the non-whitelisted attacker address
+5. Verifying the mint succeeds despite the attacker not being whitelisted
+6. Confirming that the attacker still cannot perform normal transfers (whitelist is enforced for those operations)
 
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/token/iTRY/iTry.sol";
-import "../src/external/DLFToken.sol";
-
-contract Exploit_RedeemForBlacklistBypass is Test {
-    iTryIssuer public issuer;
-    iTry public iTryToken;
-    DLFToken public dlfToken;
-    
-    address public admin;
-    address public whitelistedUser;
-    address public blacklistedUser;
-    address public blacklistManager;
-    
-    function setUp() public {
-        admin = makeAddr("admin");
-        whitelistedUser = makeAddr("whitelistedUser");
-        blacklistedUser = makeAddr("blacklistedUser");
-        blacklistManager = makeAddr("blacklistManager");
-        
-        // Deploy and initialize protocol (simplified for PoC)
-        // In real test, use full deployment setup from iTryIssuer.base.t.sol
-    }
-    
-    function test_RedeemForBlacklistBypass() public {
-        // SETUP: Initial state
-        // 1. WhitelistedUser has 1000 iTRY tokens
-        // 2. BlacklistedUser is blacklisted on iTRY
-        // 3. DLF token's blacklist is not synchronized (BlacklistedUser not blacklisted on DLF)
-        
-        uint256 redeemAmount = 500e18;
-        uint256 initialDlfBalance = dlfToken.balanceOf(blacklistedUser);
-        
-        vm.startPrank(blacklistManager);
-        address[] memory users = new address[](1);
-        users[0] = blacklistedUser;
-        iTryToken.addBlacklistAddress(users);
-        vm.stopPrank();
-        
-        // Verify blacklistedUser cannot receive iTRY directly
-        vm.startPrank(whitelistedUser);
-        vm.expectRevert(); // Should revert due to blacklist
-        iTryToken.transfer(blacklistedUser, 100e18);
-        vm.stopPrank();
-        
-        // EXPLOIT: WhitelistedUser calls redeemFor to send DLF to blacklistedUser
-        vm.startPrank(whitelistedUser);
-        bool fromBuffer = issuer.redeemFor(blacklistedUser, redeemAmount, 0);
-        vm.stopPrank();
-        
-        // VERIFY: Confirm exploit success
-        uint256 finalDlfBalance = dlfToken.balanceOf(blacklistedUser);
-        
-        // BlacklistedUser successfully received DLF despite being blacklisted on iTRY
-        assertGt(finalDlfBalance, initialDlfBalance, "Vulnerability confirmed: Blacklisted user received DLF through redeemFor");
-        
-        // This demonstrates that blacklisted users can extract value from the protocol
-        // by having whitelisted users redeem on their behalf
-    }
-}
-```
+This PoC accurately simulates the cross-chain flow where the LayerZero endpoint calls `_mint()` on behalf of a cross-chain message, demonstrating that the whitelist check is bypassed for minting operations.
 
 ## Notes
 
-This vulnerability exists due to incomplete recipient validation in the `redeemFor` function. While the DLF token (external dependency) has its own blacklist mechanism, this creates a dual-blacklist system where synchronization is not guaranteed. The iTryIssuer should enforce iTRY's blacklist rules when distributing the underlying collateral to maintain consistent sanctions enforcement across the protocol.
+**Critical Distinction - Hub vs Spoke Chains:**
+While the same code pattern exists in both `iTry.sol` (hub chain) and `iTryTokenOFT.sol` (spoke chains), the impact differs significantly:
 
-The issue is distinct from the known Zellic finding about blacklisted users transferring via allowance - that issue concerns iTRY token transfers themselves, whereas this issue concerns the redemption flow where DLF collateral is distributed to potentially blacklisted recipients without validation.
+- **Hub Chain**: The vulnerability is mitigated by the `iTryIssuer` contract, which enforces `onlyRole(_WHITELISTED_USER_ROLE)` at the application level [8](#0-7) 
+  
+- **Spoke Chains**: NO such issuer contract exists. LayerZero OFT minting is the ONLY way to receive iTRY tokens, making this the primary entry point and the vulnerability critical.
+
+**Why This Is Not a Known Issue:**
+This is distinct from the Zellic audit's known issue about "Blacklisted user can transfer tokens on behalf of non-blacklisted users using allowance" [9](#0-8) . That issue concerns the `msg.sender` not being validated in transfers. This issue concerns the recipient of minting operations not being validated against the whitelist, which is a separate access control bypass affecting a different operation (minting vs transfer) and different parties (recipient vs sender).
+
+**Consistency Issue:**
+The code correctly enforces whitelist for normal transfers (requiring all parties to be whitelisted) [4](#0-3)  but fails to apply the same logic to minting operations, creating an inconsistent security policy that undermines the entire whitelist mechanism on spoke chains.
 
 ### Citations
 
-**File:** src/protocol/iTryIssuer.sol (L318-325)
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L157-172)
 ```text
-    function redeemFor(address recipient, uint256 iTRYAmount, uint256 minAmountOut)
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
+            if (msg.sender == minter && !blacklisted[from] && to == address(0)) {
+                // redeeming
+            } else if (msg.sender == minter && from == address(0) && !blacklisted[to]) {
+                // minting
+            } else if (msg.sender == owner() && blacklisted[from] && to == address(0)) {
+                // redistributing - burn
+            } else if (msg.sender == owner() && from == address(0) && !blacklisted[to]) {
+                // redistributing - mint
+            } else if (whitelisted[msg.sender] && whitelisted[from] && to == address(0)) {
+                // whitelisted user can burn
+            } else if (whitelisted[msg.sender] && whitelisted[from] && whitelisted[to]) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
+```
+
+**File:** README.md (L35-35)
+```markdown
+-  Blacklisted user can transfer tokens on behalf of non-blacklisted users using allowance - `_beforeTokenTransfer` does not validate `msg.sender`, a blacklisted caller can still initiate a same-chain token transfer on behalf of a non-blacklisted user as long as allowance exists.
+```
+
+**File:** README.md (L125-125)
+```markdown
+- Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state.
+```
+
+**File:** src/protocol/iTryIssuer.sol (L270-275)
+```text
+    function mintFor(address recipient, uint256 dlfAmount, uint256 minAmountOut)
         public
         onlyRole(_WHITELISTED_USER_ROLE)
         nonReentrant
-        returns (bool fromBuffer)
+        returns (uint256 iTRYAmount)
     {
-        // Validate recipient address
-        if (recipient == address(0)) revert CommonErrors.ZeroAddress();
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L351-370)
+**File:** src/token/iTRY/iTry.sol (L198-217)
 ```text
-        _burn(msg.sender, iTRYAmount);
-
-        // Check if buffer pool has enough DLF balance
-        uint256 bufferBalance = liquidityVault.getAvailableBalance();
-
-        if (bufferBalance >= grossDlfAmount) {
-            // Buffer has enough - serve from buffer
-            _redeemFromVault(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = true;
-        } else {
-            // Buffer insufficient - serve from custodian
-            _redeemFromCustodian(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = false;
-        }
-
-        // Emit redemption event
-        emit ITRYRedeemed(recipient, iTRYAmount, netDlfAmount, fromBuffer, redemptionFeeInBPS);
-    }
-```
-
-**File:** src/token/iTRY/iTry.sol (L180-183)
-```text
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
             if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
                 // redeeming
             } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
                 // minting
-```
-
-**File:** src/external/DLFToken.sol (L25-29)
-```text
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override whenNotPaused {
-        require(!_isBlacklisted[from], "ERC20: sender is blacklisted");
-        require(!_isBlacklisted[to], "ERC20: recipient is blacklisted");
-        super._beforeTokenTransfer(from, to, amount);
-    }
-```
-
-**File:** README.md (L122-127)
-```markdown
-- The total issued iTry in the Issuer contract should always be be equal or lower to the total value of the DLF under custody. It should not be possible to mint "unbacked" iTry through the issuer. This does not mean that _totalIssuedITry needs to be equal to iTry.totalSupply(), though: there could be more than one minter contract using different backing assets.
-- In the context of this audit, the NAV price queried can be assumed to be correct. The Oracle implementation will perform additional checks on the data feed and revert if it encounters issues.
-- Blacklisted users cannot send/receive/mint/burn iTry tokens in any case.
-- Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state.
-- Only non-blacklisted addresses can send/receive/burn iTry tokens in a FULLY_ENABLED transfer state.
-- No adresses can send/receive tokens in a FULLY_DISABLED transfer state.
+            } else if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender) && hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
+                // redistributing - burn
+            } else if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to))
+            {
+                // redistributing - mint
+            } else if (hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from) && to == address(0)) {
+                // whitelisted user can burn
+            } else if (
+                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
+                    && hasRole(WHITELISTED_ROLE, to)
+            ) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
 ```

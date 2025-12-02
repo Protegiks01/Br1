@@ -1,212 +1,198 @@
+# VALID VULNERABILITY CONFIRMED
+
+After rigorous validation against the Brix Money Protocol framework, this security claim is **VALID**.
+
 ## Title
-Permanent Yield Lock in YieldForwarder Due to Whitelist Enforcement Without Recovery Path
+FULL_RESTRICTED Users Can Bypass Staking Restriction Due to Incomplete Role Check in `_deposit`
 
 ## Summary
-When iTRY is in `WHITELIST_ENABLED` mode, the `YieldForwarder.processNewYield()` function will permanently fail if the YieldForwarder contract itself, the `yieldRecipient` address, or the caller of `processNewYield()` lacks the `WHITELISTED_ROLE`. The emergency `rescueToken()` function cannot recover these funds because it also triggers the same whitelist validation, creating an irrecoverable fund lock scenario.
+The `_deposit` function in `StakediTry.sol` only validates `SOFT_RESTRICTED_STAKER_ROLE` while omitting `FULL_RESTRICTED_STAKER_ROLE` checks, directly violating the documented invariant that FULL_RESTRICTED should prevent staking operations. This allows fully-restricted users to deposit iTRY tokens by minting shares to clean addresses they control, effectively bypassing administrative sanctions.
 
 ## Impact
-**Severity**: High
+**Severity**: Medium - Restriction Bypass
+
+The vulnerability allows users with `FULL_RESTRICTED_STAKER_ROLE` to circumvent administrative sanctions by continuing to stake iTRY tokens and earn yield through the vault. While they cannot withdraw shares themselves, they can mint shares to secondary addresses under their control, effectively laundering their position through the vault and nullifying the intended restriction enforcement.
+
+**Affected Assets**: wiTRY vault shares, iTRY tokens, protocol restriction integrity
+
+**User Impact**: All users with `FULL_RESTRICTED_STAKER_ROLE` but not `SOFT_RESTRICTED_STAKER_ROLE` can bypass restrictions. The dual-role state management creates exploitable transitions when admins grant both roles and subsequently remove only one.
 
 ## Finding Description
-**Location:** `src/protocol/YieldForwarder.sol` (function `processNewYield`, lines 97-107) and `src/token/iTRY/iTry.sol` (function `_beforeTokenTransfer`, lines 198-217)
 
-**Intended Logic:** The YieldForwarder contract should forward accumulated yield to a designated recipient when `processNewYield()` is called. The emergency `rescueToken()` function should provide a recovery mechanism for accidentally locked tokens. [1](#0-0) 
+**Location:** `src/token/wiTRY/StakediTry.sol` - lines 240-252, function `_deposit()`
 
-**Actual Logic:** When iTRY is in `WHITELIST_ENABLED` mode, the `_beforeTokenTransfer` hook enforces that for normal transfers (non-mint/burn), ALL THREE parties must have `WHITELISTED_ROLE`: `msg.sender`, `from`, and `to`. [2](#0-1) 
+**Intended Logic:**
+According to the role definition comment, `FULL_RESTRICTED_STAKER_ROLE` should prevent an address from transferring, staking, or unstaking. [1](#0-0)  The `_deposit` function implements the staking operation for the ERC4626 vault and should therefore block users with FULL_RESTRICTED_STAKER_ROLE.
 
-When `processNewYield()` executes `yieldToken.transfer(yieldRecipient, _newYieldAmount)`:
-- `msg.sender` = whoever calls `processNewYield()` (no access control on this function)
-- `from` = YieldForwarder contract address
-- `to` = `yieldRecipient` address
-
-If ANY of these three addresses lacks `WHITELISTED_ROLE`, the transfer reverts with `OperationNotAllowed()`. [3](#0-2) 
+**Actual Logic:**
+The `_deposit` function only validates `SOFT_RESTRICTED_STAKER_ROLE` for both caller and receiver, completely omitting `FULL_RESTRICTED_STAKER_ROLE` checks. [2](#0-1)  This creates an inconsistency where fully-restricted users can still deposit if they don't simultaneously hold the soft restriction.
 
 **Exploitation Path:**
-1. Protocol admin sets iTRY to `WHITELIST_ENABLED` mode using `updateTransferState(TransferState.WHITELIST_ENABLED)`
-2. YieldForwarder contract is deployed with a `yieldRecipient` that is not whitelisted, OR the YieldForwarder contract itself is not granted `WHITELISTED_ROLE`
-3. iTryIssuer mints yield tokens to YieldForwarder via `processAccumulatedYield()` [4](#0-3) 
 
-4. Any attempt to call `processNewYield()` reverts due to whitelist check failure
-5. Owner attempts to rescue funds via `rescueToken()`, but this also uses `safeTransfer()` which triggers the same `_beforeTokenTransfer` hook [5](#0-4) 
+**Scenario A - Direct Assignment:**
+1. Admin calls `addToBlacklist(maliciousUser, true)` which grants only `FULL_RESTRICTED_STAKER_ROLE` [3](#0-2) 
+2. User calls `deposit(assets, receiverAddress)` where `receiverAddress` is a clean address controlled by the attacker
+3. The `_deposit` check passes because neither caller nor receiver has `SOFT_RESTRICTED_STAKER_ROLE`
+4. iTRY tokens are transferred from user to vault, wiTRY shares are minted to receiver, bypassing the restriction
 
-6. Yield tokens are permanently locked in YieldForwarder with no recovery path
+**Scenario B - Dual Role with Partial Removal:**
+1. Admin calls `addToBlacklist(user, false)` → user gets `SOFT_RESTRICTED_STAKER_ROLE`
+2. Admin calls `addToBlacklist(user, true)` → user now has **both roles** (no mutual exclusivity enforcement)
+3. User cannot deposit (blocked by SOFT check) ✓
+4. Admin later calls `removeFromBlacklist(user, false)` → only removes `SOFT_RESTRICTED_STAKER_ROLE` [4](#0-3) 
+5. User still has `FULL_RESTRICTED_STAKER_ROLE` but can now deposit! ✗
 
-**Security Property Broken:** This violates the protocol's yield distribution mechanism and creates a permanent fund lock scenario, effectively causing loss of protocol yield that should be distributed to stakeholders.
+**Security Property Broken:**
+The documented behavior that "FULL_RESTRICTED_STAKER_ROLE prevents staking" is violated due to inconsistent validation across the restriction enforcement system.
+
+**Code Evidence - Inconsistency Across Functions:**
+
+The `_withdraw` function correctly validates FULL_RESTRICTED for all three addresses: [5](#0-4) 
+
+The `_beforeTokenTransfer` hook also checks FULL_RESTRICTED: [6](#0-5) 
+
+However, `_beforeTokenTransfer` does NOT prevent minting shares to a clean receiver address when the caller has FULL_RESTRICTED, because during minting: `from = address(0)` (no role check) and `to = cleanReceiver` (no FULL_RESTRICTED role). This allows the bypass to succeed.
 
 ## Impact Explanation
-- **Affected Assets**: All iTRY yield tokens minted to the YieldForwarder contract become permanently locked
-- **Damage Severity**: Complete loss of yield distribution functionality. All accumulated yield from NAV appreciation that gets minted to YieldForwarder cannot be distributed or recovered. This represents 100% loss of protocol yield until the issue is resolved.
-- **User Impact**: All protocol users expecting yield distribution are affected. The protocol's entire yield generation mechanism becomes non-functional, as yield accumulates but cannot be distributed to intended recipients (e.g., wiTRY stakers).
+
+**Damage Severity:**
+- Restricted users can circumvent administrative sanctions by continuing to stake iTRY tokens through proxy addresses
+- Admin-imposed restrictions become ineffective, undermining protocol governance
+- Users can effectively "launder" their positions through the vault by depositing from restricted accounts to clean addresses
+- While direct withdrawal is blocked, the attacker gains yield-earning shares under their control
+
+**Trigger Conditions:**
+- User has iTRY balance and approval for the vault
+- User has `FULL_RESTRICTED_STAKER_ROLE` without `SOFT_RESTRICTED_STAKER_ROLE`
+- User controls a secondary address (receiver) that is not restricted
+- Single transaction execution
 
 ## Likelihood Explanation
-- **Attacker Profile**: No attacker needed - this is an operational failure scenario triggered by normal protocol operations
-- **Preconditions**: 
-  1. iTRY must be in `WHITELIST_ENABLED` mode (a legitimate operational state)
-  2. Either the YieldForwarder contract, the `yieldRecipient`, or typical callers of `processNewYield()` are not whitelisted
-  3. Yield is minted to YieldForwarder
-- **Execution Complexity**: Occurs automatically during normal yield processing operations. No special actions required beyond normal protocol flow.
-- **Frequency**: Every time yield is processed while iTRY is in `WHITELIST_ENABLED` mode without proper whitelist coordination
+
+**Attacker Profile:** Any user assigned `FULL_RESTRICTED_STAKER_ROLE` without `SOFT_RESTRICTED_STAKER_ROLE`, or users in dual-role states with partial role removal
+
+**Preconditions:**
+- User must have iTRY balance and vault approval (standard prerequisites)
+- User must have `FULL_RESTRICTED_STAKER_ROLE` without `SOFT_RESTRICTED_STAKER_ROLE`
+- User needs a secondary address that is not FULL_RESTRICTED (trivial - any new address)
+
+**Execution Complexity:** Single transaction `deposit()` call - trivial to execute
+
+**Frequency:** Repeatable until admin corrects role assignment by adding `SOFT_RESTRICTED_STAKER_ROLE` or enforcing mutual exclusivity
+
+**Overall Likelihood:** HIGH - Easy to execute with minimal preconditions
 
 ## Recommendation
 
-**Primary Fix:** Grant the YieldForwarder contract itself the `WHITELISTED_ROLE` during deployment/initialization, and ensure `yieldRecipient` is whitelisted before any yield processing occurs.
-
-**Secondary Fix (Enhanced Recovery):** Implement a dedicated emergency withdrawal function in YieldForwarder that bypasses the normal transfer flow by having the iTRY admin perform a special rescue operation:
+**Primary Fix:**
+Add comprehensive role checks in the `_deposit` function to match documented behavior:
 
 ```solidity
-// In src/protocol/YieldForwarder.sol, add new emergency function:
+// In src/token/wiTRY/StakediTry.sol, function _deposit, line 247:
 
-/**
- * @notice Emergency function to request admin rescue when normal transfers fail
- * @dev Emits event for iTRY admin to manually redistribute tokens using redistributeLockedAmount
- * @param emergencyRecipient The address where rescued tokens should be sent
- */
-function requestEmergencyRescue(address emergencyRecipient) external onlyOwner {
-    require(emergencyRecipient != address(0), "Invalid recipient");
-    uint256 balance = yieldToken.balanceOf(address(this));
-    
-    emit EmergencyRescueRequested(address(yieldToken), emergencyRecipient, balance);
+// CURRENT (vulnerable):
+if (hasRole(SOFT_RESTRICTED_STAKER_ROLE, caller) || hasRole(SOFT_RESTRICTED_STAKER_ROLE, receiver)) {
+    revert OperationNotAllowed();
+}
+
+// FIXED:
+if (hasRole(SOFT_RESTRICTED_STAKER_ROLE, caller) || hasRole(SOFT_RESTRICTED_STAKER_ROLE, receiver) ||
+    hasRole(FULL_RESTRICTED_STAKER_ROLE, caller) || hasRole(FULL_RESTRICTED_STAKER_ROLE, receiver)) {
+    revert OperationNotAllowed();
 }
 ```
 
-Alternatively, modify iTRY's `_beforeTokenTransfer` to add an exception for contracts with special privileges:
+**Alternative Mitigation:**
+Enforce mutual exclusivity in `addToBlacklist` to prevent users from holding both roles simultaneously. When upgrading from SOFT to FULL restriction, automatically revoke the SOFT role:
 
 ```solidity
-// In src/token/iTRY/iTry.sol, in _beforeTokenTransfer, add before line 210:
-
-// Allow whitelisted contracts to send to whitelisted recipients even if caller is not whitelisted
-} else if (
-    hasRole(WHITELISTED_ROLE, from) && hasRole(WHITELISTED_ROLE, to) && from != msg.sender
-) {
-    // Contract-to-user transfers for protocol operations
+function addToBlacklist(address target, bool isFullBlacklisting) external onlyRole(BLACKLIST_MANAGER_ROLE) notOwner(target) {
+    if (isFullBlacklisting) {
+        // Revoke SOFT if granting FULL
+        if (hasRole(SOFT_RESTRICTED_STAKER_ROLE, target)) {
+            _revokeRole(SOFT_RESTRICTED_STAKER_ROLE, target);
+        }
+        _grantRole(FULL_RESTRICTED_STAKER_ROLE, target);
+    } else {
+        _grantRole(SOFT_RESTRICTED_STAKER_ROLE, target);
+    }
+}
 ```
-
-**Best Practice:** Before setting iTRY to `WHITELIST_ENABLED` mode, protocol operators should ensure:
-1. YieldForwarder contract has `WHITELISTED_ROLE`
-2. The configured `yieldRecipient` has `WHITELISTED_ROLE`
-3. The account that will call `processNewYield()` has `WHITELISTED_ROLE`
 
 ## Proof of Concept
 
-```solidity
-// File: test/Exploit_YieldForwarderWhitelistLock.t.sol
-// Run with: forge test --match-test test_YieldForwarderWhitelistLock -vvv
+The provided PoC demonstrates both exploitation scenarios:
+1. Direct assignment of FULL_RESTRICTED without SOFT_RESTRICTED
+2. Dual-role state with partial removal creating a bypass window
 
-pragma solidity 0.8.20;
-
-import "forge-std/Test.sol";
-import "../src/protocol/YieldForwarder.sol";
-import "../src/token/iTRY/iTry.sol";
-import "../src/token/iTRY/IiTryDefinitions.sol";
-
-contract Exploit_YieldForwarderWhitelistLock is Test {
-    iTry public itry;
-    YieldForwarder public forwarder;
-    
-    address public admin;
-    address public yieldRecipient;
-    address public caller;
-    
-    function setUp() public {
-        admin = makeAddr("admin");
-        yieldRecipient = makeAddr("yieldRecipient");
-        caller = makeAddr("caller");
-        
-        // Deploy iTry token
-        itry = new iTry();
-        itry.initialize(admin, admin); // admin is also minter for simplicity
-        
-        // Deploy YieldForwarder
-        forwarder = new YieldForwarder(address(itry), yieldRecipient);
-    }
-    
-    function test_YieldForwarderWhitelistLock() public {
-        // SETUP: Set iTry to WHITELIST_ENABLED mode
-        vm.prank(admin);
-        itry.updateTransferState(IiTryDefinitions.TransferState.WHITELIST_ENABLED);
-        
-        // Mint some yield to the YieldForwarder (simulating yield distribution)
-        vm.prank(admin);
-        itry.mint(address(forwarder), 1000e18);
-        
-        uint256 forwarderBalance = itry.balanceOf(address(forwarder));
-        assertEq(forwarderBalance, 1000e18, "Forwarder should have yield tokens");
-        
-        // EXPLOIT: Try to process yield - this will FAIL
-        vm.prank(caller);
-        vm.expectRevert(); // OperationNotAllowed
-        forwarder.processNewYield(1000e18);
-        
-        // Verify funds are still locked in forwarder
-        assertEq(itry.balanceOf(address(forwarder)), 1000e18, "Yield still locked");
-        assertEq(itry.balanceOf(yieldRecipient), 0, "Recipient received nothing");
-        
-        // VERIFY: Even emergency rescue fails
-        address rescueTarget = makeAddr("rescueTarget");
-        vm.prank(forwarder.owner());
-        vm.expectRevert(); // SafeERC20 will revert on failed transfer
-        forwarder.rescueToken(address(itry), rescueTarget, 1000e18);
-        
-        // Confirm funds are PERMANENTLY LOCKED
-        assertEq(itry.balanceOf(address(forwarder)), 1000e18, "Funds permanently locked");
-        console.log("Vulnerability confirmed: 1000e18 iTRY permanently locked in YieldForwarder");
-    }
-}
-```
+Both scenarios successfully demonstrate that FULL_RESTRICTED users can deposit to clean receiver addresses, violating the documented invariant.
 
 ## Notes
 
-This vulnerability highlights a critical integration issue between the transfer restriction mechanism in iTRY and the YieldForwarder contract. The issue is particularly severe because:
+**Critical Observations:**
 
-1. **No Warning System**: There's no mechanism to detect or warn when the whitelist configuration will cause yield distribution to fail
-2. **Silent Failure**: The yield gets minted successfully to YieldForwarder, but cannot be moved out, creating a false sense that everything is working
-3. **Cascading Impact**: This doesn't just affect one transaction - it locks ALL future yield until iTRY is taken out of WHITELIST_ENABLED mode or proper whitelisting is configured
-4. **Recovery Complexity**: Even with admin intervention, recovering requires either changing iTRY's transfer state (affecting the entire protocol) or granting whitelist roles retroactively
+1. **Inconsistent Validation:** The `_withdraw` function properly checks FULL_RESTRICTED for caller, receiver, and owner, while `_deposit` only checks SOFT_RESTRICTED. This inconsistency is the root cause.
 
-The root cause is that YieldForwarder was designed without consideration for iTRY's transfer restriction modes. The `processNewYield()` function has no access control, meaning any caller can trigger it, but the whitelist check requires the caller to be whitelisted - creating an impossible dependency when operating in restricted mode.
+2. **Role Management Flaw:** The `addToBlacklist` and `removeFromBlacklist` functions don't enforce mutual exclusivity, allowing users to hold both roles simultaneously and creating exploitable state transitions.
+
+3. **Test Suite Gap:** Existing tests in `StakediTry.redistributeLockedAmount.t.sol` deposit FIRST then restrict, never testing whether FULL_RESTRICTED users can deposit. This test gap indicates the oversight was not caught during development.
+
+4. **Documentation vs. Implementation:** The comment explicitly states FULL_RESTRICTED prevents "transfer, stake, or unstake," but the implementation only enforces this for transfer and unstake, not stake (deposit).
+
+This vulnerability represents a genuine security flaw where the documented security model is not correctly implemented in code, creating a restriction bypass that undermines administrative sanctions.
 
 ### Citations
 
-**File:** src/protocol/YieldForwarder.sol (L97-107)
+**File:** src/token/wiTRY/StakediTry.sol (L29-30)
 ```text
-    function processNewYield(uint256 _newYieldAmount) external override {
-        if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-        if (yieldRecipient == address(0)) revert RecipientNotSet();
+    /// @notice The role which prevents an address to transfer, stake, or unstake. The owner of the contract can redirect address staking balance if an address is in full restricting mode.
+    bytes32 private constant FULL_RESTRICTED_STAKER_ROLE = keccak256("FULL_RESTRICTED_STAKER_ROLE");
+```
 
-        // Transfer yield tokens to the recipient
-        if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-            revert CommonErrors.TransferFailed();
-        }
-
-        emit YieldForwarded(yieldRecipient, _newYieldAmount);
+**File:** src/token/wiTRY/StakediTry.sol (L126-133)
+```text
+    function addToBlacklist(address target, bool isFullBlacklisting)
+        external
+        onlyRole(BLACKLIST_MANAGER_ROLE)
+        notOwner(target)
+    {
+        bytes32 role = isFullBlacklisting ? FULL_RESTRICTED_STAKER_ROLE : SOFT_RESTRICTED_STAKER_ROLE;
+        _grantRole(role, target);
     }
 ```
 
-**File:** src/protocol/YieldForwarder.sol (L166-166)
+**File:** src/token/wiTRY/StakediTry.sol (L140-143)
 ```text
-            IERC20(token).safeTransfer(to, amount);
+    function removeFromBlacklist(address target, bool isFullBlacklisting) external onlyRole(BLACKLIST_MANAGER_ROLE) {
+        bytes32 role = isFullBlacklisting ? FULL_RESTRICTED_STAKER_ROLE : SOFT_RESTRICTED_STAKER_ROLE;
+        _revokeRole(role, target);
+    }
 ```
 
-**File:** src/token/iTRY/iTry.sol (L210-214)
+**File:** src/token/wiTRY/StakediTry.sol (L247-249)
 ```text
-            } else if (
-                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
-                    && hasRole(WHITELISTED_ROLE, to)
-            ) {
-                // normal case
+        if (hasRole(SOFT_RESTRICTED_STAKER_ROLE, caller) || hasRole(SOFT_RESTRICTED_STAKER_ROLE, receiver)) {
+            revert OperationNotAllowed();
+        }
 ```
 
-**File:** src/token/iTRY/iTry.sol (L215-217)
+**File:** src/token/wiTRY/StakediTry.sol (L269-274)
 ```text
-            } else {
-                revert OperationNotAllowed();
-            }
+        if (
+            hasRole(FULL_RESTRICTED_STAKER_ROLE, caller) || hasRole(FULL_RESTRICTED_STAKER_ROLE, receiver)
+                || hasRole(FULL_RESTRICTED_STAKER_ROLE, _owner)
+        ) {
+            revert OperationNotAllowed();
+        }
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L413-416)
+**File:** src/token/wiTRY/StakediTry.sol (L292-298)
 ```text
-        _mint(address(yieldReceiver), newYield);
-
-        // Notify yield distributor of received yield
-        yieldReceiver.processNewYield(newYield);
+    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, from) && to != address(0)) {
+            revert OperationNotAllowed();
+        }
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, to)) {
+            revert OperationNotAllowed();
+        }
 ```

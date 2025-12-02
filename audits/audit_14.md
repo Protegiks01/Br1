@@ -1,276 +1,218 @@
+# Validation Result: VALID HIGH SEVERITY VULNERABILITY
+
 ## Title
-FastAccessVault.rescueToken Can Drain Operational DLF Balance Creating Unbacked iTRY Tokens
+wiTryOFTAdapter Permanently Locks Shares When Crediting to Blacklisted Users
 
 ## Summary
-The `rescueToken` function in FastAccessVault.sol lacks validation to prevent rescuing the vault's operational DLF token balance. This allows the owner to withdraw DLF tokens that back issued iTRY tokens without updating the accounting in iTryIssuer, directly violating the protocol's core invariant that "Total issued iTRY MUST ALWAYS be equal or lower to total value of DLF under custody." [1](#0-0) 
+The `wiTryOFTAdapter` contract on the hub chain (Ethereum L1) fails to override the `_credit()` function to handle blacklisted recipients, creating a critical asymmetry with the spoke chain implementation (`wiTryOFT`). When users bridge wiTRY shares back from L2 to L1 after being blacklisted, the unlock operation reverts due to StakediTry's transfer restrictions, permanently locking their shares in the adapter with no recovery mechanism.
 
 ## Impact
 **Severity**: High
 
+This vulnerability results in **permanent and irreversible loss of user funds**. Users who legitimately bridge wiTRY shares cross-chain and subsequently get blacklisted for regulatory compliance reasons will lose all bridged shares permanently. The shares become locked in the adapter contract with no owner-accessible rescue function, and cannot be recovered through the standard `redistributeLockedAmount` mechanism since that function requires the source address itself to be blacklisted, not merely holding blacklisted users' funds.
+
 ## Finding Description
-**Location:** `src/protocol/FastAccessVault.sol` (FastAccessVault contract, `rescueToken` function, lines 215-229)
 
-**Intended Logic:** The `rescueToken` function is documented as an emergency function to "rescue tokens accidentally sent to this contract." It should only allow rescuing tokens that were mistakenly sent to the vault, not the operational DLF balance that backs issued iTRY tokens. [2](#0-1) 
+**Location:** `src/token/wiTRY/crosschain/wiTryOFTAdapter.sol` [1](#0-0) 
 
-**Actual Logic:** The function allows rescuing ANY ERC20 token including the vault's operational token (`_vaultToken`, which is DLF). There is no validation check like `if (token == address(_vaultToken)) revert InvalidToken();` that would prevent this. [1](#0-0) 
+**Intended Logic:** 
+The wiTryOFTAdapter should safely handle bidirectional cross-chain transfers of wiTRY shares, ensuring shares can always be returned to legitimate users or appropriately redistributed if users become blacklisted during the transfer lifecycle.
+
+**Actual Logic:**
+The adapter relies on LayerZero's base `OFTAdapter._credit()` implementation, which performs a simple `safeTransfer()` to unlock shares. When the recipient has the `FULL_RESTRICTED_STAKER_ROLE`, StakediTry's `_beforeTokenTransfer` hook blocks the transfer: [2](#0-1) 
 
 **Exploitation Path:**
-1. Users mint iTRY by depositing DLF tokens to the FastAccessVault, which updates `_totalDLFUnderCustody` in iTryIssuer [3](#0-2) 
 
-2. Owner calls `FastAccessVault.rescueToken(address(_vaultToken), recipient, amount)` to withdraw DLF tokens from the vault [1](#0-0) 
+1. **Initial Bridge (L1→L2)**: Alice bridges 100 wiTRY shares from Ethereum to MegaETH
+   - `wiTryOFTAdapter.send()` locks shares by transferring from Alice to adapter address
+   - LayerZero message triggers `wiTryOFT.lzReceive()` on L2
+   - wiTryOFT mints 100 shares to Alice on L2
 
-3. The DLF tokens are transferred out, but `_totalDLFUnderCustody` in iTryIssuer is NOT decreased (unlike proper redemptions which update this value) [4](#0-3) 
+2. **Blacklist Event**: Alice gets added to `FULL_RESTRICTED_STAKER_ROLE` on L1 due to regulatory requirements
 
-4. The protocol now has unbacked iTRY in circulation - the accounting shows more DLF under custody than actually exists, violating the core invariant
+3. **Return Bridge (L2→L1)**: Alice attempts to bridge shares back to Ethereum
+   - `wiTryOFT.send()` burns Alice's 100 shares on L2
+   - LayerZero message delivered to `wiTryOFTAdapter.lzReceive()` on L1
+   - Adapter calls `_credit(alice, 100 shares)` internally
+   - Base OFTAdapter attempts `IERC20(token).safeTransfer(alice, 100 shares)`
+   - StakediTry's `_beforeTokenTransfer` checks if recipient has `FULL_RESTRICTED_STAKER_ROLE`
+   - Transaction **reverts** with `OperationNotAllowed()`
+   - 100 shares remain permanently locked in adapter
 
-**Security Property Broken:** Critical Invariant #1 from README: "The total issued iTRY in the Issuer contract should always be equal or lower to the total value of the DLF under custody. It should not be possible to mint 'unbacked' iTRY through the issuer." [5](#0-4) 
+4. **Failed Recovery**: The standard `redistributeLockedAmount` function cannot rescue these shares: [3](#0-2) 
+
+This function requires the `from` address to have `FULL_RESTRICTED_STAKER_ROLE`, but the adapter itself is not blacklisted—it's merely holding shares intended for a blacklisted user.
+
+**Security Property Broken:**
+Violates the protocol's invariant that blacklisted users' funds can be managed through administrative redistribution mechanisms.
 
 ## Impact Explanation
-- **Affected Assets**: All DLF tokens held in FastAccessVault, all issued iTRY tokens
-- **Damage Severity**: Complete loss of iTRY backing. If owner rescues substantial DLF amounts, users attempting redemptions will fail due to insufficient vault balance, while the protocol still believes sufficient collateral exists. This creates unbacked stablecoin tokens and protocol insolvency.
-- **User Impact**: All iTRY holders are affected. When users attempt to redeem their iTRY for DLF, the vault will have insufficient balance, causing redemptions to fail or require custodian intervention. The protocol's solvency guarantee is broken.
+
+**Affected Assets**: wiTRY shares (ERC4626 vault shares representing staked iTRY)
+
+**Damage Severity**:
+- Complete permanent loss of all shares bridged by users who are blacklisted between outbound and inbound cross-chain transfers
+- No administrative rescue function exists in the adapter contract
+- Locked shares cannot be recovered, burned, or redistributed
+- Each affected user loses 100% of their bridged share value
+
+**User Impact**: 
+Any user who bridges wiTRY shares cross-chain and subsequently gets blacklisted loses those shares permanently. This affects legitimate users who may be blacklisted for regulatory compliance reasons (AML, sanctions lists) after their shares are already deployed on L2. Given that blacklisting is a known regulatory requirement for the protocol, this scenario has realistic probability.
+
+**Trigger Conditions**: 
+Occurs whenever a user who has bridged shares to L2 is added to the blacklist on L1 before completing the return journey.
 
 ## Likelihood Explanation
-- **Attacker Profile**: Requires owner privileges (multisig), but represents a critical code defect rather than intentional malicious action
-- **Preconditions**: FastAccessVault must hold operational DLF tokens (normal operating state after any minting activity)
-- **Execution Complexity**: Single transaction calling `rescueToken` with vault token address
-- **Frequency**: Can be executed at any time the vault holds DLF tokens
+
+**User Profile**: Any legitimate user participating in cross-chain operations
+
+**Preconditions**:
+1. User must have bridged wiTRY shares from L1 to L2 (shares locked in adapter)
+2. User must be added to `FULL_RESTRICTED_STAKER_ROLE` blacklist on L1
+3. User attempts to bridge shares back from L2 to L1
+
+**Execution Complexity**: 
+Not an exploit—occurs through normal protocol operation when administrative blacklisting action occurs during the cross-chain transfer lifecycle
+
+**Frequency**: 
+Can occur for every user who gets blacklisted while having shares on L2. Given regulatory requirements for maintaining blacklists in DeFi protocols, this is not a theoretical edge case.
+
+**Overall Likelihood**: MEDIUM-HIGH
+
+The protocol explicitly supports blacklisting for regulatory compliance, and users will naturally use cross-chain functionality. The combination of these two legitimate features creates the permanent loss scenario.
 
 ## Recommendation
 
-The FastAccessVault should follow the same pattern as StakediTry, which explicitly prevents rescuing operational assets: [6](#0-5) 
+The wiTryOFTAdapter should override `_credit()` to mirror the protection logic already implemented in the spoke chain contract. This creates symmetry between hub and spoke implementations:
 
-Apply the same protection to FastAccessVault:
+**Comparison with Existing Protection (Spoke Chain):** [4](#0-3) 
+
+**Recommended Fix for Hub Chain:**
+
+Add the following to `src/token/wiTRY/crosschain/wiTryOFTAdapter.sol`:
 
 ```solidity
-// In src/protocol/FastAccessVault.sol, function rescueToken, add validation after line 217:
+import {IStakediTry} from "../interfaces/IStakediTry.sol";
 
-function rescueToken(address token, address to, uint256 amount) external onlyOwner nonReentrant {
-    if (to == address(0)) revert CommonErrors.ZeroAddress();
-    if (amount == 0) revert CommonErrors.ZeroAmount();
-    
-    // ADDED: Prevent rescuing operational vault token
-    if (token == address(_vaultToken)) revert InvalidToken();
-    
-    if (token == address(0)) {
-        // Rescue ETH
-        (bool success,) = to.call{value: amount}("");
-        if (!success) revert CommonErrors.TransferFailed();
-    } else {
-        // Rescue ERC20 tokens
-        IERC20(token).safeTransfer(to, amount);
+function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+    internal
+    virtual
+    override
+    returns (uint256 amountReceivedLD)
+{
+    IStakediTry vault = IStakediTry(address(innerToken));
+    if (vault.hasRole(vault.FULL_RESTRICTED_STAKER_ROLE(), _to)) {
+        emit FundsRedirectedFromBlacklistedUser(_to, owner(), _amountLD);
+        return super._credit(owner(), _amountLD, _srcEid);
     }
-
-    emit TokenRescued(token, to, amount);
+    return super._credit(_to, _amountLD, _srcEid);
 }
+
+event FundsRedirectedFromBlacklistedUser(
+    address indexed blacklistedUser, 
+    address indexed redirectedTo, 
+    uint256 amount
+);
 ```
 
-Add the error definition:
-```solidity
-error InvalidToken();
-```
+**Alternative Mitigation:**
 
-This ensures `rescueToken` can only rescue accidentally sent tokens, not the vault's operational DLF balance that backs issued iTRY.
-
-## Proof of Concept
+Add an emergency rescue function to manually recover shares locked due to blacklisted recipients:
 
 ```solidity
-// File: test/Exploit_RescueOperationalDLF.t.sol
-// Run with: forge test --match-test test_RescueOperationalDLF_CreatesUnbackedITRY -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/protocol/FastAccessVault.sol";
-import "./mocks/MockERC20.sol";
-import "./iTryIssuer.base.t.sol";
-
-contract Exploit_RescueOperationalDLF is iTryIssuerBaseTest {
-    
-    function test_RescueOperationalDLF_CreatesUnbackedITRY() public {
-        // SETUP: User mints iTRY with DLF collateral
-        uint256 mintAmount = 1000e18;
-        
-        vm.startPrank(whitelistedUser1);
-        collateralToken.approve(address(issuer), mintAmount);
-        issuer.mintFor(whitelistedUser1, mintAmount, 0);
-        vm.stopPrank();
-        
-        // Verify initial state: iTRY is fully backed
-        uint256 issuedITRY = issuer.getTotalIssuedITry();
-        uint256 dlfUnderCustody = issuer.getCollateralUnderCustody();
-        uint256 vaultBalance = vault.getAvailableBalance();
-        
-        console.log("Initial issued iTRY:", issuedITRY);
-        console.log("Initial DLF under custody:", dlfUnderCustody);
-        console.log("Initial vault DLF balance:", vaultBalance);
-        
-        assertGt(issuedITRY, 0, "iTRY should be minted");
-        assertEq(dlfUnderCustody, vaultBalance, "Custody accounting should match vault balance");
-        assertTrue(issuedITRY <= dlfUnderCustody, "Invariant: iTRY must be backed by DLF");
-        
-        // EXPLOIT: Owner rescues operational DLF tokens from vault
-        address recipient = makeAddr("recipient");
-        uint256 rescueAmount = vaultBalance / 2; // Rescue 50% of operational balance
-        
-        vm.prank(admin);
-        FastAccessVault(address(vault)).rescueToken(
-            address(collateralToken), 
-            recipient, 
-            rescueAmount
-        );
-        
-        // VERIFY: Accounting mismatch - unbacked iTRY created
-        uint256 finalIssuedITRY = issuer.getTotalIssuedITry();
-        uint256 finalDlfUnderCustody = issuer.getCollateralUnderCustody();
-        uint256 finalVaultBalance = vault.getAvailableBalance();
-        uint256 recipientBalance = collateralToken.balanceOf(recipient);
-        
-        console.log("\nAfter rescue:");
-        console.log("Final issued iTRY:", finalIssuedITRY);
-        console.log("Final DLF under custody (accounting):", finalDlfUnderCustody);
-        console.log("Final vault DLF balance (actual):", finalVaultBalance);
-        console.log("Rescued to recipient:", recipientBalance);
-        
-        // CRITICAL: Accounting shows full backing, but actual balance is reduced
-        assertEq(finalIssuedITRY, issuedITRY, "Issued iTRY unchanged");
-        assertEq(finalDlfUnderCustody, dlfUnderCustody, "Custody accounting NOT updated");
-        assertEq(finalVaultBalance, vaultBalance - rescueAmount, "Vault balance reduced");
-        assertEq(recipientBalance, rescueAmount, "DLF successfully rescued");
-        
-        // INVARIANT VIOLATED: iTRY is no longer fully backed
-        assertGt(finalDlfUnderCustody, finalVaultBalance, 
-            "VULNERABILITY: Accounting shows more DLF than actually exists");
-        
-        // IMPACT: Users cannot redeem because vault has insufficient balance
-        vm.startPrank(whitelistedUser1);
-        uint256 redeemAmount = finalIssuedITRY;
-        
-        // This will fail because vault doesn't have enough DLF
-        vm.expectRevert();
-        issuer.redeemFor(whitelistedUser1, redeemAmount, 0);
-        vm.stopPrank();
-        
-        console.log("\n[!] CRITICAL: Protocol believes it has", finalDlfUnderCustody, "DLF");
-        console.log("[!] CRITICAL: Vault actually has", finalVaultBalance, "DLF");
-        console.log("[!] CRITICAL: iTRY is now UNBACKED by", finalDlfUnderCustody - finalVaultBalance, "DLF");
-    }
+function rescueBlacklistedShares(address blacklistedUser, uint256 amount) 
+    external 
+    onlyOwner 
+{
+    IStakediTry vault = IStakediTry(address(innerToken));
+    require(
+        vault.hasRole(vault.FULL_RESTRICTED_STAKER_ROLE(), blacklistedUser),
+        "User not blacklisted"
+    );
+    IERC20(innerToken).safeTransfer(owner(), amount);
+    emit BlacklistedSharesRecovered(blacklistedUser, amount);
 }
 ```
 
 ## Notes
 
-**Why this is NOT a centralization risk:** While the vulnerability requires owner privileges to exploit, it represents a fundamental code defect that violates the protocol's core invariant. The codebase itself demonstrates awareness of this issue:
+**Critical Asymmetry Identified:**
 
-- StakediTry explicitly prevents rescuing operational assets with validation [7](#0-6) 
+The spoke chain implementation (`wiTryOFT`) has blacklist protection in `_credit()` that redirects tokens to the owner when crediting blacklisted users, while the hub chain implementation (`wiTryOFTAdapter`) lacks this protection entirely. This asymmetry demonstrates that the development team was aware of the risk but failed to implement consistent protection across both chain types.
 
-- The comment in StakediTry states: "the owner cannot rescue iTry tokens because they functionally sit here and belong to stakers" [8](#0-7) 
+**Why Standard Recovery Mechanisms Fail:**
 
-This same principle should apply to FastAccessVault's DLF tokens - they functionally belong to iTRY holders as backing collateral and should not be rescuable. The test claiming this is an "intentional design feature" conflicts with the protocol's documented invariants. [9](#0-8) 
+1. The `redistributeLockedAmount` function requires the source address to have `FULL_RESTRICTED_STAKER_ROLE`—but the adapter itself is not blacklisted
+2. The adapter contract has no rescue or emergency withdrawal functions
+3. LayerZero's base OFTAdapter does not include token recovery mechanisms
+4. StakediTry's `rescueTokens` function explicitly excludes the asset (iTRY) and wouldn't help with shares locked in external contracts
 
-The proper design pattern exists in the codebase but was not consistently applied to FastAccessVault, creating a critical vulnerability that enables unbacked stablecoin minting.
+**Impact on Protocol Design:**
+
+This vulnerability undermines the protocol's regulatory compliance framework by creating a scenario where legitimate blacklisting actions result in permanent fund loss rather than controlled fund redistribution.
 
 ### Citations
 
-**File:** src/protocol/FastAccessVault.sol (L207-214)
+**File:** src/token/wiTRY/crosschain/wiTryOFTAdapter.sol (L26-33)
 ```text
+contract wiTryOFTAdapter is OFTAdapter {
     /**
-     * @notice Rescue tokens accidentally sent to this contract
-     * @dev Only callable by owner. Can rescue both ERC20 tokens and native ETH
-     *      Use address(0) for rescuing ETH
-     * @param token The token address to rescue (use address(0) for ETH)
-     * @param to The address to send rescued tokens to
-     * @param amount The amount to rescue
+     * @notice Constructor for wiTryOFTAdapter
+     * @param _token Address of the wiTRY share token from StakedUSDe
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
      */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L215-229)
+**File:** src/token/wiTRY/StakediTry.sol (L168-185)
 ```text
-    function rescueToken(address token, address to, uint256 amount) external onlyOwner nonReentrant {
-        if (to == address(0)) revert CommonErrors.ZeroAddress();
-        if (amount == 0) revert CommonErrors.ZeroAmount();
-
-        if (token == address(0)) {
-            // Rescue ETH
-            (bool success,) = to.call{value: amount}("");
-            if (!success) revert CommonErrors.TransferFailed();
-        } else {
-            // Rescue ERC20 tokens
-            IERC20(token).safeTransfer(to, amount);
-        }
-
-        emit TokenRescued(token, to, amount);
-    }
-```
-
-**File:** src/protocol/iTryIssuer.sol (L604-618)
-```text
-    function _transferIntoVault(address from, uint256 dlfAmount, uint256 feeAmount) internal {
-        _totalDLFUnderCustody += dlfAmount;
-        // Transfer net DLF amount to buffer pool
-        if (!collateralToken.transferFrom(from, address(liquidityVault), dlfAmount)) {
-            revert CommonErrors.TransferFailed();
-        }
-
-        if (feeAmount > 0) {
-            // Transfer fee to treasury
-            if (!collateralToken.transferFrom(from, treasury, feeAmount)) {
-                revert CommonErrors.TransferFailed();
+    function redistributeLockedAmount(address from, address to) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, from) && !hasRole(FULL_RESTRICTED_STAKER_ROLE, to)) {
+            uint256 amountToDistribute = balanceOf(from);
+            uint256 iTryToVest = previewRedeem(amountToDistribute);
+            _burn(from, amountToDistribute);
+            _checkMinShares();
+            // to address of address(0) enables burning
+            if (to == address(0)) {
+                _updateVestingAmount(iTryToVest);
+            } else {
+                _mint(to, amountToDistribute);
             }
-            emit FeeProcessed(from, treasury, feeAmount);
+
+            emit LockedAmountRedistributed(from, to, amountToDistribute);
+        } else {
+            revert OperationNotAllowed();
         }
     }
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L627-635)
+**File:** src/token/wiTRY/StakediTry.sol (L292-299)
 ```text
-    function _redeemFromVault(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-        _totalDLFUnderCustody -= (receiveAmount + feeAmount);
-
-        liquidityVault.processTransfer(receiver, receiveAmount);
-
-        if (feeAmount > 0) {
-            liquidityVault.processTransfer(treasury, feeAmount);
+    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, from) && to != address(0)) {
+            revert OperationNotAllowed();
+        }
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, to)) {
+            revert OperationNotAllowed();
         }
     }
 ```
 
-**File:** README.md (L122-122)
-```markdown
-- The total issued iTry in the Issuer contract should always be be equal or lower to the total value of the DLF under custody. It should not be possible to mint "unbacked" iTry through the issuer. This does not mean that _totalIssuedITry needs to be equal to iTry.totalSupply(), though: there could be more than one minter contract using different backing assets.
-```
-
-**File:** src/token/wiTRY/StakediTry.sol (L145-161)
+**File:** src/token/wiTRY/crosschain/wiTryOFT.sol (L84-97)
 ```text
-    /**
-     * @notice Allows the owner to rescue tokens accidentally sent to the contract.
-     * Note that the owner cannot rescue iTry tokens because they functionally sit here
-     * and belong to stakers but can rescue staked iTry as they should never actually
-     * sit in this contract and a staker may well transfer them here by accident.
-     * @param token The token to be rescued.
-     * @param amount The amount of tokens to be rescued.
-     * @param to Where to send rescued tokens
-     */
-    function rescueTokens(address token, uint256 amount, address to)
-        external
-        nonReentrant
-        onlyRole(DEFAULT_ADMIN_ROLE)
+    function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+        internal
+        virtual
+        override
+        returns (uint256 amountReceivedLD)
     {
-        if (address(token) == asset()) revert InvalidToken();
-        IERC20(token).safeTransfer(to, amount);
-    }
-```
-
-**File:** test/FastAccessVault.t.sol (L1199-1207)
-```text
-    /// @dev Intentional design feature
-    function test_rescueToken_whenRescuingVaultToken_succeeds() public {
-        uint256 rescueAmount = 500_000e18;
-
-        vault.rescueToken(address(vaultToken), user1, rescueAmount);
-
-        assertEq(vaultToken.balanceOf(user1), rescueAmount, "Should be able to rescue vault token");
-        assertEq(vault.getAvailableBalance(), INITIAL_VAULT_BALANCE - rescueAmount, "Vault balance decreased");
+        // If the recipient is blacklisted, emit an event, redistribute funds, and credit the owner
+        if (blackList[_to]) {
+            emit RedistributeFunds(_to, _amountLD);
+            return super._credit(owner(), _amountLD, _srcEid);
+        } else {
+            return super._credit(_to, _amountLD, _srcEid);
+        }
     }
 ```

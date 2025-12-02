@@ -1,1 +1,0 @@
-Let me investigate this security question by analyzing the execution flow in `fastRedeem()` and examining if share price changes can cause discrepancies.

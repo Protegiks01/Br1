@@ -1,263 +1,153 @@
+# Validation Result: VALID HIGH SEVERITY VULNERABILITY
+
+After performing ruthless validation against all criteria, I confirm this is a **legitimate HIGH severity vulnerability**.
+
 ## Title
-FastAccessVault Target Buffer Calculation Can Exceed Total AUM, Breaking Liquidity Distribution
+iTRY Blacklist Bypass via Fast Redemption - Blacklisted iTRY Owners Can Extract Funds Through wiTRY Vault
 
 ## Summary
-The `_calculateTargetBufferBalance` function in `FastAccessVault.sol` fails to cap the target buffer at the total AUM when `minimumExpectedBalance` exceeds `_referenceAUM`, causing the vault to request more collateral than exists in the entire system and breaking the intended liquidity distribution architecture. [1](#0-0) 
+The fast redemption flow only validates the wiTRY blacklist (`FULL_RESTRICTED_STAKER_ROLE`) but fails to check if the share owner is blacklisted in the underlying iTRY token (`BLACKLISTED_ROLE`). This allows users blacklisted in iTRY to bypass the blacklist and extract their funds by redeeming wiTRY shares to a non-blacklisted receiver.
 
 ## Impact
-**Severity**: Medium
+**Severity**: High
+
+Users who are blacklisted in iTRY can completely bypass the blacklist mechanism and extract their staked iTRY (minus fast redemption fees) by redeeming their wiTRY shares to any non-blacklisted address they control. This defeats the fundamental purpose of blacklisting, which is typically used for regulatory compliance, sanctions enforcement, or security incident response. The protocol loses the ability to freeze funds of malicious actors or comply with legal/regulatory requirements.
 
 ## Finding Description
 
-**Location:** `src/protocol/FastAccessVault.sol` - `_calculateTargetBufferBalance` (lines 241-244) and `rebalanceFunds` (lines 165-181)
+**Location:** `src/token/wiTRY/StakediTry.sol` (function `_withdraw` lines 262-278), `src/token/wiTRY/StakediTryFastRedeem.sol` (function `fastRedeem` lines 57-71, function `_redeemWithFee` lines 138-156), `src/token/iTRY/iTry.sol` (function `_beforeTokenTransfer` lines 177-222)
 
-**Intended Logic:** The FastAccessVault should maintain a configurable percentage of total DLF collateral (e.g., 5%) to enable instant redemptions, with a minimum balance floor. The vault and custodian should maintain complementary balances that sum to the total AUM. [2](#0-1) 
+**Intended Logic:**
+According to the protocol invariant documented in README: "Blacklisted users cannot send/receive/mint/burn iTry tokens in any case." [1](#0-0) 
 
-**Actual Logic:** When `minimumExpectedBalance` exceeds the total AUM, the calculation returns `minimumExpectedBalance` without any cap, causing the vault to target holding MORE than the entire protocol's collateral. [1](#0-0) 
+Users blacklisted in iTRY should not be able to access their iTRY funds through ANY mechanism, including redemption from the wiTRY staking vault.
+
+**Actual Logic:**
+The fast redemption flow performs blacklist validation at two separate layers, but neither checks the share owner's iTRY blacklist status:
+
+1. **wiTRY blacklist check** in `StakediTry._withdraw()` validates that `caller`, `receiver`, and `_owner` do not have `FULL_RESTRICTED_STAKER_ROLE`: [2](#0-1) 
+
+2. **iTRY blacklist check** in `iTry._beforeTokenTransfer()` validates that `msg.sender`, `from`, and `to` do not have `BLACKLISTED_ROLE` when iTRY is transferred: [3](#0-2) 
+
+However, during fast redemption when iTRY is transferred from vault to receiver:
+- `msg.sender` = StakediTry vault contract (not blacklisted)
+- `from` = StakediTry vault contract (not blacklisted)  
+- `to` = receiver (validated as not blacklisted)
+
+**The owner's iTRY `BLACKLISTED_ROLE` status is never checked in either validation layer.**
 
 **Exploitation Path:**
 
-1. **Initial State**: Protocol deployed with `minimumExpectedBalance = 50,000 DLF` and initial AUM of 10,000,000 DLF (reasonable 0.5% ratio)
-
-2. **AUM Reduction**: Through normal protocol operations, AUM decreases below minimum:
-   - Users perform large redemptions reducing `_totalDLFUnderCustody`
-   - NAV price drops causing undercollateralization
-   - Admin burns excess iTRY via `burnExcessITry` function [3](#0-2) 
-
-3. **Rebalancing Triggered**: Anyone calls `rebalanceFunds()` when AUM = 30,000 DLF (less than minimum of 50,000)
-   - `_calculateTargetBufferBalance(30,000)` returns 50,000 (the minimum)
-   - Vault currently holds 10,000 DLF
-   - Function emits `TopUpRequestedFromCustodian` for 40,000 DLF
-   - **But custodian only has 20,000 DLF (30,000 total - 10,000 in vault = 20,000)** [4](#0-3) 
-
-4. **System Dysfunction**: 
-   - Custodian cannot fulfill the impossible request
-   - Vault continuously reports needing more funds than exist
-   - If custodian transfers all 20,000 to reach 30,000 in vault, they have 0 left
-   - System stuck targeting 50,000 but can never exceed 30,000 total AUM
-
-**Security Property Broken:** The vault is designed to hold a percentage of total collateral for fast redemptions while custodian holds the remainder. This calculation breaks that invariant by attempting to concentrate more than 100% of collateral in the vault.
+1. **Initial State**: User deposits iTRY into wiTRY vault, receiving wiTRY shares
+2. **Blacklist Event**: User gets blacklisted in iTRY token (granted `BLACKLISTED_ROLE`) but remains non-blacklisted in wiTRY (no `FULL_RESTRICTED_STAKER_ROLE`) - this can occur due to operational error where the blacklist manager updates only one system, or a time gap between updates
+3. **Exploit Execution**: Blacklisted owner calls `fastRedeem(shares, non_blacklisted_receiver, owner_address)` [4](#0-3) 
+4. **Bypass Success**: 
+   - wiTRY blacklist check passes (owner doesn't have `FULL_RESTRICTED_STAKER_ROLE`)
+   - `_redeemWithFee()` burns owner's wiTRY shares and transfers iTRY from vault to receiver [5](#0-4) 
+   - iTRY blacklist check passes (vault→receiver transfer, owner not validated)
+   - Blacklisted owner successfully extracts iTRY to controlled receiver address
 
 ## Impact Explanation
 
-- **Affected Assets**: All DLF collateral in the FastAccessVault and custodian
-- **Damage Severity**: 
-  - Rebalancing mechanism becomes dysfunctional, continuously requesting impossible amounts
-  - If custodian attempts to fulfill, ALL collateral gets pulled into vault, leaving custodian with zero
-  - Fast redemption architecture breaks - vault holds everything instead of percentage buffer
-  - System accounting becomes inconsistent with reality
-- **User Impact**: All protocol users affected indirectly through broken liquidity management, though no direct fund theft occurs
+**Affected Assets**: iTRY tokens held in the wiTRY staking vault belonging to users who are blacklisted in iTRY but not in wiTRY
+
+**Damage Severity**:
+- Complete bypass of iTRY blacklist mechanism
+- Blacklisted users can extract 95% of their staked iTRY (after 5% fast redemption fee) to any non-blacklisted address they control
+- Protocol loses ability to freeze funds of sanctioned users, malicious actors, or users involved in security incidents
+- Potential regulatory compliance violations if blacklisting was required for legal/sanctions reasons
+
+**User Impact**: Any user who (1) staked iTRY before being blacklisted, and (2) is blacklisted in iTRY but not in wiTRY, can exploit this vulnerability. The protocol's critical security guarantee for fund freezing is completely undermined.
 
 ## Likelihood Explanation
 
-- **Attacker Profile**: Any user can trigger conditions through redemptions; anyone can call `rebalanceFunds()`
-- **Preconditions**: 
-  - Protocol initialized with reasonable `minimumExpectedBalance`
-  - Total AUM decreases below minimum through redemptions, NAV drops, or admin burning excess iTRY
-  - No validation prevents setting minimum higher than current AUM [5](#0-4) 
+**Attacker Profile**: Any user holding wiTRY shares who is blacklisted in iTRY but not in wiTRY
 
-- **Execution Complexity**: Low - normal protocol operations (redemptions) can naturally trigger this state
-- **Frequency**: Occurs whenever AUM drops below `minimumExpectedBalance` and persists until admin manually adjusts minimum downward
+**Preconditions**:
+1. User has wiTRY shares (staked before blacklisting)
+2. User is blacklisted in iTRY (`BLACKLISTED_ROLE`) but NOT in wiTRY (`FULL_RESTRICTED_STAKER_ROLE`)
+3. Fast redemption is enabled by admin (standard operational state)
+4. Cooldown is active (normal protocol state)
+
+**Execution Complexity**: Single transaction calling `fastRedeem()` - trivial to execute
+
+**Realistic Scenario**: The vulnerability requires the protocol to have TWO separate blacklist systems that are manually synchronized. Human error, operational delays, or poor process coordination can easily result in a user being blacklisted in iTRY but not in wiTRY, creating the exploitation window.
+
+**Frequency**: Exploitable once per blacklisted user for their entire wiTRY balance. While blacklisting events may be rare, they are critical (regulatory actions, sanctions, security incidents), making even a single successful bypass have severe consequences.
 
 ## Recommendation
 
-Add a cap to ensure the target buffer never exceeds the total AUM:
+Add iTRY blacklist validation in the `_withdraw()` function to check if the owner is blacklisted in the underlying iTRY token before allowing redemption. This ensures the documented invariant is enforced by code rather than relying on manual synchronization of two separate blacklist systems.
 
-```solidity
-// In src/protocol/FastAccessVault.sol, function _calculateTargetBufferBalance, lines 241-244:
-
-// CURRENT (vulnerable):
-function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-    uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-    return (targetBufferBalance < minimumExpectedBalance) ? minimumExpectedBalance : targetBufferBalance;
-}
-
-// FIXED:
-function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-    uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-    uint256 effectiveMinimum = minimumExpectedBalance > _referenceAUM ? _referenceAUM : minimumExpectedBalance;
-    return (targetBufferBalance < effectiveMinimum) ? effectiveMinimum : targetBufferBalance;
-}
-// This ensures target never exceeds total AUM, maintaining the percentage-based architecture
-```
-
-**Alternative mitigation:** Add validation in `setMinimumBufferBalance` to prevent setting minimum above current AUM, though this doesn't handle AUM decreasing after deployment.
-
-## Proof of Concept
-
-```solidity
-// File: test/Exploit_BufferExceedsAUM.t.sol
-// Run with: forge test --match-test test_BufferExceedsAUM -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import "../src/protocol/FastAccessVault.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "./mocks/MockERC20.sol";
-import "./mocks/MockIssuerContract.sol";
-
-contract Exploit_BufferExceedsAUM is Test {
-    FastAccessVault vault;
-    MockERC20 vaultToken;
-    MockIssuerContract issuerContract;
-    address owner = address(this);
-    address custodian = makeAddr("custodian");
-    
-    uint256 constant INITIAL_AUM = 10_000_000e18;
-    uint256 constant MINIMUM_BALANCE = 50_000e18; 
-    uint256 constant TARGET_BPS = 500; // 5%
-    
-    function setUp() public {
-        vaultToken = new MockERC20("DLF", "DLF");
-        issuerContract = new MockIssuerContract(INITIAL_AUM);
-        
-        vault = new FastAccessVault(
-            address(vaultToken),
-            address(issuerContract),
-            custodian,
-            TARGET_BPS,
-            MINIMUM_BALANCE,
-            owner
-        );
-        
-        issuerContract.setVault(address(vault));
-        vaultToken.mint(address(vault), 10_000e18);
-    }
-    
-    function test_BufferExceedsAUM() public {
-        // SETUP: Initial state is healthy
-        assertEq(issuerContract.getCollateralUnderCustody(), INITIAL_AUM);
-        
-        // EXPLOIT: AUM drops below minimum through redemptions
-        uint256 newAUM = 30_000e18; // Less than MINIMUM_BALANCE of 50,000
-        issuerContract.setCollateralUnderCustody(newAUM);
-        
-        // VERIFY: Target exceeds total AUM
-        uint256 currentBalance = vaultToken.balanceOf(address(vault));
-        
-        // Rebalancing requests more than exists
-        vm.expectEmit(true, false, false, false);
-        emit TopUpRequestedFromCustodian(custodian, 0, MINIMUM_BALANCE);
-        vault.rebalanceFunds();
-        
-        // Vulnerability confirmed: Vault targets 50,000 but only 30,000 exists in entire system
-        // If custodian has 20,000 (30,000 total - 10,000 in vault), they cannot fulfill 40,000 request
-        assertEq(MINIMUM_BALANCE, 50_000e18, "Target is 50k");
-        assertEq(newAUM, 30_000e18, "But total AUM is only 30k");
-        assertGt(MINIMUM_BALANCE, newAUM, "Vulnerability confirmed: Target exceeds total AUM");
-    }
-    
-    event TopUpRequestedFromCustodian(address indexed custodian, uint256 amount, uint256 targetBalance);
-}
-```
+**Alternative mitigation**: Implement automatic cross-contract synchronization where blacklisting a user in iTRY automatically blacklists them in wiTRY as well. However, this requires additional cross-contract calls and careful gas/complexity considerations.
 
 ## Notes
 
-The existing test suite includes a case demonstrating this scenario (`test_rebalanceFunds_whenAUMIsZero_usesMinimumBalance` at line 758) where AUM = 0 but minimum = 50,000, yet the test expects the request to proceed without validating feasibility. [6](#0-5) 
+**Critical Distinction**: This vulnerability exists because the protocol has TWO independent blacklist systems:
+1. **iTRY blacklist** (`BLACKLISTED_ROLE` in iTry.sol) - controls iTRY token transfers
+2. **wiTRY blacklist** (`FULL_RESTRICTED_STAKER_ROLE` in StakediTry.sol) - controls wiTRY staking operations
 
-The vulnerability is exacerbated by the lack of validation when setting `minimumExpectedBalance`, allowing any value to be set regardless of current or future AUM levels. [5](#0-4) 
+The fast redemption flow only validates the wiTRY blacklist, creating a bypass vector when these systems are not synchronized.
 
-While the off-chain custodian may refuse to fulfill impossible requests, the on-chain accounting and rebalancing logic remain broken, potentially causing operational issues and preventing proper liquidity distribution across the protocol.
+**Difference from Known Issue**: The Zellic audit identified "Blacklisted user can transfer tokens on behalf of non-blacklisted users using allowance" which refers to `msg.sender` not being checked in allowance-based transfers. [6](#0-5) 
+
+This finding is fundamentally different: it involves redemption from the wiTRY vault where the vault acts as an intermediary, and the share owner's iTRY blacklist status is never checked at any validation layer. The mechanisms, root causes, and affected code paths are entirely distinct.
+
+**Validation Summary**: This vulnerability passes all validation criteria - it's in-scope, exploitable by unprivileged users, different from known issues, violates documented invariants, has concrete HIGH severity impact, and is not a design feature but a clear security gap.
 
 ### Citations
 
-**File:** src/protocol/FastAccessVault.sol (L12-30)
-```text
-/**
- * @title FastAccessVault
- * @author Inverter Network
- * @notice Liquidity buffer vault for instant iTRY redemptions without custodian delays
- * @dev This contract maintains a configurable percentage of total DLF collateral to enable
- *      instant redemptions. It automatically rebalances between itself and the custodian to
- *      maintain optimal liquidity levels.
- *
- *      Key features:
- *      - Holds buffer of DLF tokens for instant redemptions
- *      - Automatic rebalancing based on target percentage of AUM
- *      - Minimum balance floor to ensure always-available liquidity
- *      - Fixed reference to authorized issuer contract for access control
- *      - Emergency token rescue functionality
- *
- *      The vault uses a two-tier sizing strategy:
- *      1. Target percentage: Buffer = AUM * targetBufferPercentageBPS / 10000
- *      2. Minimum balance: Buffer = max(calculated_target, minimumExpectedBalance)
- *
+**File:** README.md (L35-35)
+```markdown
+-  Blacklisted user can transfer tokens on behalf of non-blacklisted users using allowance - `_beforeTokenTransfer` does not validate `msg.sender`, a blacklisted caller can still initiate a same-chain token transfer on behalf of a non-blacklisted user as long as allowance exists.
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L165-181)
-```text
-    function rebalanceFunds() external {
-        uint256 aumReferenceValue = _issuerContract.getCollateralUnderCustody();
-        uint256 targetBalance = _calculateTargetBufferBalance(aumReferenceValue);
-        uint256 currentBalance = _vaultToken.balanceOf(address(this));
-
-        if (currentBalance < targetBalance) {
-            uint256 needed = targetBalance - currentBalance;
-            // Emit event for off-chain custodian to process
-            emit TopUpRequestedFromCustodian(address(custodian), needed, targetBalance);
-        } else if (currentBalance > targetBalance) {
-            uint256 excess = currentBalance - targetBalance;
-            if (!_vaultToken.transfer(custodian, excess)) {
-                revert CommonErrors.TransferFailed();
-            }
-            emit ExcessFundsTransferredToCustodian(address(custodian), excess, targetBalance);
-        }
-    }
+**File:** README.md (L124-124)
+```markdown
+- Blacklisted users cannot send/receive/mint/burn iTry tokens in any case.
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L197-201)
+**File:** src/token/wiTRY/StakediTry.sol (L269-273)
 ```text
-    function setMinimumBufferBalance(uint256 newMinimumBufferBalance) external onlyOwner {
-        uint256 oldMinimumBalance = minimumExpectedBalance;
-        minimumExpectedBalance = newMinimumBufferBalance;
-        emit MinimumBufferBalanceUpdated(oldMinimumBalance, newMinimumBufferBalance);
-    }
+        if (
+            hasRole(FULL_RESTRICTED_STAKER_ROLE, caller) || hasRole(FULL_RESTRICTED_STAKER_ROLE, receiver)
+                || hasRole(FULL_RESTRICTED_STAKER_ROLE, _owner)
+        ) {
+            revert OperationNotAllowed();
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L241-244)
+**File:** src/token/iTRY/iTry.sol (L189-192)
 ```text
-    function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-        uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-        return (targetBufferBalance < minimumExpectedBalance) ? minimumExpectedBalance : targetBufferBalance;
-    }
+            } else if (
+                !hasRole(BLACKLISTED_ROLE, msg.sender) && !hasRole(BLACKLISTED_ROLE, from)
+                    && !hasRole(BLACKLISTED_ROLE, to)
+            ) {
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L373-390)
+**File:** src/token/wiTRY/StakediTryFastRedeem.sol (L57-71)
 ```text
-    function burnExcessITry(uint256 iTRYAmount)
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        nonReentrant
+    function fastRedeem(uint256 shares, address receiver, address owner)
+        external
+        ensureCooldownOn
+        ensureFastRedeemEnabled
+        returns (uint256 assets)
     {
-        // Validate iTRYAmount > 0
-        if (iTRYAmount == 0) revert CommonErrors.ZeroAmount();
+        if (shares > maxRedeem(owner)) revert ExcessiveRedeemAmount();
 
-        if (iTRYAmount > _totalIssuedITry) {
-            revert AmountExceedsITryIssuance(iTRYAmount, _totalIssuedITry);
-        }
+        uint256 totalAssets = previewRedeem(shares);
+        uint256 feeAssets = _redeemWithFee(shares, totalAssets, receiver, owner);
 
-        _burn(msg.sender, iTRYAmount);
+        emit FastRedeemed(owner, receiver, shares, totalAssets, feeAssets);
 
-
-        // Emit redemption event
-        emit excessITryRemoved(iTRYAmount, _totalIssuedITry);
+        return totalAssets - feeAssets;
     }
 ```
 
-**File:** test/FastAccessVault.t.sol (L758-770)
+**File:** src/token/wiTRY/StakediTryFastRedeem.sol (L151-155)
 ```text
-    function test_rebalanceFunds_whenAUMIsZero_usesMinimumBalance() public {
-        _updateAUM(0);
-        _setupVaultWithBalance(10_000e18);
+        // Withdraw fee portion to treasury
+        _withdraw(_msgSender(), fastRedeemTreasury, owner, feeAssets, feeShares);
 
-        // Target should be minimum since 0 * percentage = 0 < minimum
-        uint256 targetBalance = DEFAULT_MINIMUM;
-        uint256 needed = targetBalance - 10_000e18;
-
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit TopUpRequestedFromCustodian(custodian, needed, targetBalance);
-
-        vault.rebalanceFunds();
-    }
+        // Withdraw net portion to receiver
+        _withdraw(_msgSender(), receiver, owner, netAssets, netShares);
 ```

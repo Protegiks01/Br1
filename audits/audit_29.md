@@ -1,52 +1,65 @@
 # NoVulnerability found for this question.
 
-## Analysis Summary
+## Disqualification Reason: Requires Admin Misconfiguration (Threat Model Violation)
 
-After thorough investigation of the YieldForwarder contract and its interaction with ERC20 Permit functionality, I found **no exploitable vulnerability**.
+The security claim **FAILS Phase 1: Immediate Disqualification Checks** under **Section B: Threat Model Violations**.
 
-### Key Technical Facts:
+### Critical Issue
 
-1. **YieldForwarder uses `transfer()`, not `transferFrom()`** [1](#0-0) 
+The vulnerability **only manifests** if the owner (a trusted admin) calls the privileged `setMinter()` function to change the minter address from the LayerZero endpoint to a different address. [1](#0-0) 
 
-2. **iTry token supports ERC20 Permit** [2](#0-1) [3](#0-2) 
+The claim explicitly acknowledges this in multiple sections:
 
-3. **The intended flow**: iTryIssuer mints iTRY to YieldForwarder, then calls processNewYield [4](#0-3) 
+**Exploitation Path (Step 2):**
+> "Owner calls `setMinter(newAddress)` to change minter (e.g., for operational reasons or mistakenly thinking it should be a different address)"
 
-### Why No Vulnerability Exists:
+**Preconditions:**
+> "Owner calls `setMinter()` to change the minter address from the endpoint to any other address"
 
-The ERC20 `transfer()` function **does not use allowances** - it only requires the sender to have sufficient balance. ERC20 Permit's sole purpose is to set allowances via signatures for use with `transferFrom()` operations.
+**Likelihood Explanation:**
+> "This is not an attack by an external adversary, but rather a protocol misconfiguration that can occur through legitimate owner operations"
 
-**Attack vectors analyzed and dismissed:**
-- **Draining YieldForwarder via permit**: Impossible - would require a valid permit signature FROM YieldForwarder contract (contracts cannot sign messages without EIP-1271 implementation, which YieldForwarder lacks)
-- **Manipulating allowances to interfere with transfer()**: Irrelevant - `transfer()` does not check or use allowances
-- **Front-running with permit calls**: Cannot affect `transfer()` operation as allowances don't apply
+### Validation Framework Violation
 
-### Notes:
-While processNewYield lacks access control (anyone can call it), this is not a permit-related vulnerability and only affects distribution timing, not fund security, as tokens are sent to the owner-controlled `yieldRecipient` address.
+The Brix Money Protocol validation framework explicitly excludes:
+
+❌ **"Needs protocol to be misconfigured by trusted admins"**
+
+❌ **"Requires Owner, Minter, Blacklist Manager, Whitelist Manager, or Yield Processor to act maliciously"** (or to misconfigure the system)
+
+The framework states:
+> "Brix Money Trusted Roles: Admins can mint, manage access controls, configure cross-chain settings—DO NOT assume they abuse these privileges."
+
+### Centralization Risk - Out of Scope
+
+The README explicitly declares: [2](#0-1) 
+
+This is a **centralization risk**: the owner has the privilege to configure the minter address via `setMinter()`, and using this privilege incorrectly (whether maliciously or mistakenly) falls under admin misconfiguration.
+
+### Conclusion
+
+Without the owner calling `setMinter()` to change the minter from the endpoint, **no vulnerability exists**. The issue is entirely dependent on a trusted admin action, which is explicitly out of scope per the validation framework and README.
+
+**Notes:**
+- The technical analysis of how `_beforeTokenTransfer` checks `msg.sender == minter` is correct
+- However, the vulnerability requires a **prerequisite admin action** that violates the threat model
+- This is analogous to claiming "if owner sets wrong parameters, the system breaks" - such issues are administrative risks, not protocol vulnerabilities
+- The validation framework's default stance applies: "When in doubt, it's INVALID" and "Requires protocol to be misconfigured by trusted admins = INVALID"
 
 ### Citations
 
-**File:** src/protocol/YieldForwarder.sol (L102-104)
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L60-64)
 ```text
-        if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-            revert CommonErrors.TransferFailed();
-        }
+    function setMinter(address _newMinter) external onlyOwner {
+        address oldMinter = minter;
+        minter = _newMinter;
+        emit MinterUpdated(oldMinter, _newMinter);
+    }
 ```
 
-**File:** src/token/iTRY/iTry.sol (L4-4)
-```text
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
-```
+**File:** README.md (L27-29)
+```markdown
+### Centralization Risks
 
-**File:** src/token/iTRY/iTry.sol (L50-50)
-```text
-        __ERC20Permit_init("iTry");
-```
-
-**File:** src/protocol/iTryIssuer.sol (L413-416)
-```text
-        _mint(address(yieldReceiver), newYield);
-
-        // Notify yield distributor of received yield
-        yieldReceiver.processNewYield(newYield);
+Any centralization risks are out-of-scope for the purposes of this audit contest.
 ```

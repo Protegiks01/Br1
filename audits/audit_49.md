@@ -1,192 +1,79 @@
-## Title
-Whitelist Enforcement Bypass During iTRY Minting in WHITELIST_ENABLED Mode
+# NoVulnerability found for this question.
 
-## Summary
-The iTry token's `_beforeTokenTransfer` hook correctly prevents blacklisted addresses from receiving minted tokens. However, it fails to enforce whitelist requirements during minting when in WHITELIST_ENABLED state, allowing non-whitelisted addresses to receive iTRY tokens and violating the protocol's whitelist enforcement invariant.
+## Validation Summary
 
-## Impact
-**Severity**: High
+After rigorous validation of the security claim using the Brix Money Protocol validation framework, I can **CONFIRM** that the analysis is **CORRECT**. Users **CANNOT** bypass the FULLY_DISABLED transfer state through the OFT adapter's `send()` function.
 
-## Finding Description
-**Location:** `src/token/iTRY/iTry.sol` (function `_beforeTokenTransfer`, lines 201-202) [1](#0-0) 
+## Validated Findings
 
-**Intended Logic:** According to the protocol invariants, in WHITELIST_ENABLED state, "ONLY whitelisted users can send/receive/burn iTRY." This means all forms of receiving tokens—including minting—should require the recipient to be whitelisted.
+### 1. Transfer State Enforcement is Absolute
 
-**Actual Logic:** When the transfer state is WHITELIST_ENABLED, the minting case in `_beforeTokenTransfer` only checks that the recipient is NOT blacklisted, but does NOT verify that the recipient IS whitelisted. This is inconsistent with how normal transfers are validated, which require all parties to be whitelisted. [2](#0-1) 
+The `iTry` token's `_beforeTokenTransfer()` hook enforces the FULLY_DISABLED state with **NO exceptions**: [1](#0-0) 
 
-**Exploitation Path:**
-1. Protocol admin sets `transferState` to `TransferState.WHITELIST_ENABLED` to restrict token distribution to whitelisted users only
-2. Alice (whitelisted user with `WHITELISTED_USER_ROLE` on iTryIssuer) deposits DLF collateral
-3. Alice calls `iTryIssuer.mintFor(bob, dlfAmount, minAmountOut)` where Bob has no `WHITELISTED_ROLE` on the iTry token (but is not blacklisted) [3](#0-2) 
+When `transferState` is set to `FULLY_DISABLED`, the function reverts with `OperationNotAllowed()` unconditionally - no exceptions for MINTER_CONTRACT, DEFAULT_ADMIN_ROLE, WHITELISTED_ROLE, or any other privileged address.
 
-4. The `_beforeTokenTransfer` hook evaluates the minting condition: `hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)` - this passes because iTryIssuer has MINTER_CONTRACT role, from is address(0), and Bob is not blacklisted
-5. Bob receives iTRY tokens despite not being whitelisted, violating the whitelist invariant
+### 2. OFT Adapter Uses Standard Transfer Flow
 
-**Security Property Broken:** 
-Invariant #3: "Whitelist Enforcement: In WHITELIST_ENABLED state, ONLY whitelisted users can send/receive/burn iTRY."
+The `iTryTokenOFTAdapter` is a minimal wrapper around LayerZero's `OFTAdapter`: [2](#0-1) 
 
-The word "receive" in this invariant should apply to ALL methods of receiving tokens, including minting, but the code only enforces whitelist for transfers, not minting.
+The adapter uses the **lock/unlock pattern**, which is explicitly documented in the similar `wiTryOFTAdapter` contract: [3](#0-2) 
 
-## Impact Explanation
-- **Affected Assets**: iTRY tokens can be minted to unauthorized (non-whitelisted) recipients
-- **Damage Severity**: Complete bypass of whitelist controls during minting operations. Any whitelisted user can effectively distribute iTRY to non-whitelisted addresses by minting to them, defeating the purpose of WHITELIST_ENABLED mode
-- **User Impact**: All protocol users are affected when whitelist mode is active. The protocol cannot enforce KYC/AML restrictions or regulatory compliance requirements that the whitelist is designed to enforce
+This pattern requires calling `transferFrom()` to lock tokens from the user into the adapter contract before sending cross-chain messages.
 
-## Likelihood Explanation
-- **Attacker Profile**: Any whitelisted user with sufficient DLF collateral can exploit this
-- **Preconditions**: 
-  - Protocol must be in WHITELIST_ENABLED state
-  - Attacker must have WHITELISTED_USER_ROLE on iTryIssuer contract
-  - Target recipient must not be blacklisted (but doesn't need to be whitelisted)
-- **Execution Complexity**: Single transaction calling `mintFor()` with target address
-- **Frequency**: Unlimited - can be exploited continuously as long as preconditions are met
+### 3. No Special Privileges Granted
 
-## Recommendation
+The deployment script confirms that the adapter is deployed without any special roles on the iTry token: [4](#0-3) 
 
-In `src/token/iTRY/iTry.sol`, function `_beforeTokenTransfer`, lines 201-202, add a whitelist check for the recipient during minting:
+No `grantRole()` calls are made to give the adapter privileged access to bypass transfer restrictions.
 
-```solidity
-// CURRENT (vulnerable):
-} else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
-    // minting
+### 4. Transfer Hook is Always Triggered
 
-// FIXED:
-} else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to) && hasRole(WHITELISTED_ROLE, to)) {
-    // minting - requires recipient to be whitelisted in WHITELIST_ENABLED mode
-```
+Since the OFT adapter must call `transferFrom()` to lock tokens, and OpenZeppelin's ERC20 implementation triggers `_beforeTokenTransfer()` for all transfer operations (including `transferFrom()`), the FULLY_DISABLED check will **always** be enforced.
 
-This ensures consistency with the normal transfer case which requires all parties to be whitelisted.
+## Conclusion
 
-## Proof of Concept
+The invariant **"FULLY_DISABLED: NO addresses can transfer"** is properly enforced across **ALL** transfer mechanisms, including cross-chain bridging. The OFT adapter cannot bypass this restriction because:
 
-```solidity
-// File: test/Exploit_WhitelistBypass.t.sol
-// Run with: forge test --match-test test_WhitelistBypassDuringMinting -vvv
+1. It relies on the standard ERC20 `transferFrom()` function to lock tokens
+2. `transferFrom()` triggers `_beforeTokenTransfer()` hook
+3. The hook enforces FULLY_DISABLED state unconditionally with no exceptions
+4. The adapter has no special privileges to bypass these checks
 
-pragma solidity 0.8.20;
-
-import "forge-std/Test.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/token/iTRY/iTry.sol";
-
-contract Exploit_WhitelistBypass is Test {
-    iTryIssuer public issuer;
-    iTry public itry;
-    address public admin;
-    address public whitelistedAlice;
-    address public nonWhitelistedBob;
-    
-    function setUp() public {
-        admin = makeAddr("admin");
-        whitelistedAlice = makeAddr("whitelistedAlice");
-        nonWhitelistedBob = makeAddr("nonWhitelistedBob");
-        
-        // Deploy and initialize iTry token
-        itry = new iTry();
-        issuer = new iTryIssuer();
-        itry.initialize(admin, address(issuer));
-        
-        // Set to WHITELIST_ENABLED mode
-        vm.prank(admin);
-        itry.updateTransferState(IiTryDefinitions.TransferState.WHITELIST_ENABLED);
-        
-        // Whitelist Alice on iTry token
-        vm.prank(admin);
-        address[] memory users = new address[](1);
-        users[0] = whitelistedAlice;
-        itry.addWhitelistAddress(users);
-        
-        // Give Alice WHITELISTED_USER_ROLE on issuer (separate from iTry whitelist)
-        vm.prank(admin);
-        issuer.grantRole(issuer.WHITELISTED_USER_ROLE(), whitelistedAlice);
-    }
-    
-    function test_WhitelistBypassDuringMinting() public {
-        // SETUP: Verify Bob is not whitelisted on iTry token
-        assertFalse(itry.hasRole(itry.WHITELISTED_ROLE(), nonWhitelistedBob), "Bob should not be whitelisted");
-        
-        // SETUP: Verify protocol is in WHITELIST_ENABLED state
-        assertEq(uint256(itry.transferState()), uint256(IiTryDefinitions.TransferState.WHITELIST_ENABLED), "Should be in WHITELIST_ENABLED mode");
-        
-        // EXPLOIT: Alice mints iTRY to non-whitelisted Bob
-        vm.prank(whitelistedAlice);
-        uint256 mintAmount = 1000e18;
-        issuer.mintFor(nonWhitelistedBob, 100e18, mintAmount);
-        
-        // VERIFY: Bob received iTRY tokens despite not being whitelisted
-        assertGt(itry.balanceOf(nonWhitelistedBob), 0, "Vulnerability confirmed: Non-whitelisted Bob received minted iTRY");
-        
-        // VERIFY: Bob cannot transfer the tokens (transfer requires whitelist)
-        vm.prank(nonWhitelistedBob);
-        vm.expectRevert(IiTryDefinitions.OperationNotAllowed.selector);
-        itry.transfer(whitelistedAlice, 1e18);
-    }
-}
-```
+**The security analysis provided is thorough, accurate, and correctly identifies that there is NO vulnerability in this mechanism.**
 
 ## Notes
 
-**Regarding the Original Question:** The specific question asked whether blacklisted addresses could receive minted tokens. The answer is **NO** - the code correctly prevents this through the check `!hasRole(BLACKLISTED_ROLE, to)` on line 201-202. [4](#0-3) 
-
-Both in FULLY_ENABLED and WHITELIST_ENABLED states, blacklisted addresses cannot receive minted tokens, so blacklist enforcement works correctly for minting.
-
-However, during the investigation of the `_beforeTokenTransfer` hook and minting logic, I discovered this related critical vulnerability: **whitelist bypass during minting**. This violates a different but equally important invariant (#3 - Whitelist Enforcement) and represents a High severity security issue that allows unauthorized token distribution when whitelist mode is active.
+This validation confirms that the Brix Money protocol's transfer state enforcement mechanism is robust and cannot be bypassed through the LayerZero OFT adapter cross-chain bridging functionality. The FULLY_DISABLED state provides absolute protection by blocking all transfers at the token contract level, including those initiated by cross-chain bridge adapters.
 
 ### Citations
 
-**File:** src/token/iTRY/iTry.sol (L182-183)
+**File:** src/token/iTRY/iTry.sol (L219-221)
 ```text
-            } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
-                // minting
-```
-
-**File:** src/token/iTRY/iTry.sol (L201-202)
-```text
-            } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
-                // minting
-```
-
-**File:** src/token/iTRY/iTry.sol (L210-213)
-```text
-            } else if (
-                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
-                    && hasRole(WHITELISTED_ROLE, to)
-            ) {
-```
-
-**File:** src/protocol/iTryIssuer.sol (L270-302)
-```text
-    function mintFor(address recipient, uint256 dlfAmount, uint256 minAmountOut)
-        public
-        onlyRole(_WHITELISTED_USER_ROLE)
-        nonReentrant
-        returns (uint256 iTRYAmount)
-    {
-        // Validate recipient address
-        if (recipient == address(0)) revert CommonErrors.ZeroAddress();
-
-        // Validate dlfAmount > 0
-        if (dlfAmount == 0) revert CommonErrors.ZeroAmount();
-
-        // Get NAV price from oracle
-        uint256 navPrice = oracle.price();
-        if (navPrice == 0) revert InvalidNAVPrice(navPrice);
-
-        uint256 feeAmount = _calculateMintFee(dlfAmount);
-        uint256 netDlfAmount = feeAmount > 0 ? (dlfAmount - feeAmount) : dlfAmount;
-
-        // Calculate iTRY amount: netDlfAmount * navPrice / 1e18
-        iTRYAmount = netDlfAmount * navPrice / 1e18;
-
-        if (iTRYAmount == 0) revert CommonErrors.ZeroAmount();
-
-        // Check if output meets minimum requirement
-        if (iTRYAmount < minAmountOut) {
-            revert OutputBelowMinimum(iTRYAmount, minAmountOut);
+        } else if (transferState == TransferState.FULLY_DISABLED) {
+            revert OperationNotAllowed();
         }
+```
 
-        // Transfer collateral into vault BEFORE minting (CEI pattern)
-        _transferIntoVault(msg.sender, netDlfAmount, feeAmount);
+**File:** src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol (L21-28)
+```text
+contract iTryTokenOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for iTryTokenAdapter
+     * @param _token Address of the existing iTryToken contract
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
+     */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
+```
 
-        _mint(recipient, iTRYAmount);
+**File:** src/token/wiTRY/crosschain/wiTryOFTAdapter.sol (L22-24)
+```text
+ * IMPORTANT: This adapter uses lock/unlock pattern (not mint/burn) because
+ * the share token's totalSupply must match the vault's accounting.
+ * Burning shares would break the share-to-asset ratio in the ERC4626 vault.
+```
+
+**File:** script/deploy/hub/03_DeployCrossChain.s.sol (L82-82)
+```text
+        iTryTokenOFTAdapter itryAdapter = _deployITryAdapter(factory, addrs.itryToken, endpoint);
 ```

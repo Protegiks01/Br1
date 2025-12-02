@@ -1,250 +1,141 @@
+# Validation Result: VALID HIGH SEVERITY VULNERABILITY
+
 ## Title
-Whitelist Bypass in WHITELIST_ENABLED State Allows Non-Whitelisted Users to Redeem iTRY Tokens via iTryIssuer
+iTRY Tokens Permanently Stranded in OFTAdapter During WHITELIST_ENABLED Mode Due to Missing Whitelist Permission
 
 ## Summary
-The `_beforeTokenTransfer` function in iTry.sol fails to enforce whitelist requirements when burning tokens via the MINTER_CONTRACT role in WHITELIST_ENABLED state. This allows non-whitelisted (but non-blacklisted) users to redeem their iTRY tokens through iTryIssuer.redeemFor(), violating Invariant 3 which states that ONLY whitelisted users can burn iTRY in WHITELIST_ENABLED state. [1](#0-0) 
+The `iTryTokenOFTAdapter` on the hub chain lacks the `WHITELISTED_ROLE` required to unlock tokens when iTRY enters `WHITELIST_ENABLED` transfer state. When users burn iTRY on spoke chains and LayerZero messages arrive to unlock tokens on the hub, the transfer from adapter to recipient fails, permanently locking user funds in the adapter contract with no recovery mechanism.
 
 ## Impact
-**Severity**: Medium
+**Severity**: High
+
+**Rationale**: This vulnerability causes permanent, unrecoverable loss of user funds during a legitimate protocol state transition. It affects ALL users performing cross-chain operations during `WHITELIST_ENABLED` mode and violates a core protocol invariant.
+
+**Affected Assets**: All iTRY tokens being returned from spoke chains to hub chain during `WHITELIST_ENABLED` mode
+
+**Damage Severity**: 100% permanent loss. Once tokens are burned on spoke chains and locked in the adapter on hub chain, they cannot be recovered. The base `OFTAdapter` contract has no rescue function, and `iTryTokenOFTAdapter` is a simple wrapper with no additional recovery logic.
+
+**User Impact**: Every user who sends iTRY from spoke chains back to hub chain during `WHITELIST_ENABLED` mode loses their funds. This includes legitimate cross-chain transfers, liquidity management, and users moving funds between chains.
 
 ## Finding Description
-**Location:** `src/token/iTRY/iTry.sol` (_beforeTokenTransfer function, lines 198-200)
 
-**Intended Logic:** When iTry token is in WHITELIST_ENABLED state (TransferState = 1), Invariant 3 requires that ONLY whitelisted users can send/receive/burn iTRY tokens. The burn operation should verify that the `from` address has the WHITELISTED_ROLE.
+**Location**: `src/token/iTRY/iTry.sol` (lines 198-217) and `src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol`
 
-**Actual Logic:** The _beforeTokenTransfer function allows burning from any non-blacklisted address when called by MINTER_CONTRACT role, without checking if the `from` address has WHITELISTED_ROLE. [1](#0-0) 
+**Intended Logic**: The `iTryTokenOFTAdapter` should be able to unlock iTRY tokens to recipients when cross-chain messages arrive from spoke chains. The `WHITELIST_ENABLED` mode should restrict normal user transfers while allowing protocol contracts to function.
 
-**Exploitation Path:**
-1. Protocol sets iTry token to WHITELIST_ENABLED state (TransferState = 1)
-2. User has WHITELISTED_USER_ROLE in iTryIssuer (can call redeemFor) but does NOT have WHITELISTED_ROLE in iTry token
-3. User cannot transfer their iTRY tokens (correctly blocked by lines 210-216 requiring all parties to be whitelisted)
-4. User calls `iTryIssuer.redeemFor(recipient, iTRYAmount, minAmountOut)` to redeem their tokens [2](#0-1) 
+**Actual Logic**: When iTRY enters `WHITELIST_ENABLED` mode, the `_beforeTokenTransfer` hook requires ALL parties (`msg.sender`, `from`, `to`) to have `WHITELISTED_ROLE` for normal transfers: [1](#0-0) 
 
-5. iTryIssuer calls `_burn(msg.sender, iTRYAmount)` which calls `iTryToken.burnFrom(msg.sender, iTRYAmount)` [3](#0-2) 
+The OFTAdapter's unlock operation is a transfer from itself to the recipient, which fails if the adapter lacks `WHITELISTED_ROLE`. The `MINTER_CONTRACT` role exemption only applies to minting operations (`from == address(0)`), not transfers: [2](#0-1) 
 
-6. The _beforeTokenTransfer check at line 199 passes because: msg.sender (iTryIssuer) has MINTER_CONTRACT role, `from` (user) is NOT blacklisted, and `to` is address(0)
-7. Tokens are burned successfully, violating the whitelist restriction
+**Exploitation Path**:
+1. Admin calls `updateTransferState(TransferState.WHITELIST_ENABLED)` on hub chain iTRY token - a legitimate protocol operation to restrict transfers
+2. User on spoke chain burns iTRY via `iTryTokenOFT.send()` to return tokens to hub chain
+3. LayerZero relays message to hub chain `iTryTokenOFTAdapter`
+4. Adapter's internal `_credit()` function attempts: `token.safeTransfer(recipient, amount)` where `msg.sender=adapter`, `from=adapter`, `to=recipient`
+5. iTRY's `_beforeTokenTransfer` hook checks lines 210-213 and reverts because adapter does NOT have `WHITELISTED_ROLE`
+6. Transaction reverts with `OperationNotAllowed()`, iTRY remains locked in adapter
+7. No rescue mechanism exists - `iTryTokenOFTAdapter` has no recovery function
 
-**Security Property Broken:** Violates Invariant 3: "In WHITELIST_ENABLED state, ONLY whitelisted users can send/receive/burn iTRY"
+**Security Property Broken**: Violates the protocol invariant stated in README: "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state." The adapter is a protocol contract that needs to transfer tokens but is not whitelisted, creating a scenario where legitimate cross-chain operations permanently lock user funds.
 
-## Impact Explanation
-- **Affected Assets**: iTRY tokens in WHITELIST_ENABLED state
-- **Damage Severity**: Non-whitelisted users can bypass transfer restrictions by redeeming through iTryIssuer instead of transferring, undermining the intended access control mechanism. While the redemption itself is economically neutral (user receives equivalent DLF), it defeats the purpose of WHITELIST_ENABLED state which is meant to restrict ALL token movement to whitelisted parties only.
-- **User Impact**: Any user with WHITELISTED_USER_ROLE in iTryIssuer but without WHITELISTED_ROLE in iTry token can bypass the whitelist restriction. This creates an inconsistency where tokens appear "frozen" for transfers but can still exit via redemption.
+**Code Evidence**: The adapter is a simple wrapper with no special logic or recovery mechanisms: [3](#0-2) 
 
 ## Likelihood Explanation
-- **Attacker Profile**: Any user who has WHITELISTED_USER_ROLE in iTryIssuer but lacks WHITELISTED_ROLE in iTry token
-- **Preconditions**: iTry token must be in WHITELIST_ENABLED state, and there must be a mismatch between iTryIssuer's whitelist and iTry token's whitelist
-- **Execution Complexity**: Single transaction - user simply calls `iTryIssuer.redeemFor()`
-- **Frequency**: Can be exploited whenever the preconditions exist
+
+**Attacker Profile**: No attacker required - this is a protocol-level bug triggered by legitimate admin actions. ANY user performing normal cross-chain operations becomes a victim.
+
+**Preconditions**:
+1. iTRY token on hub chain is in `WHITELIST_ENABLED` transfer state
+2. `iTryTokenOFTAdapter` is not granted `WHITELISTED_ROLE` (current deployment does not grant this role)
+3. User initiates cross-chain return from spoke to hub
+
+**Execution Complexity**: Single cross-chain transaction - user calls `send()` on spoke chain's `iTryTokenOFT`, LayerZero delivers message, adapter fails to unlock.
+
+**Frequency**: Affects every single cross-chain return transaction during `WHITELIST_ENABLED` mode until adapter is whitelisted.
+
+**Overall Likelihood**: HIGH if `WHITELIST_ENABLED` mode is ever used. The protocol documentation explicitly mentions whitelist functionality as a feature, making this a realistic scenario.
 
 ## Recommendation
 
-In `src/token/iTRY/iTry.sol`, function `_beforeTokenTransfer`, line 199, add a whitelist check for the `from` address when burning in WHITELIST_ENABLED state:
+**Primary Fix**: Grant `WHITELISTED_ROLE` to `iTryTokenOFTAdapter` during deployment and add validation to `updateTransferState()`:
 
 ```solidity
-// CURRENT (vulnerable):
-// Line 199-200 in iTry.sol
-if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
-    // redeeming
-}
-
-// FIXED:
-if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) 
-    && hasRole(WHITELISTED_ROLE, from) && to == address(0)) {
-    // redeeming - now requires from to be whitelisted in WHITELIST_ENABLED state
+// In iTry.sol updateTransferState function:
+function updateTransferState(TransferState code) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    if (code == TransferState.WHITELIST_ENABLED) {
+        // Verify critical protocol contracts are whitelisted
+        require(
+            hasRole(WHITELISTED_ROLE, oftAdapterAddress),
+            "iTryTokenOFTAdapter must be whitelisted before enabling WHITELIST_ENABLED mode"
+        );
+    }
+    TransferState prevState = transferState;
+    transferState = code;
+    emit TransferStateUpdated(prevState, code);
 }
 ```
 
-Alternative mitigation: Ensure iTryIssuer's whitelist (_WHITELISTED_USER_ROLE) is always synchronized with iTry token's whitelist (WHITELISTED_ROLE), though this is operationally complex and error-prone.
-
-## Proof of Concept
+**Alternative Mitigation**: Modify iTRY's `_beforeTokenTransfer` to add special handling for the OFTAdapter, similar to how the spoke chain's `iTryTokenOFT` handles the minter:
 
 ```solidity
-// File: test/Exploit_WhitelistBypass.t.sol
-// Run with: forge test --match-test test_WhitelistBypass_NonWhitelistedUserCanRedeem -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "../src/token/iTRY/iTry.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/external/DLFToken.sol";
-import "../src/protocol/RedstoneNAVFeed.sol";
-
-contract Exploit_WhitelistBypass is Test {
-    iTry public itryToken;
-    iTry public itryImplementation;
-    ERC1967Proxy public itryProxy;
-    DLFToken public dlfToken;
-    RedstoneNAVFeed public oracle;
-    iTryIssuer public issuer;
-    
-    address public admin;
-    address public treasury;
-    address public custodian;
-    address public victim;
-    
-    bytes32 constant MINTER_CONTRACT = keccak256("MINTER_CONTRACT");
-    bytes32 constant WHITELISTED_ROLE = keccak256("WHITELISTED_ROLE");
-    
-    function setUp() public {
-        admin = address(this);
-        treasury = makeAddr("treasury");
-        custodian = makeAddr("custodian");
-        victim = makeAddr("victim");
-        
-        // Deploy oracle
-        oracle = new RedstoneNAVFeed();
-        vm.mockCall(
-            address(oracle),
-            abi.encodeWithSelector(RedstoneNAVFeed.price.selector),
-            abi.encode(1e18) // 1:1 NAV
-        );
-        
-        // Deploy DLF token
-        dlfToken = new DLFToken(admin);
-        
-        // Deploy iTry with proxy
-        itryImplementation = new iTry();
-        bytes memory initData = abi.encodeWithSelector(
-            iTry.initialize.selector,
-            admin,
-            admin
-        );
-        itryProxy = new ERC1967Proxy(address(itryImplementation), initData);
-        itryToken = iTry(address(itryProxy));
-        
-        // Deploy iTryIssuer
-        issuer = new iTryIssuer(
-            address(itryToken),
-            address(dlfToken),
-            address(oracle),
-            treasury,
-            treasury, // yieldReceiver
-            custodian,
-            admin,
-            0, // initialIssued
-            0, // initialDLFUnderCustody
-            500, // vaultTargetPercentageBPS
-            0 // vaultMinimumBalance
-        );
-        
-        // Grant MINTER_CONTRACT role to issuer
-        itryToken.grantRole(MINTER_CONTRACT, address(issuer));
-        
-        // Whitelist victim in iTryIssuer (can mint/redeem)
-        issuer.addToWhitelist(victim);
-        
-        // DO NOT whitelist victim in iTry token (simulate mismatch)
-        // itryToken.addWhitelistAddress(...) is NOT called for victim
-        
-        // Setup victim with DLF and mint iTRY
-        dlfToken.mint(victim, 1000e18);
-        vm.startPrank(victim);
-        dlfToken.approve(address(issuer), 1000e18);
-        issuer.mintITRY(1000e18, 0);
-        vm.stopPrank();
-        
-        // Approve issuer to burn victim's tokens
-        vm.prank(victim);
-        itryToken.approve(address(issuer), type(uint256).max);
-    }
-    
-    function test_WhitelistBypass_NonWhitelistedUserCanRedeem() public {
-        // SETUP: Set iTry token to WHITELIST_ENABLED state
-        itryToken.updateTransferState(IiTryDefinitions.TransferState.WHITELIST_ENABLED);
-        
-        uint256 victimBalanceBefore = itryToken.balanceOf(victim);
-        assertGt(victimBalanceBefore, 0, "Victim should have iTRY tokens");
-        
-        // Verify victim is NOT whitelisted in iTry token
-        assertFalse(
-            itryToken.hasRole(WHITELISTED_ROLE, victim),
-            "Victim should NOT be whitelisted in iTry token"
-        );
-        
-        // Verify victim cannot transfer tokens (correctly blocked)
-        address randomReceiver = makeAddr("randomReceiver");
-        vm.prank(victim);
-        vm.expectRevert(IiTryDefinitions.OperationNotAllowed.selector);
-        itryToken.transfer(randomReceiver, 100e18);
-        
-        // EXPLOIT: Victim can still redeem tokens via iTryIssuer
-        vm.prank(victim);
-        bool fromBuffer = issuer.redeemFor(victim, victimBalanceBefore, 0);
-        
-        // VERIFY: Tokens were successfully burned, violating whitelist restriction
-        assertEq(
-            itryToken.balanceOf(victim),
-            0,
-            "Vulnerability confirmed: Non-whitelisted user successfully redeemed iTRY in WHITELIST_ENABLED state"
-        );
-    }
-}
+} else if (transferState == TransferState.WHITELIST_ENABLED) {
+    // ... existing MINTER_CONTRACT checks ...
+    } else if (
+        msg.sender == oftAdapterAddress && 
+        from == msg.sender && 
+        !hasRole(BLACKLISTED_ROLE, to)
+    ) {
+        // Allow adapter to unlock tokens to non-blacklisted recipients
+    } else if (
+        hasRole(WHITELISTED_ROLE, msg.sender) && ...
 ```
+
+**Emergency Recovery**: Implement an admin rescue function in `iTryTokenOFTAdapter` to recover stranded tokens, or ensure `WHITELISTED_ROLE` is granted before any `WHITELIST_ENABLED` mode activation.
 
 ## Notes
 
-The security question asks specifically about "blacklisted addresses," but the actual vulnerability discovered is the inverse: **non-whitelisted** addresses can bypass restrictions in WHITELIST_ENABLED state. The burn logic at line 199 correctly prevents burning from blacklisted addresses via the `!hasRole(BLACKLISTED_ROLE, from)` check. However, it fails to enforce that `from` must have WHITELISTED_ROLE in WHITELIST_ENABLED state.
+1. **Asymmetry with Spoke Chain**: The spoke chain's `iTryTokenOFT` (lines 158-161) allows the minter (LayerZero endpoint) to mint/burn without whitelist status. However, on the hub chain, the adapter is NOT a `MINTER_CONTRACT`, so it doesn't receive this exemption, creating the vulnerability. [4](#0-3) 
 
-This creates a significant inconsistency: the iTryIssuer whitelist (_WHITELISTED_USER_ROLE) and iTry token whitelist (WHITELISTED_ROLE) are separate systems that can become desynchronized, allowing users whitelisted in one but not the other to bypass transfer restrictions through redemption.
+2. **Area of Concern Match**: README explicitly mentions concern about "theft or loss of funds when staking/unstaking (particularly crosschain)" and "blacklist/whitelist bugs". This vulnerability directly addresses both concerns.
 
-The vulnerability is in-scope (iTry.sol), exploitable by unprivileged users, and violates a documented invariant (Invariant 3). It is NOT listed in the known issues from the Zellic audit, which only mentions blacklisted users transferring via allowance, not the whitelist bypass issue.
+3. **Deployment Gap**: While deployment scripts are out of scope for vulnerabilities, the evidence shows the deployment script grants `COMPOSER_ROLE` to other contracts but does NOT grant `WHITELISTED_ROLE` to the adapter, confirming the vulnerability exists in the intended deployment configuration.
+
+4. **Similar Risk in wiTRY**: The same vulnerability pattern may affect `wiTryOFTAdapter` if `StakediTry` implements transfer restrictions, warranting separate analysis.
+
+5. **No Existing Tests**: The cross-chain test suite (`Step5_BasicOFTTransfer.t.sol`) does not test the `WHITELIST_ENABLED` scenario, allowing this vulnerability to remain undetected.
 
 ### Citations
 
-**File:** src/token/iTRY/iTry.sol (L198-200)
+**File:** src/token/iTRY/iTry.sol (L201-202)
 ```text
-        } else if (transferState == TransferState.WHITELIST_ENABLED) {
-            if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
+            } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
+                // minting
+```
+
+**File:** src/token/iTRY/iTry.sol (L210-213)
+```text
+            } else if (
+                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
+                    && hasRole(WHITELISTED_ROLE, to)
+            ) {
+```
+
+**File:** src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol (L21-28)
+```text
+contract iTryTokenOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for iTryTokenAdapter
+     * @param _token Address of the existing iTryToken contract
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
+     */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
+```
+
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L158-161)
+```text
+            if (msg.sender == minter && !blacklisted[from] && to == address(0)) {
                 // redeeming
-```
-
-**File:** src/protocol/iTryIssuer.sol (L318-351)
-```text
-    function redeemFor(address recipient, uint256 iTRYAmount, uint256 minAmountOut)
-        public
-        onlyRole(_WHITELISTED_USER_ROLE)
-        nonReentrant
-        returns (bool fromBuffer)
-    {
-        // Validate recipient address
-        if (recipient == address(0)) revert CommonErrors.ZeroAddress();
-
-        // Validate iTRYAmount > 0
-        if (iTRYAmount == 0) revert CommonErrors.ZeroAmount();
-
-        if (iTRYAmount > _totalIssuedITry) {
-            revert AmountExceedsITryIssuance(iTRYAmount, _totalIssuedITry);
-        }
-
-        // Get NAV price from oracle
-        uint256 navPrice = oracle.price();
-        if (navPrice == 0) revert InvalidNAVPrice(navPrice);
-
-        // Calculate gross DLF amount: iTRYAmount * 1e18 / navPrice
-        uint256 grossDlfAmount = iTRYAmount * 1e18 / navPrice;
-
-        if (grossDlfAmount == 0) revert CommonErrors.ZeroAmount();
-
-        uint256 feeAmount = _calculateRedemptionFee(grossDlfAmount);
-        uint256 netDlfAmount = grossDlfAmount - feeAmount;
-
-        // Check if output meets minimum requirement
-        if (netDlfAmount < minAmountOut) {
-            revert OutputBelowMinimum(netDlfAmount, minAmountOut);
-        }
-
-        _burn(msg.sender, iTRYAmount);
-```
-
-**File:** src/protocol/iTryIssuer.sol (L587-591)
-```text
-    function _burn(address from, uint256 amount) internal {
-        // Burn user's iTRY tokens
-        _totalIssuedITry -= amount;
-        iTryToken.burnFrom(from, amount);
-    }
+            } else if (msg.sender == minter && from == address(0) && !blacklisted[to]) {
+                // minting
 ```

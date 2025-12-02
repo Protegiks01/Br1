@@ -1,314 +1,159 @@
 ## Title
-Lack of Parameter Uniqueness Validation in FastAccessVault Constructor Enables Permanent Fund Lock via Rebalancing
+Blacklisted Users Lose Funds Permanently When Bridging wiTRY from Spoke to Hub Chain Due to Missing _credit Override
 
 ## Summary
-The FastAccessVault constructor does not validate that `__vaultToken` and `_custodian` parameters are distinct addresses. [1](#0-0)  If both parameters are set to the same address during deployment, the permissionless `rebalanceFunds()` function will transfer excess DLF tokens to the token contract itself, permanently locking collateral and breaking the protocol's backing invariant.
+The `wiTryOFTAdapter` on the hub chain lacks blacklist handling in its token unlock mechanism, creating an asymmetry with the spoke chain's `wiTryOFT` implementation. When a user blacklisted on the hub chain (but not on the spoke chain) attempts to bridge wiTRY tokens back, tokens are burned on the spoke chain but fail to unlock on the hub chain due to `StakediTry`'s `_beforeTokenTransfer` restriction, resulting in permanent fund loss for sanctioned addresses. [1](#0-0) 
 
 ## Impact
-**Severity**: High
+**Severity**: Medium (High for permanently blacklisted addresses)
+
+**Affected Assets**: wiTRY share tokens of users who are blacklisted on the hub chain but not on the spoke chain.
+
+**Damage Severity**: 
+- Tokens are burned on the spoke chain but remain locked in the hub chain adapter
+- Recoverable only if the user can be removed from the blacklist and the LayerZero message retried
+- Permanent loss for sanctioned addresses (OFAC compliance) or users with permanent blacklist status
+- No direct protocol insolvency, but violates the protocol's stated concern about "blacklist/whitelist bugs that would impair rescue operations" (README line 112)
+
+**User Impact**: Any user who (1) holds wiTRY OFT on spoke chains, (2) becomes blacklisted on hub chain (granted `FULL_RESTRICTED_STAKER_ROLE`), and (3) attempts to bridge back to hub. This includes legitimate users temporarily blacklisted during investigations and sanctioned addresses.
 
 ## Finding Description
-**Location:** `src/protocol/FastAccessVault.sol` - constructor (lines 90-113) and `rebalanceFunds()` function (lines 165-181)
 
-**Intended Logic:** The constructor should initialize the vault with:
-- `_vaultToken`: The DLF ERC20 token address for collateral storage
-- `custodian`: A separate custodian address to receive excess funds during rebalancing
+**Location:** `src/token/wiTRY/crosschain/wiTryOFTAdapter.sol` (entire contract), `src/token/wiTRY/StakediTry.sol` (lines 292-299), `src/token/wiTRY/crosschain/wiTryOFT.sol` (lines 84-97)
 
-The `rebalanceFunds()` function should transfer excess funds to the legitimate custodian for off-chain management. [2](#0-1) 
+**Intended Logic:** 
+The wiTRY cross-chain bridging system should maintain consistent blacklist enforcement across all chains. The hub chain uses a lock/unlock pattern where `wiTryOFTAdapter` locks shares when sending to spoke chains and unlocks them when receiving from spoke chains. Blacklisted users should be prevented from receiving tokens on any chain.
 
-**Actual Logic:** The constructor only validates that addresses are non-zero, with no uniqueness checks. [3](#0-2)  If `__vaultToken == _custodian`, the rebalancing mechanism transfers tokens to the token contract itself at line 176, permanently locking them.
+**Actual Logic:** 
+`wiTryOFTAdapter` inherits the base LayerZero `OFTAdapter` implementation without overriding the `_credit()` function to handle blacklisted recipients. Meanwhile, `wiTryOFT` on spoke chains correctly implements `_credit()` override that redirects tokens to the owner if the recipient is blacklisted [2](#0-1) . This creates an asymmetry.
+
+The critical issue is that blacklists are not synchronized between chains:
+- **Hub chain**: Uses role-based blacklisting (`FULL_RESTRICTED_STAKER_ROLE` in `StakediTry`)
+- **Spoke chain**: Uses mapping-based blacklisting (`blackList` mapping in `wiTryOFT`)
+
+These are separate, independently managed blacklist systems.
 
 **Exploitation Path:**
-1. **Deployment Misconfiguration**: FastAccessVault is deployed (via iTryIssuer constructor) with `_collateralToken == _custodian`, causing `_vaultToken` and `custodian` to be the same address. [4](#0-3) 
-2. **Normal Operations**: Users mint iTRY, depositing DLF into the FastAccessVault. The vault accumulates collateral beyond the target buffer percentage.
-3. **Attacker Triggers Rebalancing**: Any user calls the permissionless `rebalanceFunds()` function. [5](#0-4) 
-4. **Fund Lock**: The function calculates excess and executes `_vaultToken.transfer(custodian, excess)` where both are the same address, sending DLF tokens to the DLF token contract itself. [6](#0-5) 
-5. **Permanent Loss**: The tokens are locked in the token contract (standard ERC20 tokens accept self-transfers but provide no recovery mechanism). The FastAccessVault's `rescueToken` function cannot recover them as they are not held by the vault contract. [7](#0-6) 
+1. User holds wiTRY OFT tokens on spoke chain
+2. User is NOT blacklisted on spoke chain (`wiTryOFT.blackList[user] = false`)
+3. User IS blacklisted on hub chain (`StakediTry` grants `FULL_RESTRICTED_STAKER_ROLE`)
+4. User calls `send()` on `wiTryOFT` to bridge tokens back to hub
+5. **Spoke chain**: `wiTryOFT` burns user's tokens successfully (no blacklist restriction)
+6. LayerZero message sent to hub chain
+7. **Hub chain**: `wiTryOFTAdapter` receives message, calls inherited `_credit()` from base `OFTAdapter`
+8. Base `_credit()` attempts to transfer wiTRY shares from adapter to user
+9. `StakediTry._beforeTokenTransfer()` reverts because recipient has `FULL_RESTRICTED_STAKER_ROLE` [3](#0-2) 
+10. LayerZero message fails, tokens remain locked in adapter
+11. **Result**: Tokens burned on spoke, stuck in adapter on hub
 
-**Security Property Broken:** Violates the iTRY Backing invariant: "Total issued iTRY in iTryIssuer MUST ALWAYS be equal or lower to total value of DLF under custody." The locked DLF tokens reduce effective collateral while `_totalDLFUnderCustody` in iTryIssuer still counts them as available. [8](#0-7) 
-
-## Impact Explanation
-- **Affected Assets**: DLF collateral tokens backing iTRY stablecoin, FastAccessVault redemption capacity
-- **Damage Severity**: 
-  - Permanent loss of DLF tokens transferred to the token contract
-  - Each rebalancing call can lock `(currentBalance - targetBalance)` tokens
-  - With 5% target buffer on 100M DLF, up to 95M DLF could be locked
-  - Protocol becomes undercollateralized as iTryIssuer still counts locked tokens in `_totalDLFUnderCustody`
-  - Users unable to redeem iTRY for full DLF value
-- **User Impact**: All iTRY holders affected as redeemable collateral decreases; fast redemptions fail when vault is drained
+**Security Property Broken:** 
+This violates the protocol's stated concern about "blacklist/whitelist bugs that would impair rescue operations in case of hacks or similar black swan events" and creates a cross-chain blacklist synchronization vulnerability.
 
 ## Likelihood Explanation
-- **Attacker Profile**: Any user (attacker, legitimate user, or even protocol participants) can trigger the exploit
-- **Preconditions**: 
-  - FastAccessVault deployed with `__vaultToken == _custodian` (deployment-time misconfiguration)
-  - Vault has excess funds beyond target buffer (normal operation)
-  - Standard ERC20 token implementation that accepts self-transfers
-- **Execution Complexity**: Single transaction calling `rebalanceFunds()` - no special timing or complex setup required
-- **Frequency**: Can be exploited repeatedly whenever vault exceeds target balance; attacker could even deposit DLF to create excess and immediately rebalance to lock funds
+
+**Attacker Profile**: Any user with wiTRY OFT tokens on spoke chains who becomes blacklisted on the hub chain (not necessarily malicious—could be legitimate users under temporary investigation or sanctioned addresses)
+
+**Preconditions**:
+1. User must bridge tokens to spoke chain before being blacklisted on hub
+2. Hub and spoke blacklists must become desynchronized (user blacklisted on hub but not spoke)
+3. User attempts to bridge back while in this state
+
+**Execution Complexity**: Simple—single cross-chain bridge transaction via `wiTryOFT.send()`
+
+**Economic Cost**: Standard bridge transaction gas fees (~$5-50 depending on L2)
+
+**Frequency**: Can occur for every user who gets blacklisted on hub after bridging to spoke and attempts to bridge back
+
+**Overall Likelihood**: Medium—requires specific cross-chain blacklist desynchronization state, but this is a realistic scenario for compliance operations
 
 ## Recommendation
 
-Add parameter uniqueness validation in the FastAccessVault constructor:
+**Primary Fix**: Override the `_credit()` function in `wiTryOFTAdapter` to implement blacklist-aware token unlocking, mirroring the protection already present in `wiTryOFT`:
 
 ```solidity
-// In src/protocol/FastAccessVault.sol, constructor, after line 101:
+// In src/token/wiTRY/crosschain/wiTryOFTAdapter.sol:
 
-// CURRENT (vulnerable):
-// No validation for parameter uniqueness
+import {IStakediTry} from "../interfaces/IStakediTry.sol";
 
-// FIXED:
-if (__vaultToken == address(0)) revert CommonErrors.ZeroAddress();
-if (__issuerContract == address(0)) revert CommonErrors.ZeroAddress();
-if (_custodian == address(0)) revert CommonErrors.ZeroAddress();
-if (_initialAdmin == address(0)) revert CommonErrors.ZeroAddress();
+event SharesRedirected(address indexed originalRecipient, address indexed actualRecipient, uint256 amount);
 
-// Add these uniqueness checks:
-if (__vaultToken == _custodian) revert InvalidConfiguration("vaultToken cannot be custodian");
-if (__vaultToken == __issuerContract) revert InvalidConfiguration("vaultToken cannot be issuer");
-if (__issuerContract == _custodian) revert InvalidConfiguration("issuer cannot be custodian");
-```
-
-Alternative mitigation: Add a check in `rebalanceFunds()` to prevent transfers to the vault token address:
-
-```solidity
-// In src/protocol/FastAccessVault.sol, function rebalanceFunds, line 175:
-
-// CURRENT:
-if (currentBalance > targetBalance) {
-    uint256 excess = currentBalance - targetBalance;
-    if (!_vaultToken.transfer(custodian, excess)) {
-        revert CommonErrors.TransferFailed();
-    }
-
-// FIXED:
-if (currentBalance > targetBalance) {
-    uint256 excess = currentBalance - targetBalance;
-    if (custodian == address(_vaultToken)) {
-        revert InvalidReceiver(custodian); // Prevent self-transfer
-    }
-    if (!_vaultToken.transfer(custodian, excess)) {
-        revert CommonErrors.TransferFailed();
-    }
-```
-
-## Proof of Concept
-
-```solidity
-// File: test/Exploit_VaultTokenCustodianCollision.t.sol
-// Run with: forge test --match-test test_VaultTokenCustodianCollision_LocksCollateral -vvv
-
-pragma solidity 0.8.20;
-
-import "forge-std/Test.sol";
-import "../src/protocol/FastAccessVault.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract MockDLF is ERC20 {
-    constructor() ERC20("DLF", "DLF") {
-        _mint(msg.sender, 1000000e18);
-    }
+function _credit(
+    address _to,
+    uint256 _amountLD,
+    uint32 _srcEid
+) internal virtual override returns (uint256 amountReceivedLD) {
+    // Check if recipient is blacklisted (has FULL_RESTRICTED_STAKER_ROLE)
+    IStakediTry stakedToken = IStakediTry(address(innerToken));
+    bytes32 FULL_RESTRICTED_STAKER_ROLE = keccak256("FULL_RESTRICTED_STAKER_ROLE");
     
-    function mint(address to, uint256 amount) external {
-        _mint(to, amount);
-    }
-}
-
-contract MockIssuer {
-    uint256 public collateral = 1000000e18;
-    
-    function getCollateralUnderCustody() external view returns (uint256) {
-        return collateral;
-    }
-}
-
-contract Exploit_VaultTokenCustodianCollision is Test {
-    MockDLF public dlf;
-    MockIssuer public issuer;
-    FastAccessVault public vault;
-    
-    address public attacker = address(0x1337);
-    address public admin = address(0x9999);
-    
-    function setUp() public {
-        // Deploy mock DLF token
-        dlf = new MockDLF();
-        issuer = new MockIssuer();
-        
-        // Deploy vault with MISCONFIGURED parameters: vaultToken == custodian
-        // This simulates the deployment bug where same address is used for both
-        vault = new FastAccessVault(
-            address(dlf),           // __vaultToken (DLF token)
-            address(issuer),        // __issuerContract  
-            address(dlf),           // _custodian (SAME AS VAULT TOKEN!)
-            500,                    // 5% target buffer
-            10000e18,               // minimum balance
-            admin                   // admin
-        );
-        
-        // Fund vault with DLF tokens (simulating normal operations)
-        dlf.transfer(address(vault), 100000e18);
-    }
-    
-    function test_VaultTokenCustodianCollision_LocksCollateral() public {
-        // SETUP: Check initial state
-        uint256 vaultBalanceBefore = dlf.balanceOf(address(vault));
-        uint256 dlfTokenContractBalanceBefore = dlf.balanceOf(address(dlf));
-        
-        console.log("Vault balance before:", vaultBalanceBefore);
-        console.log("DLF token contract balance before:", dlfTokenContractBalanceBefore);
-        
-        // EXPLOIT: Attacker (or anyone) calls rebalanceFunds
-        // This will transfer excess to custodian, but custodian == vaultToken!
-        vm.prank(attacker);
-        vault.rebalanceFunds();
-        
-        // VERIFY: Tokens are now locked in DLF token contract
-        uint256 vaultBalanceAfter = dlf.balanceOf(address(vault));
-        uint256 dlfTokenContractBalanceAfter = dlf.balanceOf(address(dlf));
-        
-        console.log("Vault balance after:", vaultBalanceAfter);
-        console.log("DLF token contract balance after:", dlfTokenContractBalanceAfter);
-        
-        // Assert that tokens moved from vault to DLF token contract itself
-        assertLt(vaultBalanceAfter, vaultBalanceBefore, "Vault balance should decrease");
-        assertGt(dlfTokenContractBalanceAfter, dlfTokenContractBalanceBefore, "DLF contract balance should increase");
-        
-        uint256 lockedAmount = dlfTokenContractBalanceAfter - dlfTokenContractBalanceBefore;
-        console.log("Permanently locked DLF tokens:", lockedAmount);
-        
-        // These tokens are now PERMANENTLY LOCKED in the DLF token contract
-        // They cannot be rescued because rescueToken only works for tokens held by the vault
-        // The vault's rescueToken function cannot retrieve tokens from external addresses
-        assertGt(lockedAmount, 0, "Vulnerability confirmed: Tokens permanently locked in DLF contract");
+    if (stakedToken.hasRole(FULL_RESTRICTED_STAKER_ROLE, _to)) {
+        // Redirect to owner instead of reverting
+        emit SharesRedirected(_to, owner(), _amountLD);
+        return super._credit(owner(), _amountLD, _srcEid);
+    } else {
+        return super._credit(_to, _amountLD, _srcEid);
     }
 }
 ```
+
+**Alternative Mitigation**: Implement a rescue function in `wiTryOFTAdapter` that allows the contract owner to manually redirect stuck tokens to the protocol owner for manual resolution of blacklist cases.
 
 ## Notes
 
-This vulnerability represents a critical deployment validation gap. The constructor validates addresses are non-zero but fails to ensure they serve distinct roles. While the misconfiguration must occur at deployment time, the resulting vulnerability is immediately exploitable by any unprivileged actor through the permissionless `rebalanceFunds()` function.
+This vulnerability represents a design asymmetry between hub and spoke chain implementations:
 
-The issue is particularly severe because:
-1. The test suite explicitly confirms `rebalanceFunds()` is intended to be permissionless
-2. Standard ERC20 tokens accept self-transfers without reverting
-3. The vault's `rescueToken` function cannot recover tokens sent to external addresses
-4. The iTryIssuer's accounting (`_totalDLFUnderCustody`) becomes incorrect, violating the backing invariant
-5. The locked funds reduce redemption capacity, potentially causing bank-run scenarios
+1. **Spoke chain protection exists**: `wiTryOFT` correctly implements `_credit()` override to redirect blacklisted recipients to the owner [2](#0-1) 
 
-This differs from typical admin misconfiguration issues because the exploit requires no privileged access after deployment and causes immediate, irreversible fund loss.
+2. **Hub chain protection missing**: `wiTryOFTAdapter` is only 33 lines with no `_credit()` override [1](#0-0) 
+
+3. **Transfer enforcement blocks recovery**: `StakediTry._beforeTokenTransfer()` prevents ANY transfer to blacklisted addresses [3](#0-2) 
+
+4. **Cross-chain blacklist desynchronization**: The hub chain uses role-based blacklisting while spoke chains use mapping-based blacklisting, creating opportunities for state inconsistency
+
+5. **Protocol concern alignment**: This directly relates to the protocol's stated concern about "blacklist/whitelist bugs that would impair rescue operations in case of hacks or similar black swan events"
+
+This is NOT the same as the known Zellic issue about allowance-based transfers (README line 35), which relates to same-chain transfers. This is a cross-chain bridge vulnerability affecting the OFT adapter's unlock mechanism.
 
 ### Citations
 
-**File:** src/protocol/FastAccessVault.sol (L90-113)
+**File:** src/token/wiTRY/crosschain/wiTryOFTAdapter.sol (L26-33)
 ```text
-    constructor(
-        address __vaultToken,
-        address __issuerContract,
-        address _custodian,
-        uint256 _initialTargetPercentageBPS,
-        uint256 _minimumExpectedBalance,
-        address _initialAdmin
-    ) {
-        if (__vaultToken == address(0)) revert CommonErrors.ZeroAddress();
-        if (__issuerContract == address(0)) revert CommonErrors.ZeroAddress();
-        if (_custodian == address(0)) revert CommonErrors.ZeroAddress();
-        if (_initialAdmin == address(0)) revert CommonErrors.ZeroAddress();
-
-        _validateBufferPercentageBPS(_initialTargetPercentageBPS);
-
-        _vaultToken = IERC20(__vaultToken);
-        _issuerContract = IiTryIssuer(__issuerContract);
-        custodian = _custodian;
-        targetBufferPercentageBPS = _initialTargetPercentageBPS;
-        minimumExpectedBalance = _minimumExpectedBalance;
-
-        // Transfer ownership to the initial admin
-        transferOwnership(_initialAdmin);
-    }
+contract wiTryOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for wiTryOFTAdapter
+     * @param _token Address of the wiTRY share token from StakedUSDe
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
+     */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L164-181)
+**File:** src/token/wiTRY/crosschain/wiTryOFT.sol (L84-97)
 ```text
-    /// @inheritdoc IFastAccessVault
-    function rebalanceFunds() external {
-        uint256 aumReferenceValue = _issuerContract.getCollateralUnderCustody();
-        uint256 targetBalance = _calculateTargetBufferBalance(aumReferenceValue);
-        uint256 currentBalance = _vaultToken.balanceOf(address(this));
-
-        if (currentBalance < targetBalance) {
-            uint256 needed = targetBalance - currentBalance;
-            // Emit event for off-chain custodian to process
-            emit TopUpRequestedFromCustodian(address(custodian), needed, targetBalance);
-        } else if (currentBalance > targetBalance) {
-            uint256 excess = currentBalance - targetBalance;
-            if (!_vaultToken.transfer(custodian, excess)) {
-                revert CommonErrors.TransferFailed();
-            }
-            emit ExcessFundsTransferredToCustodian(address(custodian), excess, targetBalance);
-        }
-    }
-```
-
-**File:** src/protocol/FastAccessVault.sol (L215-229)
-```text
-    function rescueToken(address token, address to, uint256 amount) external onlyOwner nonReentrant {
-        if (to == address(0)) revert CommonErrors.ZeroAddress();
-        if (amount == 0) revert CommonErrors.ZeroAmount();
-
-        if (token == address(0)) {
-            // Rescue ETH
-            (bool success,) = to.call{value: amount}("");
-            if (!success) revert CommonErrors.TransferFailed();
+    function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+        internal
+        virtual
+        override
+        returns (uint256 amountReceivedLD)
+    {
+        // If the recipient is blacklisted, emit an event, redistribute funds, and credit the owner
+        if (blackList[_to]) {
+            emit RedistributeFunds(_to, _amountLD);
+            return super._credit(owner(), _amountLD, _srcEid);
         } else {
-            // Rescue ERC20 tokens
-            IERC20(token).safeTransfer(to, amount);
+            return super._credit(_to, _amountLD, _srcEid);
         }
-
-        emit TokenRescued(token, to, amount);
     }
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L148-159)
+**File:** src/token/wiTRY/StakediTry.sol (L292-299)
 ```text
-        liquidityVault = IFastAccessVault(
-            address(
-                new FastAccessVault(
-                    _collateralToken,
-                    address(this), // Issuer is this contract
-                    _custodian,
-                    _vaultTargetPercentageBPS,
-                    _vaultMinimumBalance,
-                    _initialAdmin // Admin for vault ownership
-                )
-            )
-        );
-```
-
-**File:** src/protocol/iTryIssuer.sol (L250-253)
-```text
-    /// @inheritdoc IiTryIssuer
-    function getCollateralUnderCustody() external view returns (uint256) {
-        return _totalDLFUnderCustody;
-    }
-```
-
-**File:** test/FastAccessVault.t.sol (L825-840)
-```text
-    function test_rebalanceFunds_whenCalledByAnyone_succeeds() public {
-        _setupVaultWithBalance(100_000e18);
-
-        // Call from different addresses
-        vm.prank(user1);
-        vault.rebalanceFunds();
-
-        vm.prank(attacker);
-        vault.rebalanceFunds();
-
-        vm.prank(custodian);
-        vault.rebalanceFunds();
-
-        // Should not revert
-        assertTrue(true, "Anyone should be able to call rebalanceFunds");
+    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, from) && to != address(0)) {
+            revert OperationNotAllowed();
+        }
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, to)) {
+            revert OperationNotAllowed();
+        }
     }
 ```

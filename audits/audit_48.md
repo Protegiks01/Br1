@@ -1,261 +1,105 @@
-## Title
-Pending Custodian Transfer Requests Lost During Custodian Address Change Causing Permanent User Fund Loss
+# NoVulnerability found for this question.
 
-## Summary
-When users redeem iTRY tokens via custodian transfer path, the `_redeemFromCustodian()` function emits events for off-chain processing but does not track pending requests on-chain. If the custodian address is changed via `setCustodian()` before the old custodian processes these events, users permanently lose their DLF collateral with no recovery mechanism.
+## Validation Analysis
 
-## Impact
-**Severity**: High
+After thorough examination of the claim against the Brix Money validation framework, this fails to qualify as a valid security vulnerability for the following critical reasons:
 
-## Finding Description
-**Location:** `src/protocol/iTryIssuer.sol` - `_redeemFromCustodian()` (lines 644-658), `setCustodian()` (lines 468-470), `_setCustodian()` (lines 496-501)
+### 1. **The State Change is AUTHORIZED, Not a Vulnerability**
 
-**Intended Logic:** When users redeem iTRY and the FastAccessVault has insufficient liquidity, the system should emit events for the custodian to process transfers off-chain. If the custodian address changes, pending transfers should be migrated or handled properly to ensure users receive their DLF collateral.
+The core issue is that the system is **correctly enforcing** the blacklist invariant, not violating it. The README explicitly states: [1](#0-0) 
 
-**Actual Logic:** The `_redeemFromCustodian()` function immediately updates accounting and emits events without tracking pending requests on-chain. [1](#0-0)  The events (`CustodianTransferRequested`) do not include the custodian address. [2](#0-1)  When `setCustodian()` is called, it immediately replaces the custodian address with no checks for pending transfers. [3](#0-2) [4](#0-3) 
+The iTRY token's `_beforeTokenTransfer` function properly blocks blacklisted recipients: [2](#0-1) 
 
-**Exploitation Path:**
-1. User calls `redeemFor()` with 1000 iTRY when FastAccessVault has insufficient balance (e.g., only 100 DLF available)
-2. Protocol routes to `_redeemFromCustodian()`, which decrements `_totalDLFUnderCustody` and emits `CustodianTransferRequested(user, netAmount)` and `CustodianTransferRequested(treasury, feeAmount)` events
-3. Before the custodian processes these events, admin calls `setCustodian(newCustodianAddress)` (legitimate operational change, e.g., switching service providers)
-4. Old custodian stops monitoring events or loses authorization; new custodian was not aware of events emitted before their appointment
-5. User never receives their DLF collateral - permanent loss with no on-chain recovery mechanism since `_totalDLFUnderCustody` was already decremented
+When a blacklisted user cannot receive tokens during cross-chain transfer, **this is the intended behavior**, not a bug. The protocol is preventing what it's designed to prevent.
 
-**Security Property Broken:** Users must receive their redeemed DLF collateral. The protocol should ensure proper handling of pending transfers during state transitions. The accounting shows DLF was removed from custody, but tokens were never actually transferred.
+### 2. **Funds Are NOT "Permanently" Lost**
 
-## Impact Explanation
-- **Affected Assets**: User DLF collateral redemptions, treasury fee payments in DLF
-- **Damage Severity**: Complete permanent loss of all DLF amounts for redemptions processed via custodian transfer path between event emission and old custodian processing. No mechanism exists to manually adjust `_totalDLFUnderCustody` or reprocess failed transfers. [5](#0-4) 
-- **User Impact**: All users who redeemed iTRY via custodian path (when vault had insufficient liquidity) during the time window between event emission and custodian address change lose their entire redemption amount permanently
+The characterization as "permanent fund loss" is incorrect:
 
-## Likelihood Explanation
-- **Attacker Profile**: No attacker required - this is a logic flaw triggered by normal operations
-- **Preconditions**: FastAccessVault must have insufficient balance to serve redemption (forcing custodian transfer path), and admin must change custodian address before old custodian processes pending events
-- **Execution Complexity**: Occurs naturally during legitimate operational custodian transitions (e.g., switching service providers, updating infrastructure)
-- **Frequency**: Every redemption routed through custodian path during custodian transition period is affected
+- **LayerZero V2 allows message retry** after the underlying issue is resolved
+- **Admin recovery path exists**: Remove user from blacklist → retry LayerZero message → tokens delivered
+- **Tokens remain in adapter**, not burned or destroyed: [3](#0-2) 
 
-## Recommendation
+This is **conditional** loss ("lost IF user must remain blacklisted forever"), not permanent loss like unbacked minting or protocol insolvency.
 
-```solidity
-// In src/protocol/iTryIssuer.sol:
+### 3. **Related Known Issue Exists**
 
-// Add state variable to track pending custodian transfers:
-struct PendingTransfer {
-    address recipient;
-    uint256 amount;
-    uint256 timestamp;
-}
-mapping(uint256 => PendingTransfer) public pendingCustodianTransfers;
-uint256 public pendingTransferCount;
+The README acknowledges cross-chain message failures: [4](#0-3) 
 
-// CURRENT (vulnerable) - lines 496-501:
-function _setCustodian(address newCustodian) internal {
-    if (newCustodian == address(0)) revert CommonErrors.ZeroAddress();
-    address oldCustodian = custodian;
-    custodian = newCustodian;
-    emit CustodianUpdated(oldCustodian, newCustodian);
-}
+While this specific known issue is about fee loss for wiTRY, it demonstrates that **cross-chain message failures are an accepted risk area** in the protocol's threat model.
 
-// FIXED:
-function _setCustodian(address newCustodian) internal {
-    if (newCustodian == address(0)) revert CommonErrors.ZeroAddress();
-    // Check for pending transfers before allowing custodian change
-    require(pendingTransferCount == 0, "Pending custodian transfers exist");
-    address oldCustodian = custodian;
-    custodian = newCustodian;
-    emit CustodianUpdated(oldCustodian, newCustodian);
-}
+### 4. **Design Choice, Not Vulnerability**
 
-// CURRENT (vulnerable) - lines 644-658:
-function _redeemFromCustodian(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-    _totalDLFUnderCustody -= (receiveAmount + feeAmount);
-    uint256 topUpAmount = receiveAmount + feeAmount;
-    emit FastAccessVaultTopUpRequested(topUpAmount);
-    if (feeAmount > 0) {
-        emit CustodianTransferRequested(treasury, feeAmount);
-    }
-    emit CustodianTransferRequested(receiver, receiveAmount);
-}
+Yes, wiTRY has a more graceful approach by redirecting to owner: [5](#0-4) 
 
-// FIXED:
-function _redeemFromCustodian(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-    // Track pending transfer on-chain
-    uint256 transferId = pendingTransferCount++;
-    pendingCustodianTransfers[transferId] = PendingTransfer({
-        recipient: receiver,
-        amount: receiveAmount,
-        timestamp: block.timestamp
-    });
-    
-    // Do NOT decrement _totalDLFUnderCustody until transfer is confirmed
-    uint256 topUpAmount = receiveAmount + feeAmount;
-    emit FastAccessVaultTopUpRequested(topUpAmount);
-    
-    if (feeAmount > 0) {
-        uint256 feeTransferId = pendingTransferCount++;
-        pendingCustodianTransfers[feeTransferId] = PendingTransfer({
-            recipient: treasury,
-            amount: feeAmount,
-            timestamp: block.timestamp
-        });
-        emit CustodianTransferRequested(treasury, feeAmount);
-    }
-    emit CustodianTransferRequested(receiver, receiveAmount);
-}
+However, **the absence of this pattern in iTRY is a design limitation, not a security vulnerability**. The validation framework explicitly states:
 
-// Add confirmation function for custodian to call after transfer:
-function confirmCustodianTransfer(uint256 transferId) external {
-    require(msg.sender == custodian, "Only custodian");
-    PendingTransfer memory transfer = pendingCustodianTransfers[transferId];
-    require(transfer.amount > 0, "Transfer not found");
-    
-    // Now update accounting after confirmation
-    _totalDLFUnderCustody -= transfer.amount;
-    delete pendingCustodianTransfers[transferId];
-    pendingTransferCount--;
-    
-    emit CustodianTransferConfirmed(transferId, transfer.recipient, transfer.amount);
-}
-```
+> "Design Feature (NOT a bug): Blacklisted user can approve allowance (KNOWN ISSUE, accepted)"
 
-**Alternative mitigation:** Emit custodian address in `CustodianTransferRequested` event and add admin function to manually reprocess failed transfers by adjusting `_totalDLFUnderCustody` with proper validation.
+Similarly, the consequence of blacklist enforcement (tokens undeliverable while user blacklisted) is a design trade-off, not a vulnerability.
 
-## Proof of Concept
+### 5. **Fails the "UNAUTHORIZED State Change" Test**
 
-```solidity
-// File: test/Exploit_CustodianChangeVulnerability.t.sol
-// Run with: forge test --match-test test_CustodianChangeCausesPermanentLoss -vvv
+From the FINAL DECISION MATRIX checklist:
+> "- [ ] State change is UNAUTHORIZED (not user managing own funds within rules)"
 
-pragma solidity ^0.8.0;
+The state change here is **AUTHORIZED** - the protocol is correctly enforcing its blacklist policy. The validation framework requires that the state change be unauthorized for a valid vulnerability.
 
-import "./iTryIssuer.base.t.sol";
+## Conclusion
 
-contract Exploit_CustodianChangeVulnerability is iTryIssuerBaseTest {
-    
-    function test_CustodianChangeCausesPermanentLoss() public {
-        // SETUP: User mints iTRY
-        uint256 mintAmount = 1000e18;
-        uint256 iTRYMinted = _mintITry(whitelistedUser1, mintAmount, 0);
-        
-        uint256 userInitialDLF = collateralToken.balanceOf(whitelistedUser1);
-        
-        // Set vault balance to 0 to force custodian transfer path
-        _setVaultBalance(0);
-        
-        // Record initial state
-        uint256 initialTotalCustody = _getTotalCustody();
-        address initialCustodian = issuer.custodian();
-        
-        // EXPLOIT STEP 1: User redeems iTRY, triggering custodian transfer
-        vm.expectEmit(true, false, false, true);
-        emit CustodianTransferRequested(whitelistedUser1, 0); // Will emit with actual amount
-        
-        vm.prank(whitelistedUser1);
-        bool fromBuffer = issuer.redeemFor(whitelistedUser1, iTRYMinted, 0);
-        
-        // Verify redemption went through custodian path
-        assertFalse(fromBuffer, "Should route to custodian");
-        
-        // Verify accounting was updated (this is the problem!)
-        uint256 afterRedeemCustody = _getTotalCustody();
-        assertLt(afterRedeemCustody, initialTotalCustody, "Custody decreased");
-        
-        // EXPLOIT STEP 2: Admin changes custodian before old custodian processes
-        address newCustodian = makeAddr("newCustodian");
-        vm.prank(admin);
-        issuer.setCustodian(newCustodian);
-        
-        // VERIFY VULNERABILITY: 
-        // 1. User never received DLF (still has initial balance)
-        assertEq(
-            collateralToken.balanceOf(whitelistedUser1), 
-            userInitialDLF, 
-            "User did not receive DLF"
-        );
-        
-        // 2. Accounting shows DLF was removed from custody
-        assertLt(
-            afterRedeemCustody,
-            initialTotalCustody,
-            "Accounting shows DLF removed from custody"
-        );
-        
-        // 3. No way to recover - no admin function to adjust _totalDLFUnderCustody
-        // 4. Old custodian may not process events after losing authorization
-        // 5. New custodian doesn't know about events emitted before appointment
-        
-        // RESULT: Permanent loss of user funds
-        console.log("User expected DLF but received: 0");
-        console.log("Accounting shows", initialTotalCustody - afterRedeemCustody, "DLF removed");
-        console.log("No recovery mechanism exists - PERMANENT LOSS");
-    }
-}
-```
+This represents a **quality/design improvement opportunity** rather than a High severity security vulnerability. The blacklist is functioning as intended. Users' funds are recoverable through admin intervention. The severity and impact are significantly overstated.
 
-## Notes
-
-This vulnerability is a **logic error in state transition handling**, not a centralization risk or malicious admin scenario. Changing custodian addresses is a legitimate operational requirement (e.g., switching service providers, infrastructure updates), and the protocol should handle this safely without causing user fund loss. The issue stems from three design flaws: (1) events don't include custodian address creating ambiguity about which custodian should process them, (2) accounting updates occur immediately before off-chain processing completes, and (3) no on-chain tracking or recovery mechanism exists for pending transfers. The FastAccessVault also has a separate custodian variable that can be changed independently [6](#0-5) , further complicating the coordination problem.
+**The protocol is enforcing the invariant "blacklisted users cannot receive iTRY," not violating it.**
 
 ### Citations
 
-**File:** src/protocol/iTryIssuer.sol (L93-94)
-```text
-    /// @notice Total amount of DLF collateral held under custody (vault + custodian)
-    uint256 private _totalDLFUnderCustody;
+**File:** README.md (L40-40)
+```markdown
+- Native fee loss on failed `wiTryVaultComposer.LzReceive` execution. In the case of underpayment, users will lose their fee and will have to pay twice to complete the unstake request.
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L468-470)
-```text
-    function setCustodian(address newCustodian) external onlyRole(_INTEGRATION_MANAGER_ROLE) {
-        _setCustodian(newCustodian);
-    }
+**File:** README.md (L124-124)
+```markdown
+- Blacklisted users cannot send/receive/mint/burn iTry tokens in any case.
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L496-501)
+**File:** src/token/iTRY/iTry.sol (L189-195)
 ```text
-    function _setCustodian(address newCustodian) internal {
-        if (newCustodian == address(0)) revert CommonErrors.ZeroAddress();
-        address oldCustodian = custodian;
-        custodian = newCustodian;
-        emit CustodianUpdated(oldCustodian, newCustodian);
-    }
+            } else if (
+                !hasRole(BLACKLISTED_ROLE, msg.sender) && !hasRole(BLACKLISTED_ROLE, from)
+                    && !hasRole(BLACKLISTED_ROLE, to)
+            ) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L644-658)
+**File:** src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol (L21-28)
 ```text
-    function _redeemFromCustodian(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-        _totalDLFUnderCustody -= (receiveAmount + feeAmount);
-
-        // Signal that fast access vault needs top-up from custodian
-        uint256 topUpAmount = receiveAmount + feeAmount;
-        emit FastAccessVaultTopUpRequested(topUpAmount);
-
-        if (feeAmount > 0) {
-            // Emit event for off-chain custodian to process
-            emit CustodianTransferRequested(treasury, feeAmount);
-        }
-
-        // Emit event for off-chain custodian to process
-        emit CustodianTransferRequested(receiver, receiveAmount);
-    }
-```
-
-**File:** src/protocol/interfaces/IiTryIssuer.sol (L86-90)
-```text
-     * @notice Emitted when a transfer is requested from the custodian
-     * @param to The address to receive the transfer
-     * @param amount The amount to be transferred
+contract iTryTokenOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for iTryTokenAdapter
+     * @param _token Address of the existing iTryToken contract
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
      */
-    event CustodianTransferRequested(address indexed to, uint256 amount);
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L260-266)
+**File:** src/token/wiTRY/crosschain/wiTryOFT.sol (L84-97)
 ```text
-    function setCustodian(address newCustodian) external onlyOwner {
-        if (newCustodian == address(0)) revert CommonErrors.ZeroAddress();
-
-        address oldCustodian = custodian;
-        custodian = newCustodian;
-        emit CustodianUpdated(oldCustodian, newCustodian);
+    function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+        internal
+        virtual
+        override
+        returns (uint256 amountReceivedLD)
+    {
+        // If the recipient is blacklisted, emit an event, redistribute funds, and credit the owner
+        if (blackList[_to]) {
+            emit RedistributeFunds(_to, _amountLD);
+            return super._credit(owner(), _amountLD, _srcEid);
+        } else {
+            return super._credit(_to, _amountLD, _srcEid);
+        }
     }
 ```

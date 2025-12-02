@@ -1,310 +1,198 @@
+# VALIDATION RESULT: VALID HIGH SEVERITY VULNERABILITY
+
 ## Title
-Front-Running Griefing Attack: Vault Balance Manipulation Forces Legitimate Redemptions Through Slow Custodian Path
+OFT Cross-Chain Minting Bypasses Whitelist Enforcement in WHITELIST_ENABLED Mode
 
 ## Summary
-The `redeemFor` function in `iTryIssuer.sol` decides between instant vault redemption and delayed custodian redemption based on a simple balance check. An attacker can front-run legitimate redemptions by redeeming their own iTRY first to drain the vault balance below the victim's requirement, forcing the victim through the slower custodian path that requires off-chain manual processing.
+The `_beforeTokenTransfer` hook in both iTryTokenOFT and iTry contracts contains a critical access control flaw: during cross-chain minting operations in WHITELIST_ENABLED mode, the validation only checks that recipients are not blacklisted, completely bypassing the whitelist requirement. This directly violates the protocol's documented invariant that "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state."
 
 ## Impact
-**Severity**: Medium
+**Severity**: High
+
+This vulnerability completely undermines the protocol's regulatory compliance framework. When the protocol operates in WHITELIST_ENABLED mode—specifically designed to restrict token transfers to KYC/AML-approved addresses—any non-whitelisted address can receive iTRY tokens through LayerZero cross-chain transfers. This exposes the protocol to:
+
+- **Regulatory Violations**: Unrestricted distribution to non-approved entities defeats the purpose of the whitelist feature
+- **Compliance Failure**: The protocol cannot enforce its stated access controls for compliance-approved addresses only
+- **Legal Liability**: Potential exposure to regulatory sanctions for failing to enforce stated compliance measures
+- **Protocol-Wide Impact**: Affects all iTRY holders across both hub (Ethereum) and spoke (MegaETH) chains
 
 ## Finding Description
-**Location:** `src/protocol/iTryIssuer.sol` (redeemFor function, lines 318-370)
 
-**Intended Logic:** The protocol offers two redemption paths: (1) instant on-chain transfers from FastAccessVault when sufficient liquidity exists, and (2) custodian-mediated transfers for larger amounts. The balance check ensures efficient capital usage while maintaining instant redemption capability for most users. [1](#0-0) 
+**Location:** 
+- `src/token/iTRY/crosschain/iTryTokenOFT.sol` in the `_beforeTokenTransfer` function [1](#0-0) 
+- `src/token/iTRY/iTry.sol` in the `_beforeTokenTransfer` function [2](#0-1) 
 
-**Actual Logic:** The decision logic uses a simple comparison without any protection against manipulation. An attacker can observe pending redemption transactions in the mempool and front-run them by redeeming their own iTRY tokens first, draining the vault below the victim's required amount.
+**Intended Logic:** 
+According to the protocol's documented invariants, in WHITELIST_ENABLED state, ONLY whitelisted users can send/receive/burn iTRY tokens [3](#0-2) . The `_beforeTokenTransfer` hook must enforce this restriction for ALL token operations, including cross-chain receives.
+
+**Actual Logic:** 
+In WHITELIST_ENABLED mode, when the minter (LayerZero endpoint on spoke chain) initiates a mint operation during cross-chain receipt, the validation only verifies the recipient is NOT blacklisted, without checking whitelist status:
+
+- **iTryTokenOFT.sol spoke chain**: The minting condition checks only `!blacklisted[to]` [4](#0-3) 
+
+- **iTry.sol hub chain**: The minting condition checks only `!hasRole(BLACKLISTED_ROLE, to)` [5](#0-4) 
+
+In stark contrast, normal transfers in WHITELIST_ENABLED mode correctly require ALL parties to be whitelisted:
+
+- **iTryTokenOFT.sol normal transfers**: Requires `whitelisted[msg.sender] && whitelisted[from] && whitelisted[to]` [6](#0-5) 
+
+- **iTry.sol normal transfers**: Requires all parties to have `WHITELISTED_ROLE` [7](#0-6) 
 
 **Exploitation Path:**
+1. Protocol administrators set `transferState` to `WHITELIST_ENABLED` on both chains to enforce compliance-only operations [8](#0-7) 
+2. Attacker (non-whitelisted but not blacklisted) coordinates with any whitelisted user holding iTRY on the opposite chain
+3. The whitelisted user calls the OFT `send()` function to bridge iTRY to the attacker's address on the destination chain
+4. LayerZero delivers the message, triggering `_credit()` → `_mint()` → `_beforeTokenTransfer()` with `msg.sender` as the minter/endpoint
+5. The `_beforeTokenTransfer` hook's WHITELIST_ENABLED validation matches the minter condition, checking only `!blacklisted[to]` and completely bypassing the whitelist requirement
+6. Attacker receives iTRY tokens despite not being whitelisted, directly violating the protocol's access control invariant
 
-1. **Initial State Setup**: Attacker obtains whitelisted user status and mints iTRY by depositing DLF tokens. With fees initialized to zero, the only cost is gas. [2](#0-1) 
-
-2. **Mempool Monitoring**: Attacker monitors the mempool for legitimate redemption transactions. When they detect a victim's redemption for amount X requiring `grossDlfAmount = X * 1e18 / navPrice` DLF tokens, they prepare to front-run.
-
-3. **Front-Running Execution**: Attacker submits a redemption transaction with higher gas price to be executed first. If the vault currently has balance B where `B >= victimGrossAmount` but `B - attackerAmount < victimGrossAmount`, the attacker redeems just enough to drain the vault below the threshold.
-
-4. **Victim's Redemption Forced to Custodian**: When the victim's transaction executes, the balance check at line 354 fails, triggering the custodian path. Instead of receiving DLF tokens immediately, the victim only receives event emissions that require off-chain custodian processing. [3](#0-2) 
-
-5. **Vault Balance Source**: The `getAvailableBalance()` function simply returns the token balance, making it trivially manipulable by any redemption. [4](#0-3) 
-
-**Security Property Broken:** The protocol advertises instant redemption as a core feature through FastAccessVault. This attack degrades that functionality, violating user expectations and the protocol's value proposition without any access control preventing such manipulation.
+**Security Property Broken:** 
+This vulnerability violates the critical documented invariant: "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state" [3](#0-2) 
 
 ## Impact Explanation
 
-- **Affected Assets**: All users attempting to redeem iTRY tokens for DLF through the FastAccessVault path are vulnerable to forced degradation to custodian path.
+**Affected Assets**: All iTRY tokens on both hub (Ethereum) and spoke (MegaETH) chains when operating in WHITELIST_ENABLED mode
 
-- **Damage Severity**: While no funds are directly stolen, victims experience:
-  - **Time delays**: Must wait for off-chain custodian manual processing instead of instant on-chain transfer
-  - **Opportunity cost**: Time-sensitive trading opportunities may be missed during the delay period
-  - **Protocol reputation**: Degraded user experience damages trust in the "instant redemption" feature
-  - **Cascading effects**: If multiple users attempt redemptions simultaneously, a single attacker can force all of them through the slow path
+**Damage Severity**:
+- Complete bypass of regulatory compliance controls designed for KYC/AML enforcement
+- Any non-whitelisted address can receive iTRY through cross-chain transfers, rendering the whitelist feature ineffective
+- Undermines the protocol's ability to restrict token access to approved entities only
+- Potential exposure to regulatory violations and legal liability for failing to enforce stated compliance measures
 
-- **User Impact**: Any whitelisted user attempting redemption can be targeted. The attack affects all subsequent redemptions until the vault is replenished by the custodian or new mints. Since the attacker can time their front-run precisely, they can selectively target high-value redemptions or create general service degradation.
+**User Impact**: Affects all users and the protocol's compliance posture. The WHITELIST_ENABLED state is specifically intended for regulatory compliance scenarios [9](#0-8) , and its bypass allows unrestricted distribution to non-approved addresses.
 
 ## Likelihood Explanation
 
-- **Attacker Profile**: Any whitelisted user with sufficient capital to mint and redeem iTRY tokens. This includes all legitimate protocol users, making the attack highly accessible.
+**Attacker Profile**: Any non-whitelisted user who can coordinate with someone holding iTRY on another chain—an extremely low barrier to exploitation
 
-- **Preconditions**: 
-  - Attacker must have `WHITELISTED_USER_ROLE`
-  - Attacker must hold sufficient DLF to mint iTRY tokens
-  - Vault must have existing balance that can be drained
-  - Target victim must submit a redemption transaction observable in the mempool
+**Preconditions**:
+- Protocol operating in WHITELIST_ENABLED mode (the specific state designed for compliance enforcement)
+- Attacker is not blacklisted (but also not whitelisted)
+- Any whitelisted user with iTRY on the opposite chain willing to send tokens
 
-- **Execution Complexity**: Low. The attack requires:
-  - Single front-running transaction (standard MEV technique)
-  - No complex multi-block coordination
-  - No cross-chain operations
-  - Standard gas price manipulation for transaction ordering
+**Execution Complexity**: Single cross-chain transaction using the standard OFT `send()` function—no special privileges, complex setup, or technical sophistication required
 
-- **Frequency**: Highly repeatable. The attacker can:
-  - Execute the attack on every observed redemption
-  - Repeatedly cycle through mint → front-run → redeem with minimal cost (only gas if fees remain at 0)
-  - Sustain the attack as long as they maintain capital and whitelist status
+**Economic Cost**: Only standard LayerZero cross-chain messaging fees (typically a few dollars)
+
+**Frequency**: Can be exploited continuously by any number of users whenever the protocol operates in WHITELIST_ENABLED mode
+
+**Overall Likelihood**: HIGH - Trivial execution, minimal preconditions, repeatable at will
 
 ## Recommendation
 
-Implement a commitment scheme or minimum time delay between vault balance queries to prevent atomic front-running:
+**Primary Fix:**
 
+Modify the `_beforeTokenTransfer` validation logic in WHITELIST_ENABLED mode to enforce whitelist checks for minter-initiated mints:
+
+In `src/token/iTRY/crosschain/iTryTokenOFT.sol`, line 160, add whitelist validation:
 ```solidity
-// In src/protocol/iTryIssuer.sol, add state variable:
-mapping(address => uint256) public lastRedemptionBlock;
-
-// In redeemFor function, before line 354, add:
-require(block.number > lastRedemptionBlock[msg.sender], "Redemption too frequent");
-lastRedemptionBlock[msg.sender] = block.number;
-
-// Or implement a two-step redemption process:
-// Step 1: User commits to redemption, locking their iTRY
-// Step 2: After minimum delay, user executes redemption with locked amount
+} else if (msg.sender == minter && from == address(0) && !blacklisted[to] && whitelisted[to]) {
+    // minting - now enforces whitelist in WHITELIST_ENABLED mode
 ```
 
-**Alternative Mitigations:**
-
-1. **Reserve Buffer**: Implement a minimum vault balance that cannot be drained through normal redemptions, ensuring some liquidity always remains for small redemptions.
-
-2. **Fee Structure**: Set non-zero redemption fees to make the attack economically costly. However, this doesn't prevent wealthy attackers and hurts legitimate users.
-
-3. **Rate Limiting**: Implement per-user cooldowns between redemptions or maximum redemption amounts per time period.
-
-4. **Priority Queue**: Implement a FIFO queue system where redemptions are processed in submission order, preventing front-running entirely.
-
-## Proof of Concept
-
+In `src/token/iTRY/iTry.sol`, line 201, add whitelist role validation:
 ```solidity
-// File: test/Exploit_VaultDrainingGrief.t.sol
-// Run with: forge test --match-test test_FrontRunVaultDrainingGrief -vvv
-
-pragma solidity 0.8.20;
-
-import "forge-std/Test.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/token/iTRY/iTry.sol";
-import "../src/protocol/FastAccessVault.sol";
-
-contract Exploit_VaultDrainingGrief is Test {
-    iTryIssuer public issuer;
-    iTry public itry;
-    FastAccessVault public vault;
-    MockERC20 public dlf;
-    MockOracle public oracle;
-    
-    address public attacker = address(0x1);
-    address public victim = address(0x2);
-    address public custodian = address(0x3);
-    address public treasury = address(0x4);
-    
-    function setUp() public {
-        // Deploy mock tokens and oracle
-        dlf = new MockERC20("DLF", "DLF");
-        oracle = new MockOracle();
-        oracle.setPrice(1e18); // 1:1 NAV
-        
-        // Deploy iTRY and issuer
-        itry = new iTry(address(this));
-        issuer = new iTryIssuer(
-            address(itry),
-            address(dlf),
-            address(oracle),
-            treasury,
-            address(0x5), // yieldReceiver
-            custodian,
-            address(this), // admin
-            0, // initial issued
-            0, // initial custody
-            500, // 5% vault target
-            100e18 // 100 DLF minimum
-        );
-        
-        // Grant issuer minting role
-        itry.addMinter(address(issuer));
-        
-        // Whitelist attacker and victim
-        issuer.addToWhitelist(attacker);
-        issuer.addToWhitelist(victim);
-        
-        // Fund attacker and victim with DLF
-        dlf.mint(attacker, 1000e18);
-        dlf.mint(victim, 1000e18);
-    }
-    
-    function test_FrontRunVaultDrainingGrief() public {
-        // SETUP: Victim mints iTRY and vault has liquidity
-        vm.startPrank(victim);
-        dlf.approve(address(issuer), 500e18);
-        issuer.mintFor(victim, 500e18, 0);
-        vm.stopPrank();
-        
-        // Attacker also mints iTRY
-        vm.startPrank(attacker);
-        dlf.approve(address(issuer), 400e18);
-        issuer.mintFor(attacker, 400e18, 0);
-        vm.stopPrank();
-        
-        // Verify vault has sufficient balance for victim's redemption
-        uint256 vaultBalance = vault.getAvailableBalance();
-        assertGt(vaultBalance, 200e18, "Vault should have enough for victim");
-        
-        // EXPLOIT: Attacker observes victim's redemption in mempool
-        // Victim wants to redeem 200 iTRY
-        // Attacker front-runs by redeeming 350 iTRY to drain vault
-        
-        vm.startPrank(attacker);
-        bool attackerFromBuffer = issuer.redeemFor(attacker, 350e18, 0);
-        assertTrue(attackerFromBuffer, "Attacker should redeem from buffer");
-        vm.stopPrank();
-        
-        // Vault now has insufficient balance
-        vaultBalance = vault.getAvailableBalance();
-        assertLt(vaultBalance, 200e18, "Vault drained below victim's need");
-        
-        // VERIFY: Victim's redemption now forced through custodian
-        vm.startPrank(victim);
-        bool victimFromBuffer = issuer.redeemFor(victim, 200e18, 0);
-        assertFalse(victimFromBuffer, "Vulnerability confirmed: Victim forced to custodian path");
-        vm.stopPrank();
-        
-        // Result: Victim must wait for off-chain custodian processing
-        // Attacker paid only gas costs (fees are 0) to grief victim
-    }
-}
-
-// Mock contracts for testing
-contract MockERC20 {
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
-    
-    string public name;
-    string public symbol;
-    uint8 public decimals = 18;
-    
-    constructor(string memory _name, string memory _symbol) {
-        name = _name;
-        symbol = _symbol;
-    }
-    
-    function mint(address to, uint256 amount) external {
-        balanceOf[to] += amount;
-    }
-    
-    function approve(address spender, uint256 amount) external returns (bool) {
-        allowance[msg.sender][spender] = amount;
-        return true;
-    }
-    
-    function transfer(address to, uint256 amount) external returns (bool) {
-        balanceOf[msg.sender] -= amount;
-        balanceOf[to] += amount;
-        return true;
-    }
-    
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
-        allowance[from][msg.sender] -= amount;
-        balanceOf[from] -= amount;
-        balanceOf[to] += amount;
-        return true;
-    }
-}
-
-contract MockOracle {
-    uint256 private _price;
-    
-    function setPrice(uint256 price) external {
-        _price = price;
-    }
-    
-    function price() external view returns (uint256) {
-        return _price;
-    }
-}
+} else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to) && hasRole(WHITELISTED_ROLE, to)) {
+    // minting - now enforces whitelist in WHITELIST_ENABLED mode
 ```
+
+**Alternative Mitigation**: Add a dedicated check at the start of the WHITELIST_ENABLED branch that validates whitelist status for the recipient in all mint operations, ensuring consistent enforcement regardless of the caller.
+
+**Additional Recommendations**:
+- Add comprehensive test coverage for cross-chain transfers in WHITELIST_ENABLED mode with non-whitelisted recipients
+- Consider adding invariant tests that verify whitelist enforcement across all transfer paths
+- Document the intended behavior explicitly in code comments to prevent future regressions
 
 ## Notes
 
-This vulnerability represents a **griefing attack** rather than direct fund theft, which places it in the Medium severity category per Code4rena criteria ("griefing attacks causing significant loss"). The attack:
+**Validation Rationale:**
+This vulnerability passes all critical validation checkpoints:
+- ✅ Both affected files are explicitly in scope (scope.txt lines 4 and 6)
+- ✅ NOT a known issue from the Zellic audit report
+- ✅ Does NOT require any trusted role to act maliciously
+- ✅ Violates a clearly documented protocol invariant
+- ✅ Has concrete, measurable security impact (compliance bypass)
+- ✅ Is trivially exploitable by any user
+- ✅ Confirmed through direct code analysis with exact line citations
 
-- Does not steal funds but degrades core protocol functionality
-- Has low execution cost (especially with zero fees)
-- Is highly repeatable and can target specific users
-- Violates the protocol's advertised "instant redemption" feature
-- Could cause cascading effects during high-volume periods
+**Architectural Context:**
+The vulnerability exists in the cross-chain token bridging flow where LayerZero's OFT (Omnichain Fungible Token) standard is used. When tokens are bridged from one chain to another, the destination chain's OFT contract mints new tokens to the recipient. The `_beforeTokenTransfer` hook is correctly invoked during this minting operation, but the validation logic incorrectly treats minter-initiated mints differently from normal transfers, creating an inconsistency that bypasses the whitelist requirement.
 
-The issue is particularly concerning because:
-1. The redemption fees are initialized to zero, making the attack economically viable
-2. Any whitelisted user can execute it, not just malicious actors
-3. The front-running technique is well-established in MEV contexts
-4. No access controls prevent vault balance manipulation through legitimate redemptions
+**Severity Justification:**
+This is classified as HIGH severity because it:
+1. Directly violates a documented security invariant
+2. Completely undermines a critical compliance feature
+3. Has broad protocol-wide impact
+4. Is trivially exploitable with no special privileges required
+5. Cannot be mitigated without code changes
 
-While the custodian path is a legitimate fallback mechanism, forcing users through it via front-running constitutes an exploitable vulnerability that degrades user experience and protocol reputation.
+The whitelist feature exists specifically for regulatory compliance scenarios, and its bypass exposes the protocol to potential regulatory violations—a critical risk for any real-world asset (RWA) protocol handling Turkish Money Market Fund investments.
 
 ### Citations
 
-**File:** src/protocol/iTryIssuer.sol (L168-170)
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L134-138)
 ```text
-        // Set initial fees to 0
-        redemptionFeeInBPS = 0;
-        mintFeeInBPS = 0;
-```
-
-**File:** src/protocol/iTryIssuer.sol (L353-366)
-```text
-        // Check if buffer pool has enough DLF balance
-        uint256 bufferBalance = liquidityVault.getAvailableBalance();
-
-        if (bufferBalance >= grossDlfAmount) {
-            // Buffer has enough - serve from buffer
-            _redeemFromVault(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = true;
-        } else {
-            // Buffer insufficient - serve from custodian
-            _redeemFromCustodian(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = false;
-        }
-```
-
-**File:** src/protocol/iTryIssuer.sol (L644-658)
-```text
-    function _redeemFromCustodian(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-        _totalDLFUnderCustody -= (receiveAmount + feeAmount);
-
-        // Signal that fast access vault needs top-up from custodian
-        uint256 topUpAmount = receiveAmount + feeAmount;
-        emit FastAccessVaultTopUpRequested(topUpAmount);
-
-        if (feeAmount > 0) {
-            // Emit event for off-chain custodian to process
-            emit CustodianTransferRequested(treasury, feeAmount);
-        }
-
-        // Emit event for off-chain custodian to process
-        emit CustodianTransferRequested(receiver, receiveAmount);
+    function updateTransferState(TransferState code) external onlyOwner {
+        TransferState prevState = transferState;
+        transferState = code;
+        emit TransferStateUpdated(prevState, code);
     }
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L120-122)
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L157-172)
 ```text
-    function getAvailableBalance() public view returns (uint256) {
-        return _vaultToken.balanceOf(address(this));
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
+            if (msg.sender == minter && !blacklisted[from] && to == address(0)) {
+                // redeeming
+            } else if (msg.sender == minter && from == address(0) && !blacklisted[to]) {
+                // minting
+            } else if (msg.sender == owner() && blacklisted[from] && to == address(0)) {
+                // redistributing - burn
+            } else if (msg.sender == owner() && from == address(0) && !blacklisted[to]) {
+                // redistributing - mint
+            } else if (whitelisted[msg.sender] && whitelisted[from] && to == address(0)) {
+                // whitelisted user can burn
+            } else if (whitelisted[msg.sender] && whitelisted[from] && whitelisted[to]) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
+```
+
+**File:** src/token/iTRY/iTry.sol (L198-217)
+```text
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
+            if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
+                // redeeming
+            } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
+                // minting
+            } else if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender) && hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
+                // redistributing - burn
+            } else if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to))
+            {
+                // redistributing - mint
+            } else if (hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from) && to == address(0)) {
+                // whitelisted user can burn
+            } else if (
+                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
+                    && hasRole(WHITELISTED_ROLE, to)
+            ) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
+```
+
+**File:** README.md (L125-125)
+```markdown
+- Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state.
+```
+
+**File:** src/token/iTRY/IiTryDefinitions.sol (L5-9)
+```text
+    enum TransferState {
+        FULLY_DISABLED,
+        WHITELIST_ENABLED,
+        FULLY_ENABLED
     }
 ```

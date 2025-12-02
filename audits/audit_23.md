@@ -1,119 +1,98 @@
 # NoVulnerability found for this question.
 
-## Analysis Summary
+## Validation Summary
 
-After thorough investigation of the YieldForwarder contract's ETH handling mechanism, I conclude that **no exploitable vulnerability exists**. Here's why:
+After thorough analysis of the `StakediTry` cooldown mechanism and `totalAssets()` accounting, I confirm the claim is **correct** - the current implementation does not require overriding `totalAssets()` to include silo funds, and doing so would actually be **incorrect**.
 
-### How ETH Can Arrive
+## Analysis Verification
 
-The YieldForwarder contract has no payable functions, no `receive()`, and no `fallback()` functions [1](#0-0) . ETH can only arrive through force-send mechanisms:
-- Selfdestruct from another contract
-- COINBASE/block rewards (theoretical)
+**Cooldown Flow Confirmation:**
 
-### rescueToken Implementation Analysis
+When users call `cooldownShares()` or `cooldownAssets()`:
+- Shares are burned from the user via the ERC4626 `_withdraw()` function [1](#0-0) 
+- Assets are transferred from StakediTry contract to the silo contract [2](#0-1) 
+- The cooldown amount is tracked per user [3](#0-2) 
 
-The `rescueToken` function correctly handles ETH rescue at lines 160-163 [2](#0-1) :
-- Uses `onlyOwner` modifier for access control [3](#0-2) 
-- Protected by `nonReentrant` guard [3](#0-2) 
-- Validates recipient address and amount [4](#0-3) 
-- Uses low-level call with success check [5](#0-4) 
+**totalAssets() Calculation:**
 
-### Protocol Impact Assessment
+The base implementation returns only the vault's balance minus unvested rewards: [4](#0-3) 
 
-The contract's core functionality only deals with `yieldToken` (iTRY) [6](#0-5) . The `processNewYield` function transfers yield tokens to the recipient [7](#0-6) , with no dependency on ETH balance.
+Since assets have physically left the StakediTry contract and entered the silo, they are automatically excluded from `balanceOf(address(this))`.
 
-### Griefing Scenario Analysis
+**Why Including Silo Assets Would Be Wrong:**
 
-While an attacker could force-send ETH via selfdestruct:
-- **Cost to attacker**: ~50k+ gas for contract deployment and selfdestruct
-- **Cost to defender**: ~30k gas for one `rescueToken` call
-- **Impact**: None - no protocol disruption, fund loss, or DOS
-- **Severity**: Does not meet Medium/High criteria (no significant loss, no fund theft, no invariant violation)
+**Scenario Analysis:**
+- Initial: 1000 iTRY in vault, 1000 shares, price = 1.0
+- User cooldowns 100 shares: 900 iTRY in vault, 100 iTRY in silo, 900 shares remain
+- Correct: `totalAssets() = 900`, `totalSupply() = 900`, price = 1.0 ✓
+- Wrong (if including silo): `totalAssets() = 1000`, `totalSupply() = 900`, price = 1.11 ❌
 
-### Intentional Design
+Including silo assets would artificially inflate the share price by counting assets that:
+1. No longer back any outstanding shares (those shares were burned)
+2. Are committed to specific users' pending withdrawals
+3. Do not participate in yield distribution
+4. Will be paid out without affecting the vault's balance
 
-The test suite includes comprehensive ETH rescue tests [8](#0-7) , confirming this is intentional defensive programming, not an oversight.
+**Architectural Correctness:**
+
+The silo is a separate custody contract [5](#0-4)  that holds assets exclusively for cooldown claims. This segregation ensures proper accounting where cooled-down assets are isolated from the active vault pool.
+
+Rewards are transferred only to the StakediTry contract [6](#0-5) , never to the silo, confirming that silo assets don't earn yield.
 
 ## Notes
 
-The `rescueToken` function's ETH handling capability is a **security feature**, not a vulnerability. It provides a recovery mechanism for edge cases where ETH arrives via force-send methods that bypass normal payable checks. This is considered best practice in smart contract development to prevent permanent fund loss.
+This is standard ERC4626 vault behavior when implementing withdrawal delays/cooldowns. The architecture correctly maintains the invariant that `share_price = totalAssets() / totalSupply()` reflects only assets backing outstanding shares. Users who initiate cooldown exit the yield-earning pool at that moment by having their shares burned, which is the intended tradeoff for scheduled withdrawal.
 
 ### Citations
 
-**File:** src/protocol/YieldForwarder.sol (L27-28)
+**File:** src/token/wiTRY/StakediTryCooldown.sol (L104-104)
 ```text
-contract YieldForwarder is IYieldProcessor, Ownable, ReentrancyGuard {
+        _withdraw(msg.sender, address(silo), msg.sender, assets, shares);
+```
+
+**File:** src/token/wiTRY/StakediTryCooldown.sol (L114-115)
+```text
+        cooldowns[msg.sender].cooldownEnd = uint104(block.timestamp) + cooldownDuration;
+        cooldowns[msg.sender].underlyingAmount += uint152(assets);
+```
+
+**File:** src/token/wiTRY/StakediTryCooldown.sol (L117-117)
+```text
+        _withdraw(msg.sender, address(silo), msg.sender, assets, shares);
+```
+
+**File:** src/token/wiTRY/StakediTry.sol (L113-119)
+```text
+    function transferInRewards(uint256 amount) external nonReentrant onlyRole(REWARDER_ROLE) notZero(amount) {
+        _updateVestingAmount(amount);
+        // transfer assets from rewarder to this contract
+        IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit RewardsReceived(amount);
+    }
+```
+
+**File:** src/token/wiTRY/StakediTry.sol (L192-194)
+```text
+    function totalAssets() public view override returns (uint256) {
+        return IERC20(asset()).balanceOf(address(this)) - getUnvestedAmount();
+    }
+```
+
+**File:** src/token/wiTRY/iTrySilo.sol (L8-21)
+```text
+/**
+ * @title iTrySilo
+ * @notice The Silo allows to store iTry during the stake cooldown process.
+ */
+contract iTrySilo is IiTrySiloDefinitions {
     using SafeERC20 for IERC20;
-```
 
-**File:** src/protocol/YieldForwarder.sol (L35-35)
-```text
-    IERC20 public immutable yieldToken;
-```
+    address immutable STAKING_VAULT;
+    IERC20 immutable iTry;
 
-**File:** src/protocol/YieldForwarder.sol (L97-107)
-```text
-    function processNewYield(uint256 _newYieldAmount) external override {
-        if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-        if (yieldRecipient == address(0)) revert RecipientNotSet();
-
-        // Transfer yield tokens to the recipient
-        if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-            revert CommonErrors.TransferFailed();
-        }
-
-        emit YieldForwarded(yieldRecipient, _newYieldAmount);
-    }
-```
-
-**File:** src/protocol/YieldForwarder.sol (L156-156)
-```text
-    function rescueToken(address token, address to, uint256 amount) external onlyOwner nonReentrant {
-```
-
-**File:** src/protocol/YieldForwarder.sol (L157-158)
-```text
-        if (to == address(0)) revert CommonErrors.ZeroAddress();
-        if (amount == 0) revert CommonErrors.ZeroAmount();
-```
-
-**File:** src/protocol/YieldForwarder.sol (L160-163)
-```text
-        if (token == address(0)) {
-            // Rescue ETH
-            (bool success,) = to.call{value: amount}("");
-            if (!success) revert CommonErrors.TransferFailed();
-```
-
-**File:** test/YieldForwarder.t.sol (L268-296)
-```text
-    /// @notice Tests that rescueToken rescues ETH successfully
-    function test_rescueToken_whenETH_rescuesETH() public {
-        // Arrange: Send ETH to forwarder
-        address to = makeAddr("to");
-        uint256 amount = 1 ether;
-        vm.deal(address(forwarder), amount);
-
-        uint256 toBalanceBefore = to.balance;
-
-        // Act
-        vm.prank(owner);
-        forwarder.rescueToken(address(0), to, amount);
-
-        // Assert
-        assertEq(to.balance, toBalanceBefore + amount, "ETH should be rescued");
-    }
-
-    /// @notice Tests that rescueToken emits TokensRescued event for ETH
-    function test_rescueToken_whenETH_emitsEvent() public {
-        address to = makeAddr("to");
-        uint256 amount = 1 ether;
-        vm.deal(address(forwarder), amount);
-
-        vm.expectEmit(true, true, false, true);
-        emit TokensRescued(address(0), to, amount);
-
-        vm.prank(owner);
-        forwarder.rescueToken(address(0), to, amount);
+    constructor(address _stakingVault, address _iTryToken) {
+        STAKING_VAULT = _stakingVault;
+        iTry = IERC20(_iTryToken);
     }
 ```

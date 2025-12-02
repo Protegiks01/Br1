@@ -1,282 +1,176 @@
+# Validation Result: VALID Medium Severity Vulnerability
+
 ## Title
-Missing Access Control and Balance Validation in YieldForwarder.processNewYield Enables Accounting Manipulation and Unauthorized Yield Processing
+Whitelisted Users Can Mint iTRY to Non-Whitelisted Addresses in WHITELIST_ENABLED State, Violating Whitelist Enforcement Invariant
 
 ## Summary
-The `processNewYield()` function in `YieldForwarder.sol` lacks both access control and balance validation. Anyone can call this function with arbitrary amounts, and it doesn't verify that the `_newYieldAmount` parameter matches the actual tokens received. This enables unauthorized yield processing, DOS attacks, and accounting confusion when incorrect amounts are passed.
+The `mintFor` function in iTryIssuer allows whitelisted users to mint iTRY tokens to non-whitelisted recipients when the protocol is in WHITELIST_ENABLED state. This violates the documented invariant that "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state" and results in tokens becoming locked until admin intervention. [1](#0-0) 
 
 ## Impact
 **Severity**: Medium
 
+This is a temporary fund lock issue that requires admin intervention to resolve. The minted tokens cannot be transferred or burned by the non-whitelisted recipient, defeating the purpose of WHITELIST_ENABLED mode which is designed to restrict iTRY circulation to a controlled set of whitelisted addresses only.
+
 ## Finding Description
-**Location:** `src/protocol/YieldForwarder.sol` - `processNewYield()` function at lines 97-107 [1](#0-0) 
 
-**Intended Logic:** According to the IYieldProcessor interface documentation, the function should be called by iTryIssuer after minting yield tokens, and implementations should "ensure it has sufficient balance to process the yield" and validate the amount matches what was received. [2](#0-1) 
+**Location:** `src/protocol/iTryIssuer.sol` (mintFor function) and `src/token/iTRY/iTry.sol` (_beforeTokenTransfer function)
 
-**Actual Logic:** The function has no access control (anyone can call it) and doesn't validate the `_newYieldAmount` parameter against:
-- The contract's current balance
-- The amount just received (balance delta)
-- Any authorization mechanism
+**Intended Logic:** 
+According to the documented invariant, in WHITELIST_ENABLED state (TransferState = 1), iTRY tokens should only circulate among whitelisted addresses. The minting process should enforce that recipients are whitelisted to maintain the integrity of the whitelist system and comply with the stated security property. [1](#0-0) 
 
-It simply attempts to transfer whatever amount is specified, and emits an event with that parameter value regardless of whether it matches the actual amount received.
+**Actual Logic:** 
+The `mintFor` function only validates that the caller has `_WHITELISTED_USER_ROLE` but performs no validation on the recipient's whitelist status in the iTry token contract: [2](#0-1) 
+
+The iTry token's `_beforeTokenTransfer` hook allows minting to any non-blacklisted address when called by a MINTER_CONTRACT, regardless of whether the recipient has WHITELISTED_ROLE in WHITELIST_ENABLED state: [3](#0-2) 
+
+This contrasts sharply with normal transfers in WHITELIST_ENABLED state, which require ALL three parties (msg.sender, from, to) to be whitelisted: [4](#0-3) 
 
 **Exploitation Path:**
+1. Protocol is in WHITELIST_ENABLED state (one of three documented transfer states)
+2. A whitelisted user calls `mintFor(nonWhitelistedAddress, dlfAmount, minAmountOut)` with a non-whitelisted but non-blacklisted recipient
+3. The function passes access control checks and mints iTRY directly to the non-whitelisted address
+4. The non-whitelisted recipient now holds iTRY tokens but cannot transfer them (requires all parties whitelisted) or burn them (requires msg.sender and from to be whitelisted)
+5. Tokens remain locked until admin calls `addWhitelistAddress()` to whitelist the recipient [5](#0-4) 
 
-**Scenario 1: Accounting Confusion from Incorrect Amount**
-1. iTryIssuer calculates and mints 100 iTRY to YieldForwarder via `processAccumulatedYield()` [3](#0-2) 
-
-2. Due to a bug (e.g., arithmetic error, reentrancy, state inconsistency), iTryIssuer calls `processNewYield(80)` instead of `processNewYield(100)`
-3. YieldForwarder transfers only 80 iTRY to the recipient, leaving 20 iTRY stuck in the contract
-4. Event `YieldForwarded(recipient, 80)` is emitted, but 100 iTRY was actually received
-5. Accounting confusion: the system believes 80 was processed, but 20 remains unprocessed
-
-**Scenario 2: Unauthorized Yield Processing (DOS)**
-1. iTryIssuer mints 100 iTRY to YieldForwarder
-2. Before iTryIssuer can call `processNewYield()` (if done in separate transaction or any delay), an attacker front-runs with their own call to `processNewYield(100)`
-3. All yield is forwarded to the recipient (correct destination but wrong timing)
-4. When iTryIssuer's legitimate call executes, it reverts due to insufficient balance
-5. Yield distribution flow is disrupted, requiring manual intervention
-
-**Scenario 3: Balance Accumulation Exploitation**
-1. YieldForwarder accumulates 50 iTRY from previous incomplete operation
-2. iTryIssuer mints 100 iTRY (total balance now 150)
-3. Attacker calls `processNewYield(150)` draining entire balance
-4. iTryIssuer's subsequent call to `processNewYield(100)` fails
-5. DOS on yield distribution
-
-**Security Property Broken:** The function violates the principle that critical protocol operations should be restricted to authorized callers, and that event parameters should accurately reflect actual state changes.
+**Security Property Broken:**
+Violates the documented invariant: "Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state." The "receive" component of this invariant is not enforced during minting operations.
 
 ## Impact Explanation
-- **Affected Assets**: iTRY tokens held in YieldForwarder contract, yield distribution accounting
-- **Damage Severity**: 
-  - Accounting confusion: Events don't reflect actual token movements, breaking off-chain monitoring and analytics
-  - DOS potential: Legitimate yield processing can be blocked by front-running attacks
-  - Token accumulation: Incorrect amounts leave tokens stuck in YieldForwarder
-  - System reliability: Protocol requires manual intervention to resolve discrepancies
-- **User Impact**: Stakers expecting yield distribution experience delays or incorrect amounts. Protocol accounting becomes unreliable for auditing and monitoring purposes.
+
+**Affected Assets**: iTRY tokens minted to non-whitelisted addresses become temporarily locked and unusable without admin intervention.
+
+**Damage Severity**: 
+- The tokens cannot be transferred or burned by the non-whitelisted recipient through normal means
+- This defeats the purpose of WHITELIST_ENABLED mode, which is designed to restrict iTRY circulation to a controlled set of addresses
+- Requires admin intervention (calling `addWhitelistAddress()`) to unlock the tokens [6](#0-5) 
+
+**User Impact**: 
+- Any whitelisted user can trigger this, either accidentally or maliciously (griefing)
+- Non-whitelisted recipients inadvertently receive locked tokens
+- The protocol's ability to enforce whitelist-only circulation is compromised
+- Admin resources required to resolve each occurrence
 
 ## Likelihood Explanation
-- **Attacker Profile**: Any external address can exploit this (no special permissions required)
-- **Preconditions**: YieldForwarder must have iTRY balance (from normal yield minting operations)
-- **Execution Complexity**: Single transaction call to `processNewYield()` with arbitrary amount
-- **Frequency**: Can be exploited every time YieldForwarder receives tokens, or continuously to cause DOS
+
+**Attacker Profile**: Any whitelisted user with the `_WHITELISTED_USER_ROLE` in iTryIssuer can exploit this
+
+**Preconditions**: 
+- Protocol must be in WHITELIST_ENABLED state (one of three documented operational modes) [7](#0-6) 
+
+**Execution Complexity**: Single transaction - simply call `mintFor()` with a non-whitelisted recipient address
+
+**Economic Cost**: Only gas fees, no capital lockup required
+
+**Frequency**: Can be repeated continuously, with each occurrence locking more iTRY tokens
+
+**Overall Likelihood**: Medium-High - Easy to trigger, common operational state
 
 ## Recommendation
 
-**Fix 1: Add Access Control**
+**Primary Fix**: Add recipient whitelist validation in the iTry token's `_beforeTokenTransfer` function during minting operations when in WHITELIST_ENABLED state:
+
 ```solidity
-// In src/protocol/YieldForwarder.sol, line 27:
-
-// Add state variable for authorized caller
-address public immutable yieldSource;
-
-// In constructor, line 69:
-constructor(address _yieldToken, address _initialRecipient, address _yieldSource) {
-    if (_yieldToken == address(0)) revert CommonErrors.ZeroAddress();
-    if (_initialRecipient == address(0)) revert CommonErrors.ZeroAddress();
-    if (_yieldSource == address(0)) revert CommonErrors.ZeroAddress();
-    
-    yieldToken = IERC20(_yieldToken);
-    yieldRecipient = _initialRecipient;
-    yieldSource = _yieldSource; // typically iTryIssuer address
-    
-    emit YieldRecipientUpdated(address(0), _initialRecipient);
+// In src/token/iTRY/iTry.sol, line 201-202:
+// CURRENT (vulnerable):
+else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
+    // minting
 }
 
-// In processNewYield function, line 97:
-function processNewYield(uint256 _newYieldAmount) external override {
-    // Add access control
-    if (msg.sender != yieldSource) revert Unauthorized();
-    
-    if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-    if (yieldRecipient == address(0)) revert RecipientNotSet();
-    
-    // Transfer yield tokens to the recipient
-    if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-        revert CommonErrors.TransferFailed();
-    }
-    
-    emit YieldForwarded(yieldRecipient, _newYieldAmount);
+// FIXED:
+else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to) && hasRole(WHITELISTED_ROLE, to)) {
+    // minting - recipient must be whitelisted in WHITELIST_ENABLED state
 }
 ```
 
-**Fix 2: Validate Amount Against Balance**
+**Alternative Fix**: Add validation in the `mintFor` function to check recipient whitelist status:
+
 ```solidity
-// Alternative approach - validate against actual balance
-function processNewYield(uint256 _newYieldAmount) external override {
-    if (msg.sender != yieldSource) revert Unauthorized();
-    if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-    if (yieldRecipient == address(0)) revert RecipientNotSet();
-    
-    // Validate amount matches available balance
-    uint256 contractBalance = yieldToken.balanceOf(address(this));
-    if (_newYieldAmount > contractBalance) {
-        revert InsufficientBalance(_newYieldAmount, contractBalance);
-    }
-    
-    // For additional safety, could enforce exact match
-    if (_newYieldAmount != contractBalance) {
-        revert AmountMismatch(_newYieldAmount, contractBalance);
-    }
-    
-    // Transfer yield tokens to the recipient
-    yieldToken.safeTransfer(yieldRecipient, _newYieldAmount);
-    
-    emit YieldForwarded(yieldRecipient, _newYieldAmount);
-}
-```
-
-**Alternative: Simplified Approach**
-Remove the parameter entirely and always process the full balance:
-```solidity
-function processNewYield() external override {
-    if (msg.sender != yieldSource) revert Unauthorized();
-    if (yieldRecipient == address(0)) revert RecipientNotSet();
-    
-    uint256 balance = yieldToken.balanceOf(address(this));
-    if (balance == 0) revert CommonErrors.ZeroAmount();
-    
-    yieldToken.safeTransfer(yieldRecipient, balance);
-    
-    emit YieldForwarded(yieldRecipient, balance);
-}
-```
-
-## Proof of Concept
-```solidity
-// File: test/Exploit_YieldForwarderUnauthorizedAccess.t.sol
-// Run with: forge test --match-test test_UnauthorizedYieldProcessing -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import "../src/protocol/YieldForwarder.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "./mocks/MockERC20.sol";
-
-contract Exploit_YieldForwarderUnauthorizedAccess is Test {
-    YieldForwarder public forwarder;
-    MockERC20 public yieldToken;
-    
-    address public owner;
-    address public recipient;
-    address public attacker;
-    
-    function setUp() public {
-        owner = makeAddr("owner");
-        recipient = makeAddr("recipient");
-        attacker = makeAddr("attacker");
-        
-        yieldToken = new MockERC20("iTRY", "iTRY");
-        
-        vm.prank(owner);
-        forwarder = new YieldForwarder(address(yieldToken), recipient);
-    }
-    
-    function test_UnauthorizedYieldProcessing() public {
-        // SETUP: Simulate iTryIssuer minting yield to forwarder
-        uint256 yieldAmount = 100e18;
-        yieldToken.mint(address(forwarder), yieldAmount);
-        
-        uint256 forwarderBalanceBefore = yieldToken.balanceOf(address(forwarder));
-        uint256 recipientBalanceBefore = yieldToken.balanceOf(recipient);
-        
-        console.log("Forwarder balance before:", forwarderBalanceBefore);
-        console.log("Recipient balance before:", recipientBalanceBefore);
-        
-        // EXPLOIT: Attacker calls processNewYield without authorization
-        vm.prank(attacker);
-        forwarder.processNewYield(yieldAmount);
-        
-        // VERIFY: Attacker successfully processed yield (no access control)
-        uint256 forwarderBalanceAfter = yieldToken.balanceOf(address(forwarder));
-        uint256 recipientBalanceAfter = yieldToken.balanceOf(recipient);
-        
-        console.log("Forwarder balance after:", forwarderBalanceAfter);
-        console.log("Recipient balance after:", recipientBalanceAfter);
-        
-        assertEq(forwarderBalanceAfter, 0, "Vulnerability confirmed: Attacker drained forwarder");
-        assertEq(recipientBalanceAfter, recipientBalanceBefore + yieldAmount, "Yield was processed by attacker");
-    }
-    
-    function test_IncorrectAmountAccounting() public {
-        // SETUP: Mint more than will be processed
-        uint256 actualAmount = 100e18;
-        uint256 reportedAmount = 80e18;
-        
-        yieldToken.mint(address(forwarder), actualAmount);
-        
-        // EXPLOIT: Call with incorrect (lower) amount
-        vm.expectEmit(true, false, false, true);
-        emit YieldForwarder.YieldForwarded(recipient, reportedAmount);
-        
-        forwarder.processNewYield(reportedAmount);
-        
-        // VERIFY: Event reports 80 but 20 remains stuck
-        uint256 remainingBalance = yieldToken.balanceOf(address(forwarder));
-        assertEq(remainingBalance, actualAmount - reportedAmount, "Vulnerability confirmed: Tokens stuck due to incorrect amount");
-        assertEq(remainingBalance, 20e18, "20 iTRY stuck in forwarder");
+// In src/protocol/iTryIssuer.sol, after line 277:
+IiTryToken.TransferState currentState = iTryToken.transferState();
+if (currentState == IiTryToken.TransferState.WHITELIST_ENABLED) {
+    if (!iTryToken.hasRole(iTryToken.WHITELISTED_ROLE(), recipient)) {
+        revert RecipientNotWhitelisted(recipient);
     }
 }
 ```
 
 ## Notes
 
-The vulnerability directly answers the security question: **Yes, iTryIssuer could pass an incorrect amount due to a bug, and processNewYield() would succeed with wrong event parameters, creating accounting confusion.**
+**Key Observations:**
 
-However, the issue is more severe than the question implies because:
-1. **ANY address** can call `processNewYield()`, not just iTryIssuer
-2. The lack of access control enables DOS attacks and unauthorized yield processing
-3. The lack of balance validation means events can systematically misreport actual token movements
+1. **Two Separate Role Systems**: There is a disconnect between the access control in iTryIssuer (using `_WHITELISTED_USER_ROLE`) and transfer restrictions in iTry (using `WHITELISTED_ROLE`). These are managed independently through different functions:
+   - iTryIssuer: `addToWhitelist()` grants `_WHITELISTED_USER_ROLE`
+   - iTry: `addWhitelistAddress()` grants `WHITELISTED_ROLE` [8](#0-7) [6](#0-5) 
 
-The recommended fix should implement both access control AND balance validation to ensure:
-- Only authorized addresses (iTryIssuer) can trigger yield processing
-- The amount parameter matches the actual tokens received/available
-- Events accurately reflect the true state changes for off-chain monitoring
+2. **Inconsistent Enforcement**: While normal transfers require all three parties (msg.sender, from, to) to be whitelisted in WHITELIST_ENABLED state, minting operations only check that the recipient is not blacklisted, creating an inconsistency in the security model.
+
+3. **Recovery Mechanism**: Tokens are not permanently lost - an admin with WHITELIST_MANAGER_ROLE can call `addWhitelistAddress()` to grant WHITELISTED_ROLE to the recipient, after which they can transfer or burn their tokens. However, this requires manual intervention and violates the stated invariant.
+
+4. **Distinct from Known Issues**: This is different from the known Zellic issue about blacklisted users transferring via allowance. This issue concerns whitelist enforcement during minting, not blacklist bypass via allowance.
 
 ### Citations
 
-**File:** src/protocol/YieldForwarder.sol (L97-107)
+**File:** README.md (L125-125)
+```markdown
+- Only whitelisted user can send/receive/burn iTry tokens in a WHITELIST_ENABLED transfer state.
+```
+
+**File:** src/protocol/iTryIssuer.sol (L270-277)
 ```text
-    function processNewYield(uint256 _newYieldAmount) external override {
-        if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-        if (yieldRecipient == address(0)) revert RecipientNotSet();
+    function mintFor(address recipient, uint256 dlfAmount, uint256 minAmountOut)
+        public
+        onlyRole(_WHITELISTED_USER_ROLE)
+        nonReentrant
+        returns (uint256 iTRYAmount)
+    {
+        // Validate recipient address
+        if (recipient == address(0)) revert CommonErrors.ZeroAddress();
+```
 
-        // Transfer yield tokens to the recipient
-        if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-            revert CommonErrors.TransferFailed();
-        }
-
-        emit YieldForwarded(yieldRecipient, _newYieldAmount);
+**File:** src/protocol/iTryIssuer.sol (L553-555)
+```text
+    function addToWhitelist(address target) external onlyRole(_WHITELIST_MANAGER_ROLE) {
+        _grantRole(_WHITELISTED_USER_ROLE, target);
     }
 ```
 
-**File:** src/protocol/periphery/IYieldProcessor.sol (L32-49)
+**File:** src/token/iTRY/iTry.sol (L92-95)
 ```text
-    /**
-     * @notice Processes newly generated yield tokens
-     * @dev This function is called by the iTryIssuer contract after minting yield tokens.
-     *      The implementing contract should already have received the yield tokens before
-     *      this function is called. Implementations must handle the yield appropriately
-     *      according to their specific distribution logic.
-     *
-     * @param _newYieldAmount The amount of yield tokens that have been generated and should be processed
-     *
-     * Requirements:
-     * - Implementation should validate that `_newYieldAmount` is greater than zero
-     * - Implementation should ensure it has sufficient balance to process the yield
-     * - Implementation should handle any distribution logic (transfers, conversions, etc.)
-     * - Implementation should emit appropriate events for tracking yield processing
-     *
-     * @custom:example YieldForwarder implements this by transferring the entire amount to a recipient
-     * @custom:example A more complex implementation might split yield across multiple parties
-     */
+    function addWhitelistAddress(address[] calldata users) external onlyRole(WHITELIST_MANAGER_ROLE) {
+        for (uint8 i = 0; i < users.length; i++) {
+            if (!hasRole(BLACKLISTED_ROLE, users[i])) _grantRole(WHITELISTED_ROLE, users[i]);
+        }
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L412-416)
+**File:** src/token/iTRY/iTry.sol (L198-202)
 ```text
-        // Mint yield amount to yieldReceiver contract
-        _mint(address(yieldReceiver), newYield);
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
+            if (hasRole(MINTER_CONTRACT, msg.sender) && !hasRole(BLACKLISTED_ROLE, from) && to == address(0)) {
+                // redeeming
+            } else if (hasRole(MINTER_CONTRACT, msg.sender) && from == address(0) && !hasRole(BLACKLISTED_ROLE, to)) {
+                // minting
+```
 
-        // Notify yield distributor of received yield
-        yieldReceiver.processNewYield(newYield);
+**File:** src/token/iTRY/iTry.sol (L208-209)
+```text
+            } else if (hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from) && to == address(0)) {
+                // whitelisted user can burn
+```
+
+**File:** src/token/iTRY/iTry.sol (L210-214)
+```text
+            } else if (
+                hasRole(WHITELISTED_ROLE, msg.sender) && hasRole(WHITELISTED_ROLE, from)
+                    && hasRole(WHITELISTED_ROLE, to)
+            ) {
+                // normal case
+```
+
+**File:** src/token/iTRY/IiTryDefinitions.sol (L5-9)
+```text
+    enum TransferState {
+        FULLY_DISABLED,
+        WHITELIST_ENABLED,
+        FULLY_ENABLED
+    }
 ```

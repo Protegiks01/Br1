@@ -1,237 +1,125 @@
-## Title
-FastAccessVault Perpetual Under-Buffering Due to Unvalidated Minimum Balance Against Total Collateral
+# NoVulnerability found for this question.
 
-## Summary
-The `rebalanceFunds()` function in `FastAccessVault.sol` can enter a perpetual under-buffering state when `minimumExpectedBalance` exceeds the total available collateral (`_totalDLFUnderCustody`). The function emits top-up requests to the custodian without validating that the custodian has sufficient balance to fulfill them, causing the vault to remain indefinitely underfunded and breaking fast redemption functionality.
+## Validation Summary
 
-## Impact
-**Severity**: Medium
+After rigorous validation against the Brix Money Protocol security framework, I confirm that the analysis is **correct** and there is **no exploitable vulnerability** in the `cooldownAssets` function or cooldown accumulation mechanism.
 
-## Finding Description
-**Location:** [1](#0-0) 
+## Technical Validation
 
-**Intended Logic:** The `rebalanceFunds()` function should maintain the vault's buffer at an optimal level by requesting the custodian to top up when underfunded. The target balance is calculated as the maximum of either a percentage of total AUM or the `minimumExpectedBalance`.
+### 1. Share Burning is Properly Enforced
 
-**Actual Logic:** The function calculates target balance without validating that it's achievable given total available collateral. When `minimumExpectedBalance` is set higher than `_totalDLFUnderCustody`, the target becomes mathematically impossible to reach. The custodian cannot fulfill top-up requests because the requested amount exceeds their actual holdings.
+The `cooldownAssets` function correctly burns shares on each invocation. At line 104, it calls `_withdraw()`, which invokes OpenZeppelin's ERC4626 `_withdraw` implementation that burns shares from the user's balance. [1](#0-0) 
 
-**Exploitation Path:**
-1. Owner sets `minimumExpectedBalance` to 100e18 DLF tokens via `setMinimumBufferBalance()` [2](#0-1) 
-2. Total collateral under custody drops to 70e18 DLF (e.g., after multiple redemptions reduce `_totalDLFUnderCustody`)
-3. Current vault balance is 20e18 DLF, meaning custodian effectively holds 50e18 DLF (70 - 20)
-4. User calls `rebalanceFunds()`:
-   - `aumReferenceValue = 70e18` (from `getCollateralUnderCustody()`) [3](#0-2) 
-   - `targetBalance = max((70e18 * 500) / 10000, 100e18) = 100e18` [4](#0-3) 
-   - `needed = 100e18 - 20e18 = 80e18`
-   - Event `TopUpRequestedFromCustodian` emitted requesting 80e18 DLF
-5. Custodian only has 50e18 DLF available, cannot fulfill the 80e18 request
-6. Vault remains at 20e18 DLF (well below the 100e18 target)
-7. Subsequent calls to `rebalanceFunds()` continue emitting the same unfulfillable request
+The `_withdraw` override includes reentrancy protection and delegates to `super._withdraw()` for the actual share burning: [2](#0-1) 
 
-**Security Property Broken:** The FastAccessVault's core function of providing immediate liquidity for fast redemptions is broken. The vault cannot serve redemptions requiring more than 20e18 DLF when it should maintain 100e18 DLF buffer.
+### 2. maxWithdraw Validates Current Balance Only
 
-## Impact Explanation
-- **Affected Assets**: DLF tokens in FastAccessVault, iTRY redemption functionality
-- **Damage Severity**: Users cannot perform fast redemptions when vault is perpetually under-buffered. All redemptions requiring more than current vault balance (20e18 in example) must use the slow custodian redemption path, defeating the purpose of the FastAccessVault. The system operates in a degraded state until admin manually reduces `minimumExpectedBalance` to an achievable level.
-- **User Impact**: All users attempting fast redemptions above vault's actual balance are affected. This can occur through legitimate admin configuration or when total collateral drops below a previously reasonable minimum (e.g., due to large redemptions or NAV changes affecting collateral value).
+The check at line 97 uses `maxWithdraw(msg.sender)`, which in ERC4626 is based on `balanceOf(msg.sender)`. Since shares are burned during each cooldown, subsequent `maxWithdraw` calls only validate against **remaining unburned shares**, not shares already in cooldown. This is the correct behavior.
 
-## Likelihood Explanation
-- **Attacker Profile**: No attacker needed - this is a systemic issue. Can be triggered by any user calling `rebalanceFunds()` after owner sets `minimumExpectedBalance` too high or after collateral drops below the minimum.
-- **Preconditions**: 
-  - Owner sets `minimumExpectedBalance` higher than total collateral (can happen legitimately during configuration or market stress)
-  - OR: Total collateral drops below previously set `minimumExpectedBalance` due to redemptions
-- **Execution Complexity**: Single transaction calling `rebalanceFunds()` (permissionless function)
-- **Frequency**: Occurs whenever `minimumExpectedBalance > _totalDLFUnderCustody`, and persists until admin intervention
+### 3. Accumulation is Intentional Design
 
-## Recommendation
-Add validation in `setMinimumBufferBalance()` to ensure the minimum never exceeds total available collateral, and add a check in `rebalanceFunds()` to cap the target at total available collateral:
+The `+=` operator at line 102 is explicitly tested and documented as intended behavior. The protocol includes a test that validates multiple cooldowns should accumulate assets while resetting the timestamp: [3](#0-2) 
 
-```solidity
-// In src/protocol/FastAccessVault.sol, function setMinimumBufferBalance, line 197-201:
+The test comment on line 229 states "should overwrite timestamp but accumulate assets" and line 234 asserts `amount2 == assets1 + assets2`, confirming this is expected behavior.
 
-// CURRENT (vulnerable):
-function setMinimumBufferBalance(uint256 newMinimumBufferBalance) external onlyOwner {
-    uint256 oldMinimumBalance = minimumExpectedBalance;
-    minimumExpectedBalance = newMinimumBufferBalance;
-    emit MinimumBufferBalanceUpdated(oldMinimumBalance, newMinimumBufferBalance);
-}
+### 4. No Value Extraction Possible
 
-// FIXED:
-function setMinimumBufferBalance(uint256 newMinimumBufferBalance) external onlyOwner {
-    uint256 totalCollateral = _issuerContract.getCollateralUnderCustody();
-    if (newMinimumBufferBalance > totalCollateral) {
-        revert MinimumExceedsTotalCollateral(newMinimumBufferBalance, totalCollateral);
-    }
-    uint256 oldMinimumBalance = minimumExpectedBalance;
-    minimumExpectedBalance = newMinimumBufferBalance;
-    emit MinimumBufferBalanceUpdated(oldMinimumBalance, newMinimumBufferBalance);
-}
-```
+**Scenario Analysis:**
+- User cooldowns 1000 assets → burns X shares (calculated via `previewWithdraw`), locks 1000 iTRY in silo
+- User receives NEW shares from another source
+- User cooldowns 1000 more assets → burns Y NEW shares, locks 1000 more iTRY in silo
+- **Total: Burns X+Y shares, locks 2000 iTRY, can claim 2000 iTRY after cooldown**
 
-Additionally, modify `_calculateTargetBufferBalance()` to cap at total collateral:
+This represents a **fair 1:1 exchange** - the user burned shares proportional to the assets they will claim. No unbacked value is created.
 
-```solidity
-// In src/protocol/FastAccessVault.sol, function _calculateTargetBufferBalance, line 241-243:
+## Why This is NOT a Vulnerability
 
-// CURRENT (vulnerable):
-function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-    uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-    return (targetBufferBalance < minimumExpectedBalance) ? minimumExpectedBalance : targetBufferBalance;
-}
+The implied concern was that a user might:
+1. Cooldown shares
+2. Somehow cooldown "the same shares again" 
+3. Extract more iTRY than entitled
 
-// FIXED:
-function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-    uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-    uint256 targetWithMinimum = (targetBufferBalance < minimumExpectedBalance) ? minimumExpectedBalance : targetBufferBalance;
-    // Cap target at total available collateral to ensure it's achievable
-    return targetWithMinimum > _referenceAUM ? _referenceAUM : targetWithMinimum;
-}
-```
+This is **impossible** because:
+- Shares are immediately burned upon cooldown (removed from user's balance)
+- The `maxWithdraw` check only validates remaining (unburned) shares
+- Each cooldown requires burning proportional NEW shares
+- Accumulation just sums the cooldown amounts - it doesn't multiply value
 
-## Proof of Concept
-```solidity
-// File: test/Exploit_PerpetualUnderBuffering.t.sol
-// Run with: forge test --match-test test_perpetualUnderBuffering -vvv
+## Design Pattern Validation
 
-pragma solidity ^0.8.0;
+This follows standard ERC4626 vault patterns:
+- Shares represent proportional ownership of underlying assets
+- Withdrawals burn shares and transfer assets
+- The cooldown mechanism adds a waiting period before final claim
+- Multiple partial cooldowns accumulating is a **UX feature** allowing users to batch withdrawals while resetting the timer
 
-import "forge-std/Test.sol";
-import "../src/protocol/FastAccessVault.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "./mocks/MockERC20.sol";
-import "./mocks/MockIssuerContract.sol";
-
-contract Exploit_PerpetualUnderBuffering is Test {
-    FastAccessVault vault;
-    MockERC20 dlfToken;
-    MockIssuerContract issuer;
-    address owner;
-    address custodian;
-    
-    function setUp() public {
-        owner = address(this);
-        custodian = makeAddr("custodian");
-        
-        // Deploy DLF token and issuer
-        dlfToken = new MockERC20("DLF", "DLF");
-        issuer = new MockIssuerContract(70e18); // Total collateral = 70 DLF
-        
-        // Deploy vault with 5% target (500 BPS) and 50 DLF minimum
-        vault = new FastAccessVault(
-            address(dlfToken),
-            address(issuer),
-            custodian,
-            500, // 5%
-            50e18, // Initial minimum
-            owner
-        );
-        
-        issuer.setVault(address(vault));
-        
-        // Give vault 20 DLF (leaving custodian with 50 DLF)
-        dlfToken.mint(address(vault), 20e18);
-        dlfToken.mint(custodian, 50e18);
-    }
-    
-    function test_perpetualUnderBuffering() public {
-        // SETUP: Owner sets minimum balance to 100 DLF (exceeds total 70 DLF)
-        vault.setMinimumBufferBalance(100e18);
-        
-        uint256 vaultBalanceBefore = dlfToken.balanceOf(address(vault));
-        uint256 totalCollateral = issuer.getCollateralUnderCustody();
-        
-        assertEq(vaultBalanceBefore, 20e18, "Vault starts with 20 DLF");
-        assertEq(totalCollateral, 70e18, "Total collateral is 70 DLF");
-        
-        // EXPLOIT: Call rebalanceFunds - will request 80 DLF but custodian only has 50
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit IFastAccessVault.TopUpRequestedFromCustodian(
-            custodian,
-            80e18, // Requesting 80 DLF (100 - 20)
-            100e18  // Target is 100 DLF
-        );
-        
-        vault.rebalanceFunds();
-        
-        // VERIFY: Vault remains at 20 DLF since custodian cannot fulfill
-        // (In real scenario, custodian would not be able to send 80 DLF as they only have 50)
-        assertEq(dlfToken.balanceOf(address(vault)), 20e18, 
-            "Vault still at 20 DLF - perpetually under-buffered");
-        
-        // Even if custodian sends all their 50 DLF:
-        vm.prank(custodian);
-        dlfToken.transfer(address(vault), 50e18);
-        
-        // Vault is now at 70 DLF but still below the impossible 100 DLF target
-        assertEq(dlfToken.balanceOf(address(vault)), 70e18, 
-            "Even with all custodian funds, vault cannot reach 100 DLF target");
-        
-        // Subsequent rebalance calls continue to emit unfulfillable requests
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit IFastAccessVault.TopUpRequestedFromCustodian(
-            custodian,
-            30e18, // Still requesting more (100 - 70)
-            100e18  // Target remains impossible
-        );
-        
-        vault.rebalanceFunds();
-        
-        // Vault remains under-buffered, fast redemptions limited to 70 DLF instead of target 100 DLF
-        assertTrue(dlfToken.balanceOf(address(vault)) < vault.getMinimumBufferBalance(),
-            "Vulnerability confirmed: Perpetual under-buffering due to impossible target");
-    }
-}
-```
+This is consistent with similar protocols like Ethena's sUSDe staking.
 
 ## Notes
 
-The vulnerability stems from the lack of validation when setting `minimumExpectedBalance` and the failure to cap calculated targets at total available collateral. While the custodian is a trusted role, the issue doesn't require custodian malice—it occurs when the minimum is legitimately set too high or when market conditions (redemptions, NAV changes) cause total collateral to drop below a previously reasonable minimum.
-
-This is distinct from the known issue about iTRY backing falling below 1:1 on NAV drops. That issue concerns the collateral value versus iTRY issuance ratio, whereas this vulnerability concerns the vault's inability to maintain its liquidity buffer due to impossible target calculations. The impact is degraded fast redemption service, not insolvency.
-
-The fix ensures that both the configuration phase (setting minimum) and the operational phase (rebalancing) validate that targets are mathematically achievable given actual collateral availability.
+The security concern about "shares already in cooldown" is resolved by understanding that **those shares no longer exist in the user's balance** - they were burned. The `maxWithdraw` check on subsequent cooldown calls validates against only the user's current (remaining) share balance, which is the correct and secure behavior. The accumulation mechanism enables users to cooldown multiple times without losing their previous cooldown amounts, which is an intentional design choice for better UX, not a vulnerability.
 
 ### Citations
 
-**File:** src/protocol/FastAccessVault.sol (L165-181)
+**File:** src/token/wiTRY/StakediTryCooldown.sol (L96-105)
 ```text
-    function rebalanceFunds() external {
-        uint256 aumReferenceValue = _issuerContract.getCollateralUnderCustody();
-        uint256 targetBalance = _calculateTargetBufferBalance(aumReferenceValue);
-        uint256 currentBalance = _vaultToken.balanceOf(address(this));
+    function cooldownAssets(uint256 assets) external ensureCooldownOn returns (uint256 shares) {
+        if (assets > maxWithdraw(msg.sender)) revert ExcessiveWithdrawAmount();
 
-        if (currentBalance < targetBalance) {
-            uint256 needed = targetBalance - currentBalance;
-            // Emit event for off-chain custodian to process
-            emit TopUpRequestedFromCustodian(address(custodian), needed, targetBalance);
-        } else if (currentBalance > targetBalance) {
-            uint256 excess = currentBalance - targetBalance;
-            if (!_vaultToken.transfer(custodian, excess)) {
-                revert CommonErrors.TransferFailed();
-            }
-            emit ExcessFundsTransferredToCustodian(address(custodian), excess, targetBalance);
+        shares = previewWithdraw(assets);
+
+        cooldowns[msg.sender].cooldownEnd = uint104(block.timestamp) + cooldownDuration;
+        cooldowns[msg.sender].underlyingAmount += uint152(assets);
+
+        _withdraw(msg.sender, address(silo), msg.sender, assets, shares);
+    }
+```
+
+**File:** src/token/wiTRY/StakediTry.sol (L262-278)
+```text
+    function _withdraw(address caller, address receiver, address _owner, uint256 assets, uint256 shares)
+        internal
+        override
+        nonReentrant
+        notZero(assets)
+        notZero(shares)
+    {
+        if (
+            hasRole(FULL_RESTRICTED_STAKER_ROLE, caller) || hasRole(FULL_RESTRICTED_STAKER_ROLE, receiver)
+                || hasRole(FULL_RESTRICTED_STAKER_ROLE, _owner)
+        ) {
+            revert OperationNotAllowed();
         }
+
+        super._withdraw(caller, receiver, _owner, assets, shares);
+        _checkMinShares();
     }
 ```
 
-**File:** src/protocol/FastAccessVault.sol (L197-201)
+**File:** test/crosschainTests/StakediTryCrosschain.t.sol (L213-236)
 ```text
-    function setMinimumBufferBalance(uint256 newMinimumBufferBalance) external onlyOwner {
-        uint256 oldMinimumBalance = minimumExpectedBalance;
-        minimumExpectedBalance = newMinimumBufferBalance;
-        emit MinimumBufferBalanceUpdated(oldMinimumBalance, newMinimumBufferBalance);
-    }
-```
+    function test_cooldownSharesByComposer_multipleCooldownsAccumulate() public {
+        // Setup
+        vm.prank(owner);
+        vault.grantRole(COMPOSER_ROLE, vaultComposer);
+        _mintAndDeposit(vaultComposer, 200e18);
 
-**File:** src/protocol/FastAccessVault.sol (L241-243)
-```text
-    function _calculateTargetBufferBalance(uint256 _referenceAUM) internal view returns (uint256) {
-        uint256 targetBufferBalance = (_referenceAUM * targetBufferPercentageBPS) / 10000;
-        return (targetBufferBalance < minimumExpectedBalance) ? minimumExpectedBalance : targetBufferBalance;
-```
+        // First cooldown
+        vm.prank(vaultComposer);
+        uint256 assets1 = vault.cooldownSharesByComposer(50e18, alice);
 
-**File:** src/protocol/iTryIssuer.sol (L251-253)
-```text
-    function getCollateralUnderCustody() external view returns (uint256) {
-        return _totalDLFUnderCustody;
+        (uint104 cooldownEnd1, uint256 amount1) = vault.cooldowns(alice);
+        assertEq(amount1, assets1);
+
+        // Fast forward time (but not past cooldown)
+        vm.warp(block.timestamp + 30 days);
+
+        // Second cooldown (should overwrite timestamp but accumulate assets)
+        vm.prank(vaultComposer);
+        uint256 assets2 = vault.cooldownSharesByComposer(50e18, alice);
+
+        (uint104 cooldownEnd2, uint256 amount2) = vault.cooldowns(alice);
+        assertEq(amount2, assets1 + assets2); // Assets accumulate
+        assertGt(cooldownEnd2, cooldownEnd1); // Timestamp updates (overwrites)
     }
 ```

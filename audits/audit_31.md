@@ -1,256 +1,193 @@
+After performing rigorous validation against the Brix Money Protocol security framework, I have completed my analysis.
+
+# VALIDATION RESULT: VALID HIGH SEVERITY VULNERABILITY
+
 ## Title
-Missing Access Control in YieldForwarder.processNewYield() Allows Yield Theft During Deployment Window
+Cross-Chain Blacklist Bypass: Blacklisted Users Can Receive iTRY Tokens on Spoke Chain
 
 ## Summary
-The `processNewYield()` function in YieldForwarder.sol lacks access control, allowing any address to trigger yield distribution to the current recipient. During multi-step deployments or recipient changes, an attacker can front-run `setYieldRecipient()` calls to redirect yield to unintended recipients, resulting in permanent loss of protocol yield.
+The `iTryTokenOFT` contract lacks a `_credit()` override to validate blacklist status during cross-chain token receipt, allowing users blacklisted on the Hub chain to receive iTRY tokens on Spoke chains. This directly violates the protocol's critical invariant that blacklisted users cannot receive iTRY tokens in any circumstance.
 
 ## Impact
 **Severity**: High
 
+This vulnerability enables complete bypass of blacklist enforcement for cross-chain token receipts. Blacklisted addresses (sanctioned entities, compromised accounts, or flagged malicious actors) can receive and control iTRY tokens on spoke chains, circumventing the protocol's compliance and risk management controls. This undermines the entire blacklist security mechanism and exposes the protocol to regulatory, reputational, and security risks.
+
 ## Finding Description
-**Location:** `src/protocol/YieldForwarder.sol`, function `processNewYield()`, line 97
 
-**Intended Logic:** According to the IYieldProcessor interface documentation, `processNewYield()` is designed to be "called by the iTryIssuer contract after minting yield tokens" [1](#0-0) , implying it should have access control to ensure only authorized callers (iTryIssuer) can trigger yield distribution.
+**Location:** `src/token/iTRY/crosschain/iTryTokenOFT.sol`, `_beforeTokenTransfer()` function and missing `_credit()` override
 
-**Actual Logic:** The implementation has no access control whatsoever [2](#0-1) , allowing any address to call `processNewYield()` and force the transfer of all available yieldToken balance to the current `yieldRecipient`.
+**Intended Logic:**
+The protocol enforces that "Blacklisted users cannot send/receive/mint/burn iTry tokens in any case" [1](#0-0)  across all chains, including cross-chain transfers.
+
+**Actual Logic:**
+When LayerZero delivers cross-chain messages to `iTryTokenOFT`, the inherited OFT contract calls `_credit()` which triggers `_mint()`. The `_mint()` function invokes `_beforeTokenTransfer()` [2](#0-1)  which only validates the recipient's blacklist status against the **local** spoke chain blacklist mapping [3](#0-2) , not the Hub chain status.
+
+**Critical Architectural Inconsistency:**
+The `wiTryOFT` contract correctly implements a `_credit()` override [4](#0-3)  that checks blacklist status and redirects tokens to the owner if the recipient is blacklisted. The `iTryTokenOFT` contract **completely lacks this protection**, despite having identical cross-chain architecture and blacklist requirements.
 
 **Exploitation Path:**
+1. Alice is blacklisted on Hub chain (Ethereum) via `iTry.addBlacklistAddress()` [5](#0-4) 
+2. Bob (non-blacklisted) initiates cross-chain transfer via `iTryTokenOFTAdapter.send()` with Alice as recipient
+3. Hub chain: Adapter locks Bob's iTRY tokens (Bob's non-blacklisted status passes validation)
+4. Spoke chain: `iTryTokenOFT.lzReceive()` processes message and calls inherited `_credit()` → `_mint(Alice)`
+5. `_beforeTokenTransfer()` validates Alice against **Spoke chain** blacklist only (line 145-146)
+6. Since blacklist mappings are independent [3](#0-2)  with no synchronization mechanism, Alice receives tokens despite Hub chain blacklisting
 
-1. **Deployment Setup:** YieldForwarder is deployed with an initial recipient address (e.g., deployer's address as placeholder during testing) [3](#0-2) 
-
-2. **Yield Accumulation:** iTRY tokens accumulate in the YieldForwarder contract (either through iTryIssuer's `processAccumulatedYield()` function [4](#0-3)  or through accidental transfers during setup)
-
-3. **Attack Execution:** Before the owner can call `setYieldRecipient()` to update to the correct recipient [5](#0-4) , attacker monitors the contract and calls `processNewYield()` with the current balance
-
-4. **Yield Theft:** All accumulated iTRY tokens are transferred to the placeholder recipient address instead of the intended final recipient (e.g., treasury or StakediTry vault), resulting in permanent loss of protocol yield
-
-**Security Property Broken:** This violates the implicit trust assumption that yield distribution should only be triggered by authorized protocol contracts (iTryIssuer) through the IYieldProcessor interface, not by arbitrary external actors.
+**Security Property Broken:**
+Violates critical invariant: "Blacklisted users cannot send/receive/mint/burn iTry tokens in any case" [1](#0-0) 
 
 ## Impact Explanation
-- **Affected Assets**: All iTRY tokens that accumulate in YieldForwarder contract during deployment/configuration windows
-- **Damage Severity**: Complete loss of accumulated yield to wrong recipient. The amount depends on when the attack occurs - could be initial test yields or significant accumulated protocol yields worth thousands of dollars
-- **User Impact**: Protocol treasury/stakers lose yield intended for them. If YieldForwarder was supposed to forward yield to StakediTry vault for distribution to stakers, all stakers collectively suffer the loss
+
+**Affected Assets**: iTRY tokens on all spoke chains (MegaETH and future deployments)
+
+**Damage Severity**:
+- Complete bypass of blacklist enforcement for cross-chain receipts
+- Blacklisted entities can re-enter protocol ecosystem via different chain
+- Enables sanctions evasion, money laundering, and continued operation by flagged malicious actors
+- Undermines protocol's compliance framework and regulatory standing
+- Creates operational burden requiring manual blacklist synchronization
+
+**User Impact**: All protocol users and stakeholders are affected as blacklist mechanism is a fundamental security and compliance control protecting the entire ecosystem.
 
 ## Likelihood Explanation
-- **Attacker Profile**: Any unprivileged address with basic contract interaction capabilities
-- **Preconditions**: 
-  - YieldForwarder deployed with initial/temporary recipient
-  - iTRY tokens present in YieldForwarder contract
-  - Owner has not yet called `setYieldRecipient()` to update to final recipient
-- **Execution Complexity**: Single transaction calling `processNewYield()` with appropriate amount parameter. Attacker can easily monitor YieldForwarder balance and front-run any pending `setYieldRecipient()` transactions
-- **Frequency**: Exploitable any time during deployment windows, upgrades, or recipient changes where there's a gap between yield accumulation and recipient configuration
+
+**Attacker Profile**: Any non-blacklisted user can serve as intermediary (witting or unwitting). Blacklisted user only needs to convince someone to send tokens cross-chain or use a complicit party.
+
+**Preconditions**:
+1. Target blacklisted on Hub but not on Spoke (always true due to independent mappings)
+2. Intermediary has iTRY on Hub and is non-blacklisted (trivial to obtain)
+3. Cross-chain infrastructure operational (expected normal state)
+
+**Execution Complexity**: Single cross-chain transaction. No special timing, front-running, or complex coordination required.
+
+**Frequency**: Exploitable continuously until blacklists are manually synchronized.
+
+**Overall Likelihood**: HIGH - Trivial execution with no special preconditions or privileges required.
 
 ## Recommendation
 
-Add access control to restrict `processNewYield()` to only authorized callers (iTryIssuer contract):
+Implement a `_credit()` override in `iTryTokenOFT.sol` following the proven pattern from `wiTryOFT.sol`:
+
+Add after line 177 in `src/token/iTRY/crosschain/iTryTokenOFT.sol`:
 
 ```solidity
-// In src/protocol/YieldForwarder.sol, add state variable after line 38:
-
-/// @notice The address authorized to trigger yield processing (typically iTryIssuer)
-address public authorizedCaller;
-
-// Update constructor to accept and set authorizedCaller (after line 74):
-
-authorizedCaller = _authorizedCaller; // Pass iTryIssuer address
-require(_authorizedCaller != address(0), "Invalid authorized caller");
-
-// Add function to update authorizedCaller (owner-only, after line 131):
-
-function setAuthorizedCaller(address _newCaller) external onlyOwner {
-    require(_newCaller != address(0), "Invalid caller");
-    authorizedCaller = _newCaller;
-    emit AuthorizedCallerUpdated(authorizedCaller, _newCaller);
-}
-
-// Modify processNewYield() to include access control (line 97):
-
-function processNewYield(uint256 _newYieldAmount) external override {
-    require(msg.sender == authorizedCaller, "Unauthorized caller"); // ADD THIS CHECK
-    if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-    if (yieldRecipient == address(0)) revert RecipientNotSet();
-    
-    // Transfer yield tokens to the recipient
-    if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-        revert CommonErrors.TransferFailed();
+/**
+ * @dev Override _credit to handle blacklisted recipients on cross-chain transfers
+ * @param _to The address of the recipient
+ * @param _amountLD The amount of tokens to credit
+ * @param _srcEid The source endpoint identifier
+ * @return amountReceivedLD The actual amount of tokens received
+ */
+function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+    internal
+    virtual
+    override
+    returns (uint256 amountReceivedLD)
+{
+    // If the recipient is blacklisted, emit event and redirect to owner
+    if (blacklisted[_to]) {
+        emit RedistributeFunds(_to, _amountLD);
+        return super._credit(owner(), _amountLD, _srcEid);
+    } else {
+        return super._credit(_to, _amountLD, _srcEid);
     }
-    
-    emit YieldForwarded(yieldRecipient, _newYieldAmount);
 }
+
+// Add event definition after line 44:
+event RedistributeFunds(address indexed user, uint256 amount);
 ```
 
-**Alternative mitigation:** If multiple callers need to trigger yield processing, implement role-based access control using OpenZeppelin's AccessControl and create a `YIELD_PROCESSOR_ROLE` that can be granted to authorized contracts.
-
-## Proof of Concept
-
-```solidity
-// File: test/Exploit_YieldTheftDeploymentWindow.t.sol
-// Run with: forge test --match-test test_YieldTheftDuringDeployment -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import "../src/protocol/YieldForwarder.sol";
-import "../src/protocol/iTryIssuer.sol";
-import "../src/token/iTRY/iTry.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-
-contract Exploit_YieldTheftDeploymentWindow is Test {
-    YieldForwarder public yieldForwarder;
-    MockERC20 public itryToken;
-    
-    address public owner;
-    address public placeholderRecipient; // Temporary address during deployment
-    address public intendedRecipient;   // Final treasury address
-    address public attacker;
-    
-    function setUp() public {
-        owner = makeAddr("owner");
-        placeholderRecipient = makeAddr("placeholder");
-        intendedRecipient = makeAddr("treasury");
-        attacker = makeAddr("attacker");
-        
-        // Deploy iTRY token mock
-        itryToken = new MockERC20("iTRY", "iTRY");
-        
-        // Simulate deployment with placeholder recipient
-        vm.prank(owner);
-        yieldForwarder = new YieldForwarder(address(itryToken), placeholderRecipient);
-    }
-    
-    function test_YieldTheftDuringDeployment() public {
-        // SETUP: Simulate yield accumulation before recipient is updated
-        uint256 yieldAmount = 10000e18; // 10,000 iTRY yield accumulated
-        itryToken.mint(address(yieldForwarder), yieldAmount);
-        
-        uint256 placeholderBalanceBefore = itryToken.balanceOf(placeholderRecipient);
-        uint256 intendedBalanceBefore = itryToken.balanceOf(intendedRecipient);
-        
-        // EXPLOIT: Attacker front-runs setYieldRecipient() call
-        vm.prank(attacker);
-        yieldForwarder.processNewYield(yieldAmount);
-        
-        // VERIFY: Yield went to placeholder instead of intended recipient
-        assertEq(
-            itryToken.balanceOf(placeholderRecipient), 
-            placeholderBalanceBefore + yieldAmount,
-            "Vulnerability confirmed: Yield stolen to placeholder recipient"
-        );
-        assertEq(
-            itryToken.balanceOf(intendedRecipient),
-            intendedBalanceBefore,
-            "Intended recipient received nothing"
-        );
-        
-        // Now even if owner updates recipient, the yield is already gone
-        vm.prank(owner);
-        yieldForwarder.setYieldRecipient(intendedRecipient);
-        
-        // Intended recipient never receives the stolen yield
-        assertEq(
-            itryToken.balanceOf(intendedRecipient),
-            0,
-            "Permanent loss: Intended recipient never received yield"
-        );
-    }
-    
-    function test_AnyoneCanCallProcessNewYield() public {
-        // SETUP: Any amount of yield in contract
-        uint256 yieldAmount = 1000e18;
-        itryToken.mint(address(yieldForwarder), yieldAmount);
-        
-        // EXPLOIT: Demonstrate any address can call processNewYield
-        address randomUser = makeAddr("random");
-        vm.prank(randomUser);
-        yieldForwarder.processNewYield(yieldAmount);
-        
-        // VERIFY: Call succeeded without revert
-        assertEq(
-            itryToken.balanceOf(placeholderRecipient),
-            yieldAmount,
-            "Anyone can trigger yield distribution"
-        );
-    }
-}
-```
+**Additional Mitigations**:
+1. Establish operational procedures for manual blacklist synchronization across chains
+2. Consider implementing automated cross-chain blacklist synchronization via LayerZero messages (more complex but provides stronger guarantees)
+3. Add monitoring for cross-chain transfers to blacklisted addresses
 
 ## Notes
 
-This vulnerability is particularly critical because:
+This vulnerability represents a **critical architectural inconsistency**. The protocol developers correctly implemented `_credit()` override protection in `wiTryOFT` [4](#0-3)  but omitted it from `iTryTokenOFT`, despite identical cross-chain architecture and blacklist requirements. This proves the protection is not only necessary but was intentionally designed for the wiTRY system—making its absence from iTRY a clear oversight rather than a design decision.
 
-1. **No access control validation** - The function signature in YieldForwarder.sol explicitly shows no role or caller checks [6](#0-5) 
-
-2. **Mismatch with interface intent** - While IYieldProcessor documentation implies authorized-only calling [7](#0-6) , the implementation doesn't enforce this
-
-3. **Deployment script confirms multi-step setup** - The deployment shows YieldForwarder is created with an initial recipient that may need updating [8](#0-7) 
-
-4. **Real attack window exists** - Between iTryIssuer minting yield to YieldForwarder and any potential recipient changes, tokens can be forcibly distributed by anyone
-
-The fix requires adding explicit access control to ensure only the iTryIssuer contract (or other authorized addresses) can trigger yield distribution.
+The vulnerability is particularly severe because:
+- Requires zero privileged access
+- Uses normal protocol operations (no exploit of broken logic)
+- Completely bypasses stated security invariant
+- Has proven mitigation pattern already implemented elsewhere in codebase
+- Creates ongoing compliance and operational risks until fixed
 
 ### Citations
 
-**File:** src/protocol/periphery/IYieldProcessor.sol (L32-38)
-```text
-    /**
-     * @notice Processes newly generated yield tokens
-     * @dev This function is called by the iTryIssuer contract after minting yield tokens.
-     *      The implementing contract should already have received the yield tokens before
-     *      this function is called. Implementations must handle the yield appropriately
-     *      according to their specific distribution logic.
-     *
+**File:** README.md (L124-124)
+```markdown
+- Blacklisted users cannot send/receive/mint/burn iTry tokens in any case.
 ```
 
-**File:** src/protocol/YieldForwarder.sol (L97-107)
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L35-36)
 ```text
-    function processNewYield(uint256 _newYieldAmount) external override {
-        if (_newYieldAmount == 0) revert CommonErrors.ZeroAmount();
-        if (yieldRecipient == address(0)) revert RecipientNotSet();
+    /// @notice Mapping of blacklisted addresses
+    mapping(address => bool) public blacklisted;
+```
 
-        // Transfer yield tokens to the recipient
-        if (!yieldToken.transfer(yieldRecipient, _newYieldAmount)) {
-            revert CommonErrors.TransferFailed();
+**File:** src/token/iTRY/crosschain/iTryTokenOFT.sol (L140-177)
+```text
+    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+        // State 2 - Transfers fully enabled except for blacklisted addresses
+        if (transferState == TransferState.FULLY_ENABLED) {
+            if (msg.sender == minter && !blacklisted[from] && to == address(0)) {
+                // redeeming
+            } else if (msg.sender == minter && from == address(0) && !blacklisted[to]) {
+                // minting
+            } else if (msg.sender == owner() && blacklisted[from] && to == address(0)) {
+                // redistributing - burn
+            } else if (msg.sender == owner() && from == address(0) && !blacklisted[to]) {
+                // redistributing - mint
+            } else if (!blacklisted[msg.sender] && !blacklisted[from] && !blacklisted[to]) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
+            // State 1 - Transfers only enabled between whitelisted addresses
+        } else if (transferState == TransferState.WHITELIST_ENABLED) {
+            if (msg.sender == minter && !blacklisted[from] && to == address(0)) {
+                // redeeming
+            } else if (msg.sender == minter && from == address(0) && !blacklisted[to]) {
+                // minting
+            } else if (msg.sender == owner() && blacklisted[from] && to == address(0)) {
+                // redistributing - burn
+            } else if (msg.sender == owner() && from == address(0) && !blacklisted[to]) {
+                // redistributing - mint
+            } else if (whitelisted[msg.sender] && whitelisted[from] && to == address(0)) {
+                // whitelisted user can burn
+            } else if (whitelisted[msg.sender] && whitelisted[from] && whitelisted[to]) {
+                // normal case
+            } else {
+                revert OperationNotAllowed();
+            }
+            // State 0 - Fully disabled transfers
+        } else if (transferState == TransferState.FULLY_DISABLED) {
+            revert OperationNotAllowed();
         }
-
-        emit YieldForwarded(yieldRecipient, _newYieldAmount);
     }
 ```
 
-**File:** src/protocol/YieldForwarder.sol (L124-131)
+**File:** src/token/wiTRY/crosschain/wiTryOFT.sol (L84-97)
 ```text
-    function setYieldRecipient(address _newRecipient) external onlyOwner {
-        if (_newRecipient == address(0)) revert CommonErrors.ZeroAddress();
-
-        address oldRecipient = yieldRecipient;
-        yieldRecipient = _newRecipient;
-
-        emit YieldRecipientUpdated(oldRecipient, _newRecipient);
+    function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+        internal
+        virtual
+        override
+        returns (uint256 amountReceivedLD)
+    {
+        // If the recipient is blacklisted, emit an event, redistribute funds, and credit the owner
+        if (blackList[_to]) {
+            emit RedistributeFunds(_to, _amountLD);
+            return super._credit(owner(), _amountLD, _srcEid);
+        } else {
+            return super._credit(_to, _amountLD, _srcEid);
+        }
     }
 ```
 
-**File:** script/deploy/hub/02_DeployProtocol.s.sol (L102-103)
+**File:** src/token/iTRY/iTry.sol (L31-31)
 ```text
-        YieldForwarder yieldForwarder = _deployYieldForwarder(factory, addrs.itryToken);
-        require(address(yieldForwarder) == predictedYieldForwarder, "YieldForwarder address mismatch");
-```
-
-**File:** script/deploy/hub/02_DeployProtocol.s.sol (L188-195)
-```text
-    function _getYieldForwarderBytecode(address itryToken) internal view returns (bytes memory) {
-        return abi.encodePacked(
-            type(YieldForwarder).creationCode,
-            abi.encode(
-                itryToken, // yieldToken
-                treasuryAddress // initialRecipient
-            )
-        );
-```
-
-**File:** src/protocol/iTryIssuer.sol (L412-416)
-```text
-        // Mint yield amount to yieldReceiver contract
-        _mint(address(yieldReceiver), newYield);
-
-        // Notify yield distributor of received yield
-        yieldReceiver.processNewYield(newYield);
+    bytes32 public constant BLACKLISTED_ROLE = keccak256("BLACKLISTED_ROLE");
 ```

