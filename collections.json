@@ -3748,5 +3748,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5ef5419e-c4c2-45ae-b8a1-c924eb52fac0",
     "timestamp": "2025-12-02 08:01:59.412828",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 75] When blacklisting, if the user has WHITELISTED_ROLE, it's revoked. Does this emit an event for role revocation, or is it silently removed, potentially confusing monitoring systems?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98221cbc-0e60-4cb7-9337-c5ebebbf9e55",
+    "timestamp": "2025-12-02 08:03:07.194367",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 94] When whitelisting, if the user is blacklisted, the whitelist grant is skipped. Does this silently fail, or should it revert to alert the admin of the conflict?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_67579769-f4af-4b38-aff4-2c6a64051a7e",
+    "timestamp": "2025-12-02 08:03:20.367553",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 113] The redistributeLockedAmount requires `hasRole(BLACKLISTED_ROLE, from)`. Can this check be bypassed if the role state changes between the call and execution due to cross-contract interactions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4fc3fb62-1107-47dc-9036-53cc8e0cc338",
+    "timestamp": "2025-12-02 08:03:34.562958",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 134-135] The rescueTokens function checks for zero address and zero amount. However, it doesn't check if the contract actually holds the amount being rescued. Can this cause unexpected reverts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6341b33f-c224-4539-8601-e6c6b81bc27e",
+    "timestamp": "2025-12-02 08:03:49.601395",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Lines 180-183] The minting path checks `from == address(0)` and `!hasRole(BLACKLISTED_ROLE, to)`. Does this mean MINTER_CONTRACT cannot mint to address(0)? Is this check necessary, as minting to address(0) should fail anyway?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f3d1519b-3417-42be-85de-d88351ec7937",
+    "timestamp": "2025-12-02 08:04:04.714307",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Lines 190-192] In the normal transfer case for FULLY_ENABLED, all three addresses (msg.sender, from, to) are checked for blacklist. However, does this mean a contract calling transferFrom() must not be blacklisted, even if it's just a proxy for a non-blacklisted user?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bc52729a-afd1-4674-9011-29d9ada0f16b",
+    "timestamp": "2025-12-02 08:04:21.483367",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Lines 208-210] In WHITELIST_ENABLED state, whitelisted users can burn their tokens (to == address(0)). Does this mean burn() is always available to whitelisted users regardless of other restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a97df05-d700-4be3-8852-b940b85e9b14",
+    "timestamp": "2025-12-02 08:04:39.364117",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Line 220] In FULLY_DISABLED state, the hook reverts all operations. Does this block even DEFAULT_ADMIN_ROLE operations like redistributeLockedAmount? Can the admin fix issues if transfers are fully disabled?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f38ea910-33d2-49b1-89e3-a8caa3d7c08f",
+    "timestamp": "2025-12-02 08:04:58.535427",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/iTry.sol] [Blacklist + Approval] Can a blacklisted user who has pre-approved a non-blacklisted DEX contract still have their tokens traded by the DEX? The _beforeTokenTransfer checks msg.sender (the DEX), from (the blacklisted user",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_44537775-f8a5-4a93-b185-73ab10a5b2b1",
+    "timestamp": "2025-12-02 08:05:18.234118",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets function, lines 192-194] Does the totalAssets() calculation correctly exclude unvested rewards by subtracting getUnvestedAmount() from the contract's iTRY balance? Could an attacker manipulate the timing of deposits to capture unvested rewards that should be time-locked, effectively stealing yield from future stakers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7eb40df3-9dbe-4c6c-9fce-892af634559e",
+    "timestamp": "2025-12-02 08:05:39.702467",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets function, lines 192-194] If child contracts like StakediTryCooldown transfer iTRY to the iTrySilo during cooldown initiation, does totalAssets() account for these locked funds? Could this cause share price manipulation where totalAssets underreports actual iTRY backing, allowing attackers to mint wiTRY shares at artificially low prices?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d94a836c-e43a-4e2b-b198-4bc7c4e8fd34",
+    "timestamp": "2025-12-02 08:06:02.924758",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [getUnvestedAmount function, lines 199-211] In the getUnvestedAmount() calculation at line 210, can the unchecked deltaT subtraction at lines 206-209 underflow if block.timestamp < lastDistributionTimestamp due to block timestamp manipulation or chain reorg? Would this cause totalAssets() to return an inflated value, enabling share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d5ee4d9e-c6e3-4e32-93f0-8ca082dc15b5",
+    "timestamp": "2025-12-02 08:06:26.636372",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [getUnvestedAmount function, lines 199-211] Does the vesting calculation `(deltaT * vestingAmount) / vestingPeriod` at line 210 properly handle precision loss? Could repeated small deposits exploit rounding to gradually unlock unvested amounts early, violating the vesting invariant and allowing yield theft?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7daac0d-4fdf-4eb4-b3ab-c7a3386bdf65",
+    "timestamp": "2025-12-02 08:06:52.859694",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [ERC4626 inheritance, line 19] Since StakediTry inherits ERC4626, does the standard convertToShares/convertToAssets rounding favor the vault or users? Could an attacker exploit rounding in deposit/mint vs withdraw/redeem to extract value through repeated small operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f70420f3-021a-4a02-abb1-103fc92b86ed",
+    "timestamp": "2025-12-02 08:07:17.975365",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_checkMinShares function, lines 228-231] The MIN_SHARES check at line 230 reverts if totalSupply is between 1 wei and MIN_SHARES (1 ether). Could an attacker front-run the initial deposit, deposit 1 wei, then DOS all subsequent deposits until redistributeLockedAmount() is called? What if no FULL_RESTRICTED_STAKER exists to redistribute from?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d19ac54e-4df3-46ba-91c3-3148d16fc8ac",
+    "timestamp": "2025-12-02 08:07:42.764674",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_deposit function, lines 240-252] The _deposit function calls _checkMinShares() after minting shares at line 251. If totalSupply is exactly MIN_SHARES - 1 before deposit, and the deposit amount would mint less than 2 shares, will the check fail and DOS legitimate deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ca627a4-9ad8-4869-8bfd-31a720c459de",
+    "timestamp": "2025-12-02 08:08:07.752341",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_withdraw function, lines 262-278] The _withdraw function calls _checkMinShares() after burning shares at line 277. If a user tries to withdraw their entire balance when totalSupply equals MIN_SHARES, will the transaction revert, permanently locking their funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_04b5e47d-b837-46af-81fd-f7cd367c95f6",
+    "timestamp": "2025-12-02 08:08:35.211540",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_deposit function, lines 240-252] Does the SOFT_RESTRICTED_STAKER_ROLE check at line 247 prevent both the caller and receiver from depositing? If an attacker is soft-blacklisted but calls deposit() on behalf of a legitimate user (as receiver), does this DOS the legitimate user's ability to stake via this contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f5360b02-9274-4c24-b2e2-a6645e11415a",
+    "timestamp": "2025-12-02 08:09:03.994454",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_withdraw function, lines 262-278] The FULL_RESTRICTED_STAKER_ROLE check at lines 270-272 blocks caller, receiver, and owner. If a user's address is fully blacklisted after they've already staked, can they ever withdraw their funds, or are they permanently locked until redistributeLockedAmount() is called by admin?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ad86e60c-ed89-48d3-8555-4111284dce7e",
+    "timestamp": "2025-12-02 08:09:33.263199",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards function, lines 113-119] Does transferInRewards() at line 116 call safeTransferFrom() before updating vestingAmount? If the iTRY token has a reentrancy vulnerability or callback, could an attacker reenter and call totalAssets() mid-transfer to see inflated assets, then deposit at old share price before vesting is updated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa3cdda2-cc3f-4cc3-a8d4-c67c46a9f61b",
+    "timestamp": "2025-12-02 08:09:59.828356",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [transferInRewards function, lines 113-119] The transferInRewards() function calls _updateVestingAmount() at line 114 before the actual token transfer at line 116. If the safeTransferFrom() reverts, are vestingAmount and lastDistributionTimestamp already updated? Could this lead to state corruption where the contract believes it received rewards it never got?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c3a6ae19-cb10-4525-ae08-917ff605580c",
+    "timestamp": "2025-12-02 08:10:26.011701",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_updateVestingAmount function, lines 280-285] At line 281, _updateVestingAmount() reverts if getUnvestedAmount() > 0. Does this mean that if rewards are transferred more frequently than vestingPeriod, later distributions will always revert? Could this DOS yield distribution and prevent share price appreciation, hurting all stakers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f3d94efb-71e3-4f5e-ba99-289ea871daac",
+    "timestamp": "2025-12-02 08:10:51.754758",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_updateVestingAmount function, lines 280-285] The vestingAmount is set directly to newVestingAmount at line 283 without accumulating unvested remainder. If there are any unvested tokens due to rounding in getUnvestedAmount(), are these lost? Could this gradually drain the protocol's yield over many distributions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_82aa963b-a339-41c5-aba2-dc590df0d45e",
+    "timestamp": "2025-12-02 08:11:19.482454",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [setVestingPeriod function, lines 95-107] The setVestingPeriod() function at line 99 checks if getUnvestedAmount() > 0 and reverts. Could an attacker prevent the admin from changing vestingPeriod by continuously sending tiny reward amounts via transferInRewards() to always keep some unvested amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_435a9755-ee2b-4647-a951-42d459e3bb71",
+    "timestamp": "2025-12-02 08:11:47.252429",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets and getUnvestedAmount interaction] If totalAssets() at line 193 calls getUnvestedAmount() which uses block.timestamp, could block timestamp manipulation by miners allow attackers to artificially inflate or deflate totalAssets() around deposit/withdraw operations for profit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05d54b99-607b-4be3-aa05-0d6e5355eb8b",
+    "timestamp": "2025-12-02 08:12:16.212207",
+    "report_generated": false
   }
 ]
