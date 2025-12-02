@@ -3148,5 +3148,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb3e5de0-9680-4d3c-a03a-61c6c4afd3c3",
     "timestamp": "2025-12-02 06:03:23.291609",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemFee line 103] Can the DEFAULT_ADMIN_ROLE change fastRedeemFeeInBPS to MAX_FAST_REDEEM_FEE (20%) while users have pending transactions, causing them to pay 20% fees instead of the expected lower fee?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_57d698e2-086d-40a0-9a80-8eca1abd395d",
+    "timestamp": "2025-12-02 06:04:33.309706",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemEnabled line 95-98] Does the setFastRedeemEnabled() function have timelock or other protection against sudden disabling of fast redemption when users have transactions in the mempool, causing unexpected reverts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3fa47c8c-930d-45bc-9cad-a32def4e092b",
+    "timestamp": "2025-12-02 06:04:46.548322",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] Does maxRedeem(owner) exclude shares that are already in cooldown from the available balance, or can shares simultaneously exist in cooldown AND be fast redeemed, causing accounting corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_79223408-70bc-468f-af36-6c5cc0665081",
+    "timestamp": "2025-12-02 06:05:00.374971",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 76-90] If a user has shares in cooldown (stored in the silo), can they call fastWithdraw() using those shares, double-spending them by both unstaking after cooldown ends and fast redeeming immediately?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a8ce94b6-f688-4aba-8536-fa643f2c9e83",
+    "timestamp": "2025-12-02 06:05:14.351872",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Does fast redemption properly coordinate with the iTrySilo contract that normally holds cooldown-locked iTRY, or does it bypass the silo entirely, potentially causing silo balance inconsistencies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd8930a6-5593-4332-ad09-042eaa4e69a3",
+    "timestamp": "2025-12-02 06:05:29.454385",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57-71] Can a user initiate a cooldown via cooldownShares(), then immediately call fastRedeem() to extract their iTRY, leaving ghost cooldown entries in the cooldowns mapping with non-zero underlyingAmount but no actual locked funds in the silo?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_60f44f44-0b67-4147-9c84-21b08f03ebc4",
+    "timestamp": "2025-12-02 06:05:45.584386",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 59] The ensureCooldownOn modifier requires cooldownDuration > 0, but does fastRedeem() create any cooldown entries in the cooldowns mapping, or does it completely bypass the cooldown system without leaving any record?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_44c7d692-feb9-445d-a572-14c55619de3b",
+    "timestamp": "2025-12-02 06:06:03.800690",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 84] Does previewWithdraw(assets) correctly account for unvested rewards in totalAssets(), and can a user exploit yield vesting by fast withdrawing right before vesting completes, extracting more assets than they should for their share amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ef9ae91b-4f48-464d-9ef7-cc807c862c44",
+    "timestamp": "2025-12-02 06:06:23.418884",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee internal] Since _redeemWithFee() doesn't directly modify totalAssets but relies on iTRY token transfers, if the iTRY transfer to treasury or receiver fails silently (e.g., non-standard ERC20), can the vault's totalAssets become incorrect?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c67f7825-84c8-4cf7-b458-bcef18476a00",
+    "timestamp": "2025-12-02 06:06:44.141366",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65] Does the previewRedeem(shares) calculation at line 65 use the same totalAssets() value that will be used during the actual _withdraw() calls, or can totalAssets change (e.g., due to yield distribution) between preview and execution, causing accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd1347d0-7824-4207-9a19-0c01fd63441b",
+    "timestamp": "2025-12-02 06:07:07.684558",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] When fast redemption withdraws iTRY from the vault via two _withdraw() calls, does this properly decrease totalAssets() by the full amount (feeAssets + netAssets), or can rounding cause totalAssets to decrease by a different amount than withdrawn?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5713a869-b0e3-4ec0-9e89-abac2b6be2d8",
+    "timestamp": "2025-12-02 06:07:30.774634",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 82] Does maxWithdraw(owner) account for the owner's shares minus shares already in cooldown, or can a user have 100 shares with 50 in cooldown, maxWithdraw returns assets for 50 shares, but they fast withdraw assets for 100 shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_80e6cc44-571d-4809-a5c1-d776cee3f95b",
+    "timestamp": "2025-12-02 06:07:55.696439",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152-155] Do the _withdraw() calls properly update the vestingAmount and lastDistributionTimestamp in the parent contract if there are unvested rewards, or can fast redemption corrupt the vesting accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a3e3dd7-9fe9-4db1-a680-1a344f5d888d",
+    "timestamp": "2025-12-02 06:08:21.984700",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57] The fastRedeem() function has the ensureCooldownOn modifier, meaning it only works when cooldownDuration > 0. If the admin sets cooldownDuration to 0, do users permanently lose access to fast redemption even though they might need it for liquidity?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b2520bf7-8a51-48aa-a72d-dfd29cb60fa3",
+    "timestamp": "2025-12-02 06:08:48.563383",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 152] When _withdraw() is called, does it internally call the parent contract's _withdraw() which has the nonReentrant modifier, and does this properly prevent reentrancy across the two _withdraw() calls in _redeemWithFee()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d4522021-198b-4b80-be4d-cf88e269a7e4",
+    "timestamp": "2025-12-02 06:09:15.124248",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] Does the maxRedeem(owner) check properly account for shares in cooldown, or can a user bypass the cooldown by initiating a cooldown for X shares, then fast redeeming those same X shares before the cooldown ends?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29e0c9a4-f3fc-4836-9d60-008d478dfeca",
+    "timestamp": "2025-12-02 06:09:42.370356",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw return value line 89] The fastWithdraw() function returns `totalShares`, which is the total shares burned including both fee and net portions. Should it return only netShares to accurately reflect what the user spent for their received assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8009b05a-bba1-407b-b205-0c31435256c7",
+    "timestamp": "2025-12-02 06:10:09.398291",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem return value line 70] The fastRedeem() function returns `totalAssets - feeAssets`, but this is the gross amount before fees, not the net amount the receiver actually gets. Is this return value misleading, and can it cause integration errors with external contracts expecting the net amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2957961b-64a0-48e7-aec3-43b536619fc9",
+    "timestamp": "2025-12-02 06:10:37.543469",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 84] In fastWithdraw(), shares are calculated via `previewWithdraw(assets)` at line 84. If the share price increases before _redeemWithFee() executes, will users need to burn more shares than previewed, potentially failing if they don't have enough shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_831e1185-591d-48a2-bdf2-f897dc69667a",
+    "timestamp": "2025-12-02 06:11:04.479721",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65] In fastRedeem(), the assets are calculated via `previewRedeem(shares)` at line 65, then passed to _redeemWithFee(). Can share price changes between the preview and the actual _withdraw() calls cause users to receive more or less iTRY than previewed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98e3e1fa-7072-4916-b31e-9ae588f793ec",
+    "timestamp": "2025-12-02 06:11:30.567549",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem vs fastWithdraw] If a user calls fastRedeem(X shares) and another calls fastWithdraw(Y assets) where previewRedeem(X) == Y, will both users pay the same fee amount, or do rounding differences between the share→asset and asset→share conversions cause fee inconsistencies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0977f5de-20a1-400d-845b-e060649d843c",
+    "timestamp": "2025-12-02 06:11:56.983553",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 145] Does the zero fee check at line 145 happen before or after share price manipulation attempts, and can an attacker manipulate the share price down to make feeAssets round to zero for their redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_00ffb85a-ba0f-439e-9fd1-ee377831bf95",
+    "timestamp": "2025-12-02 06:12:24.519445",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65] If a user fast redeems 1 share when the share price is very low, can the resulting totalAssets be so small that feeAssets rounds to zero, allowing them to bypass the cooldown for free?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49f80378-f46b-4597-9467-8f8c0e8f946d",
+    "timestamp": "2025-12-02 06:12:52.231956",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] For very small asset amounts, can the calculation `feeAssets = (assets * fastRedeemFeeInBPS) / BASIS_POINTS` round to zero even with fastRedeemFeeInBPS > 0, and does line 145 properly prevent this, or are there edge cases where zero fees slip through?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_028884aa-2ad8-44a2-b99c-f45321c4e447",
+    "timestamp": "2025-12-02 06:13:19.683231",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 145] The check `if (feeAssets == 0) revert InvalidAmount()` prevents zero-fee redemptions, but can an attacker bypass this by redeeming an amount where feeAssets rounds to 1 wei, paying effectively zero fees while still passing the check?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d46bb20-6a49-43e9-92fe-35e0894044ae",
+    "timestamp": "2025-12-02 06:13:46.302834",
+    "report_generated": false
   }
 ]
