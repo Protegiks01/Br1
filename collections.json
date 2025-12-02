@@ -2848,5 +2848,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a860c967-4db8-42da-a708-928b9318f0ad",
     "timestamp": "2025-12-02 06:58:58.212530",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Transfer state FULLY_DISABLED] If iTRY's transferState is set to FULLY_DISABLED on the hub chain, can users still bridge tokens by calling the adapter's send() function, effectively bypassing the transfer pause and moving tokens cross-chain when all transfers should be blocked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76e60dca-8d34-41a8-8cd9-b061c1871592",
+    "timestamp": "2025-12-02 07:00:19.773089",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Lock mechanism] The OFTAdapter uses a lock/unlock pattern where tokens are transferred to the adapter contract. If the adapter accumulates a large locked balance, could an attacker exploit reentrancy during the _debit (lock) or _credit (unlock) operations to drain the locked iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dbaa6745-4dc2-40db-a152-3c74107ea123",
+    "timestamp": "2025-12-02 07:00:33.356259",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _debit function] When _debit is called to lock iTRY tokens, does it properly invoke iTRY's _beforeTokenTransfer hook which enforces blacklist/whitelist checks, or does the adapter's lock mechanism bypass these critical transfer restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1e43c607-0d87-40d8-9b8b-bcae2571c5ad",
+    "timestamp": "2025-12-02 07:00:47.666367",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _credit function] When _credit is called to unlock iTRY tokens, does it trigger iTRY's _beforeTokenTransfer hook to validate the recipient is not blacklisted, or could the unlock operation bypass the hook by using a direct token transfer that doesn't invoke the validation logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ffda8e8a-d85d-460e-b7d5-734190d599ec",
+    "timestamp": "2025-12-02 07:01:02.274402",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Constructor] The constructor initializes the adapter with a LayerZero endpoint address. If the endpoint address is incorrect or points to a malicious contract, could an attacker intercept LayerZero messages and manipulate the lock/unlock operations to steal locked iTRY from the adapter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a413040c-1b0d-42b6-b2ee-8209c481e83f",
+    "timestamp": "2025-12-02 07:01:17.727262",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Peer configuration] The adapter inherits setPeer functionality from OFTAdapter, allowing the owner to configure trusted peer contracts. If multiple spoke chains are added over time, could an attacker exploit a misconfigured or compromised peer on one chain to drain locked iTRY intended for other chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_644a6df2-b800-4260-a9c7-11be651cfab4",
+    "timestamp": "2025-12-02 07:01:34.774823",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Token balance] The adapter holds locked iTRY for all users bridging to spoke chains. If the adapter's iTRY balance becomes insufficient due to a bug in the lock/unlock accounting, could users lose their tokens permanently when attempting to bridge back from spoke to hub?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5aa01d1-7693-4ff4-84a1-86bc6915566f",
+    "timestamp": "2025-12-02 07:01:53.413747",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited send function] When bridging from hub to spoke, the send() function accepts a _refundAddress parameter for LayerZero fee refunds. Could an attacker specify a malicious refund address that triggers a callback during the refund, enabling reentrancy attacks to manipulate the adapter's locked balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_225d4fa1-fc35-4212-a448-f4dbf942f39c",
+    "timestamp": "2025-12-02 07:02:13.616856",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [MINTER_CONTRACT role] The iTRY token has a MINTER_CONTRACT role that can mint tokens. If the OFTAdapter is incorrectly granted MINTER_CONTRACT role, could it mint unbacked iTRY during cross-chain operations instead of using the intended lock/unlock mechanism, violating the backing invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96c67da4-ba7a-481c-b590-0451d9802a24",
+    "timestamp": "2025-12-02 07:02:35.398893",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _debit function] The _debit function should transfer iTRY from the user to the adapter to lock it. If msg.sender during _debit is the adapter itself (due to a forwarding pattern), does iTRY's _beforeTokenTransfer validate msg.sender, from, or to for blacklist checks, and could this enable a blacklist bypass?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_170293a1-d4c8-4e02-b56d-24bf4703e7de",
+    "timestamp": "2025-12-02 07:02:58.682448",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [LayerZero message encoding] The adapter inherits message encoding from OFTAdapter which includes the recipient address and amount. Could an attacker manipulate the encoded message during transmission to redirect unlocked iTRY to their own address instead of the legitimate recipient on the hub chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aea5868e-9a96-4ec4-ada5-1b36800ce63e",
+    "timestamp": "2025-12-02 07:03:24.795675",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited quoteSend function] Users call quoteSend to estimate LayerZero fees before bridging. If the quote is inaccurate and users send insufficient fees with their send() call, could the LayerZero message fail silently, locking user iTRY in the adapter permanently without minting equivalent tokens on the spoke chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dfb1003b-805e-471c-a1a9-48db398a708e",
+    "timestamp": "2025-12-02 07:03:50.207787",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Rounding in amount transfer] The OFTAdapter may perform amount conversions or fee deductions when bridging. If there are rounding errors between the amount locked on hub and amount minted on spoke, could this cause unbacked iTRY minting on the spoke chain or permanent loss of user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a5e5c12c-b17e-437b-a7cc-61f2f66240fd",
+    "timestamp": "2025-12-02 07:04:16.995815",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited send function] When a user sends iTRY from hub to spoke, the adapter locks the exact amount. If the spoke chain's iTryTokenOFT mints a different amount due to decimal conversion or fee logic, could this create an imbalance where totalSupply across chains exceeds the locked amount in the adapter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a0ffed2a-cf91-4d79-a36b-093f4f2fb406",
+    "timestamp": "2025-12-02 07:04:43.449273",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Adapter as intermediary] The adapter acts as an intermediary holding locked iTRY. According to iTRY's _beforeTokenTransfer logic, does the validation check msg.sender, from, or to addresses? Could a blacklisted user use the adapter as an intermediary to bypass blacklist enforcement by having non-blacklisted msg.sender call send() on their behalf?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48b1d349-efea-4b2d-a2a1-6ffd15b5a067",
+    "timestamp": "2025-12-02 07:05:11.491793",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited lzReceive function] When lzReceive processes an incoming unlock message, it extracts the recipient address from the message payload. If the LayerZero message is replayed or duplicated due to a network issue, could the same iTRY tokens be unlocked multiple times to the recipient, draining the adapter's locked balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cd939bf8-4267-4907-9cb5-46fc8e46b9aa",
+    "timestamp": "2025-12-02 07:05:40.595001",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFT.sol vs iTryTokenOFTAdapter.sol] The spoke chain uses iTryTokenOFT which mints/burns, while the hub uses iTryTokenOFTAdapter which locks/unlocks. If there's a desynchronization between burned amounts on spoke and unlocked amounts on hub, could this lead to locked iTRY becoming permanently stranded in the adapter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6bcc139a-83eb-40da-be37-7d8d1f35a56b",
+    "timestamp": "2025-12-02 07:06:09.342629",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Transfer restrictions] The iTRY token has three transfer states: FULLY_DISABLED, WHITELIST_ENABLED, and FULLY_ENABLED. Does the adapter's lock operation respect the current transfer state, or could setting FULLY_DISABLED after tokens are already locked prevent users from ever unlocking their iTRY when bridging back?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_de0fb354-0f6f-40ca-a335-d75419008ae8",
+    "timestamp": "2025-12-02 07:06:39.921605",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited _credit function] When unlocking iTRY via _credit, the adapter transfers tokens from its own balance to the recipient. If the adapter's balance is somehow lower than expected (due to a bug or direct transfer out), could the unlock transaction revert, permanently locking user funds who bridged from spoke to hub?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4ffe5a91-1648-4725-9133-915fe48cc0f4",
+    "timestamp": "2025-12-02 07:07:10.080260",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Constructor] The constructor accepts arbitrary addresses for _token, _lzEndpoint, and _owner. If the _token address points to a different token contract (not iTRY) or a malicious contract, could this enable attacks where the adapter locks real iTRY but unlocks fake tokens, or vice versa?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_13f962ec-c13c-46a0-995c-a7925af0860f",
+    "timestamp": "2025-12-02 07:07:40.757714",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Blacklist during bridging] If a user initiates a bridge transaction from hub to spoke and becomes blacklisted before the LayerZero message is delivered, their iTRY is already locked in the adapter. When they attempt to bridge back later, will the unlock operation fail because they're blacklisted, permanently locking their funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2efe1d27-8cc8-4f78-880e-0ad5cf53cd01",
+    "timestamp": "2025-12-02 07:08:13.315752",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited send function] The send() function allows specifying arbitrary _extraOptions for LayerZero configuration. Could an attacker craft malicious _extraOptions that manipulate gas limits, execution flow, or message routing to cause the lock operation to succeed but the mint operation on spoke to fail, trapping iTRY in the adapter?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8060a9f2-3917-4371-9a01-9b621496c0a8",
+    "timestamp": "2025-12-02 07:08:46.564483",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [msg.sender validation] iTRY's _beforeTokenTransfer checks if msg.sender is MINTER_CONTRACT to allow minting/burning, but the known issue states that msg.sender is not validated for blacklist, only from/to. Does this mean a blacklisted user can call transferFrom on behalf of a non-blacklisted user to lock tokens in the adapter, bypassing blacklist enforcement?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5383c506-a7db-422b-9248-464aad6d8133",
+    "timestamp": "2025-12-02 07:09:19.621312",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Redistribution function] iTRY has a redistributeLockedAmount function that burns tokens from blacklisted users and mints to a new address. If a blacklisted user's iTRY is locked in the adapter, can the admin still call redistributeLockedAmount to recover those funds, or are they permanently locked because the adapter (not the user) holds them?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e8a85089-c01c-4fb3-ac9c-8e73f2a61f12",
+    "timestamp": "2025-12-02 07:09:52.085400",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/iTRY/crosschain/iTryTokenOFTAdapter.sol] [Inherited allowance mechanism] The adapter requires users to approve it before locking iTRY. If a user bridges tokens, gets blacklisted, and still has remaining approval, could they continue bridging through the adapter using the existing allowance, since the transferFrom in _debit only checks from/to addresses, not msg.sender (the blacklisted user)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c1bd7d24-3416-490c-a7d1-db79559fd09a",
+    "timestamp": "2025-12-02 07:10:23.298233",
+    "report_generated": false
   }
 ]
