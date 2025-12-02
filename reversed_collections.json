@@ -598,5 +598,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d66b9bbd-2916-4a21-873b-92d598a65c7e",
     "timestamp": "2025-12-01 21:57:51.408169",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown call to cooldownSharesByComposer] The vault function records cooldown for redeemer - but can an attacker initiate multiple cooldowns for the same redeemer to overflow cooldown accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a159ea4c-37a1-40fe-8460-51c0198869a8",
+    "timestamp": "2025-12-02 03:01:35.807508",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function] The function extracts UnstakeMessage from _message - but does it validate that all required fields (user, extraOptions) are present and non-zero before processing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cdbde50c-b168-4b7e-8d42-b05747a44f89",
+    "timestamp": "2025-12-02 03:01:49.404496",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function] The function calls fastRedeemThroughComposer with 'redeemer' for both crosschainReceiver and owner - but does the vault's fastRedeemThroughComposer properly validate the owner parameter to prevent unauthorized redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cf3cee2e-bafe-496f-bf20-655257b3d025",
+    "timestamp": "2025-12-02 03:02:02.826469",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake SendParam] Setting both amountLD and minAmountLD to assets provides zero slippage tolerance - but can shared decimal conversion in LayerZero cause actual received amount to be less than expected?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1db351be-54ec-4016-83f0-d4ac1124a6f1",
+    "timestamp": "2025-12-02 03:02:16.867307",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [constructor initialization] Multiple inheritance from VaultComposerSync and OApp - can constructor ordering or initialization issues cause state variables to be incorrectly set?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ecb5320e-f3f4-4151-b823-7ef3962d08bc",
+    "timestamp": "2025-12-02 03:02:31.681229",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_send inherited function] VaultComposerSync._send checks if dstEid == VAULT_EID for local transfers - but can this be exploited to bypass LayerZero fees by setting dstEid to the hub chain even when sending cross-chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f176b949-9eee-4053-af7f-a7f71c335916",
+    "timestamp": "2025-12-02 03:02:48.108336",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund mechanism] Refunds are sent back to composeFrom address - but if this address is a contract without receive/fallback, will the refund fail and trap user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6ce37c2c-e461-4880-b138-f0177eda7e41",
+    "timestamp": "2025-12-02 03:03:07.154317",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose function] When routing compose messages, the function uses keccak256 for oftCmd comparison - but can hash collision vulnerabilities in keccak256 (however theoretical) be exploited to trigger wrong code paths?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b613068-0d54-455f-bb4a-b3603cb627e6",
+    "timestamp": "2025-12-02 03:03:26.552520",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function] The unstaked assets are sent to _origin.srcEid - but if srcEid is compromised or misconfigured, can this send user funds to an unintended chain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_136c6b71-8928-47fe-becb-b7e3fe904c4b",
+    "timestamp": "2025-12-02 03:03:47.637579",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [Multiple functions using bytes32ToAddress] The OFTComposeMsgCodec.bytes32ToAddress conversion is used extensively - but does this properly handle non-EVM addresses or checksum validation to prevent wrong address extraction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d577fa2-a4bc-4548-99ac-1cf70822ed58",
+    "timestamp": "2025-12-02 03:04:11.301425",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function] fastRedeemThroughComposer charges a fee for immediate liquidity - but is this fee properly validated to prevent excessive fees that drain user value beyond acceptable slippage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_055dfa4f-5efe-4406-a131-4bddc8cf9d1e",
+    "timestamp": "2025-12-02 03:04:34.042370",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown function] No validation that _shareAmount matches the expected amount based on user's original request - can discrepancies in cross-chain amount handling cause users to receive incorrect cooldown allocations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3684b939-752d-46e6-8180-aef6fb4330fa",
+    "timestamp": "2025-12-02 03:04:58.385339",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken function] The function allows rescuing address(0) for ETH - but what if address(0) is accidentally passed as 'to' parameter instead of 'token', will the validation on line 187 catch this?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d5e2846b-1f5b-4b48-8a1b-11d9735aeec4",
+    "timestamp": "2025-12-02 03:05:22.540524",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_lzReceive function] The function doesn't emit an event on successful message reception - can this cause issues with off-chain monitoring systems that track cross-chain unstake completion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_11a0976f-bdc2-4cbc-ad34-0dc143a13c2a",
+    "timestamp": "2025-12-02 03:05:48.593623",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function] After unstaking, iTRY is sent to user on srcEid - but does this validate that srcEid matches the chain where the user originally staked, preventing cross-chain confusion attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d14944ba-487d-43df-a51c-0bb89d1b5128",
+    "timestamp": "2025-12-02 03:06:17.207282",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [quoteUnstakeReturn and quoteFastRedeemReturn] These view functions don't validate that the caller has permission to perform the operation - can this leak sensitive protocol information or enable MEV attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a7fba1bb-4896-4951-9f50-ddec79ae468b",
+    "timestamp": "2025-12-02 03:06:43.803343",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_send calls throughout] _send is called with address(this) as refundAddress in multiple places - but if LayerZero refunds are sent back to this contract, are they properly accounted for or can they be extracted via rescueToken?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5c0c9688-a37b-42a3-9361-04ff4df2b277",
+    "timestamp": "2025-12-02 03:07:12.079966",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_fastRedeem function] The function sets minAmountLD = assets on line 117 - but does this disable slippage protection that the user may have set in their original sendParam, potentially causing value loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd1d0ac9-83a2-4a5a-9c25-53d4588daab6",
+    "timestamp": "2025-12-02 03:07:39.896788",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_initiateCooldown event] CooldownInitiated event contains both bytes32 user and address owner - but if these don't match due to encoding errors, which one is actually used for cooldown tracking in the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1a125396-ae5e-4772-9212-59d4d969ec36",
+    "timestamp": "2025-12-02 03:08:08.079464",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [MSG_TYPE_UNSTAKE usage] The message type is decoded from _message - but can an attacker send a message with correct structure but wrong msgType to bypass unstake validation while still triggering state changes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69dc02ca-503a-4d30-a8d4-f00df346def1",
+    "timestamp": "2025-12-02 03:08:34.929349",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_handleUnstake function] The function constructs SendParam with empty composeMsg and oftCmd - but if ASSET_OFT on the destination expects compose behavior, will the transfer fail or be processed incorrectly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_89dfb4c9-d6b2-439f-9913-526b4031f65f",
+    "timestamp": "2025-12-02 03:09:04.711788",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_depositAndSend call in handleCompose] When ASSET_OFT (iTRY) is composed, _depositAndSend mints wiTRY shares - but does this properly validate that the depositor is not blacklisted before minting shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1de85dd9-be6a-4b86-8f63-ea47f8feeea4",
+    "timestamp": "2025-12-02 03:09:34.340605",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [handleCompose function] The function decodes (SendParam, uint256) from _composeMsg - but can malformed encoding cause abi.decode to revert without triggering the try-catch in lzCompose, permanently locking funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12501f45-ccce-42ab-8f41-8aa92c034ed9",
+    "timestamp": "2025-12-02 03:10:05.021832",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [_refund function] When refunding, the function creates a new SendParam and sends back to srcEid - but does this properly handle the case where srcEid is no longer a valid peer, causing refunds to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1d74df51-cf8e-4716-b65a-cd5739f2d15a",
+    "timestamp": "2025-12-02 03:10:35.203618",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/crosschain/wiTryVaultComposer.sol] [rescueToken function, line 186] nonReentrant modifier is applied - but since rescueToken can call external contracts (via transfer for ETH or safeTransfer for ERC20), can reentrancy still occur through token callbacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5dd2b0b6-5bfd-4d8a-9127-76dd8b58bc85",
+    "timestamp": "2025-12-02 03:11:04.054371",
+    "report_generated": false
   }
 ]
