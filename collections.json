@@ -3898,5 +3898,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05d54b99-607b-4be3-aa05-0d6e5355eb8b",
     "timestamp": "2025-12-02 08:12:16.212207",
     "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vestingPeriod state variable, line 48] The vestingPeriod is stored as uint256 but constrained to 30 days maximum. In getUnvestedAmount() at line 210, could the multiplication `deltaT * vestingAmount` overflow if vestingAmount is extremely large, causing getUnvestedAmount() to return 0 and prematurely vesting all rewards?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2828f0ce-4915-47b6-a5d3-9f2772a50e82",
+    "timestamp": "2025-12-02 08:13:25.360257",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [lastDistributionTimestamp, line 45] If lastDistributionTimestamp is 0 (initial state before first reward), does getUnvestedAmount() at line 200 calculate timeSinceLastDistribution as block.timestamp - 0? Could this cause extremely large deltaT and division errors, or allow immediate vesting of first rewards?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_32d37b3f-23c5-4d85-a58b-a71323aa41fe",
+    "timestamp": "2025-12-02 08:13:38.600793",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer function, lines 292-299] The _beforeTokenTransfer() hook at line 293 checks if 'from' has FULL_RESTRICTED_STAKER_ROLE and to != address(0). Does this allow burning tokens from blacklisted users? Could a blacklisted attacker call approve() to give allowance to a contract that burns on their behalf, bypassing the blacklist to destroy evidence of stolen funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7a3ef7f6-7f0e-454c-a576-cb58473eb1d8",
+    "timestamp": "2025-12-02 08:13:51.949519",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer function, lines 292-299] At line 296, _beforeTokenTransfer() blocks transfers TO addresses with FULL_RESTRICTED_STAKER_ROLE. However, this doesn't check msg.sender. Could a blacklisted user use transferFrom() with allowance from a non-blacklisted address to move their own tokens, bypassing blacklist enforcement via the known allowance bug?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9bd48459-b0b9-4dfd-b381-fc81a4baea91",
+    "timestamp": "2025-12-02 08:14:07.553196",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_deposit function, lines 240-252] The _deposit() function checks SOFT_RESTRICTED_STAKER_ROLE for both caller and receiver at line 247. However, could a soft-blacklisted user call mint() instead of deposit()? Are all ERC4626 entry points (deposit, mint, withdraw, redeem) properly protected against blacklisted users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e2260205-8f09-4906-a194-fd33eda28c9b",
+    "timestamp": "2025-12-02 08:14:24.297807",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_withdraw function, lines 262-278] The _withdraw() function blocks FULL_RESTRICTED users at lines 270-272. If a fully-restricted user has approved a non-restricted address to spend their shares, can the non-restricted address call redeem() to extract assets on behalf of the blacklisted user, bypassing the restriction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2935035d-d363-4a76-a566-c71bceeef38d",
+    "timestamp": "2025-12-02 08:14:43.422975",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [addToBlacklist function, lines 126-133] The addToBlacklist() function at line 132 grants SOFT or FULL restriction roles. If a user has already deposited wiTRY shares before being blacklisted, does SOFT_RESTRICTED_STAKER_ROLE prevent them from calling withdraw()? Or does it only block deposits, leaving their funds extractable?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_859d3bfa-7386-4597-84dc-fd4cd9494dd5",
+    "timestamp": "2025-12-02 08:15:03.057915",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] The redistributeLockedAmount() function at line 169 checks hasRole(FULL_RESTRICTED_STAKER_ROLE, from). If an attacker is only SOFT_RESTRICTED, can admin redistribute their funds? Or does this create an inconsistency where soft-blacklisted users keep their shares but can't unstake?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bcb4b324-f237-4ddb-9707-f40026da98ea",
+    "timestamp": "2025-12-02 08:15:24.199864",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [_beforeTokenTransfer hook, lines 292-299] Since _beforeTokenTransfer() is marked virtual, could child contracts like StakediTryCooldown override this function and accidentally remove blacklist checks? What if the child contract calls super._beforeTokenTransfer() in the wrong order?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7ba17bd-249c-40c9-a90d-3d83dfccb8db",
+    "timestamp": "2025-12-02 08:15:46.443510",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [notOwner modifier, lines 59-62] The notOwner modifier at line 60 prevents blacklisting the owner. However, could owner transfer ownership to a blacklisted address, then the new blacklisted owner can't be blacklisted but also can't perform owner functions if other contracts check blacklist status?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c94eb788-4116-47e5-98ce-29363b947915",
+    "timestamp": "2025-12-02 08:16:10.127809",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] At line 172, redistributeLockedAmount() calls previewRedeem(amountToDistribute) to calculate iTryToVest. If totalAssets() has decreased due to protocol loss, could previewRedeem() return a value higher than actual iTRY balance, causing the subsequent operations to fail or corrupt accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_52df2c68-54f0-4dbb-b4ac-bd1b7efa09c8",
+    "timestamp": "2025-12-02 08:16:35.976373",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] At line 172, the function burns shares then calls _checkMinShares() at line 173. If burning would leave totalSupply below MIN_SHARES, the transaction reverts. Does this DOS the admin's ability to redistribute locked funds if there aren't enough other shares in circulation? Could an attacker exploit this to prevent seizure of stolen funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cf79f742-4056-45dd-8b3b-79b4dc71ff91",
+    "timestamp": "2025-12-02 08:17:01.969879",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] If 'to' is address(0) at line 175, the function calls _updateVestingAmount(iTryToVest) at line 176. Does this add the blacklisted user's iTRY to the vesting schedule, distributing it to all stakers? Could this create a scenario where stolen funds are redistributed to innocent users, complicating legal recovery?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cbec5800-dea4-49e6-96d3-6365d2d98a87",
+    "timestamp": "2025-12-02 08:17:29.090900",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] If 'to' is not address(0), the function mints shares to 'to' at line 178. Does this mint the same amount of shares that were burned from 'from'? If the share price has changed between blacklisting and redistribution, could this cause value loss or gain for the 'to' address?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c62f405-26b8-4286-8d43-319b24c7b8ae",
+    "timestamp": "2025-12-02 08:17:56.090417",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] At line 169, the function requires 'from' to have FULL_RESTRICTED_STAKER_ROLE and 'to' to NOT have it. What if 'to' is later blacklisted with FULL role after receiving redistributed shares? Does this create a loop where admin must keep redistributing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5ae8e85b-0c60-450d-b72c-93ee0792052b",
+    "timestamp": "2025-12-02 08:18:24.025340",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] The function is nonReentrant but calls _updateVestingAmount() which could interact with totalAssets(). If totalAssets() reads from external contracts like iTrySilo in child classes, could there be cross-contract reentrancy that bypasses the nonReentrant guard?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2a0b67b7-0fbd-4dd4-a3ef-a4a9939ee070",
+    "timestamp": "2025-12-02 08:18:54.470530",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [redistributeLockedAmount function, lines 168-185] Does redistributeLockedAmount() properly handle the case where 'from' has cooldown shares in the StakediTryCooldown extension? If cooldown shares aren't burned, could the blacklisted user still extract their funds after cooldown completes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fecec695-4b44-4e68-99d4-9897a3185ea0",
+    "timestamp": "2025-12-02 08:19:25.035763",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [REWARDER_ROLE, line 24] The REWARDER_ROLE can call transferInRewards() to update vestingAmount and lastDistributionTimestamp. Could a compromised or malicious rewarder (not admin) manipulate vesting state to inflate totalAssets() without actually transferring iTRY, enabling share price manipulation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_67ec9314-91d8-41f4-82e3-605064a52060",
+    "timestamp": "2025-12-02 08:19:56.905656",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [BLACKLIST_MANAGER_ROLE, line 26] The BLACKLIST_MANAGER_ROLE can add/remove addresses from blacklist. While trusted, if this role is granted to a contract with a vulnerability, could an attacker trigger blacklisting of large stakers to cause their shares to be redistributed, manipulating the share price downward for other users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85c974f8-ca5d-4b4b-8fc7-4cf1f19e7e4b",
+    "timestamp": "2025-12-02 08:20:29.853909",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [renounceRole function, lines 304-306] The renounceRole() override at line 305 always reverts with OperationNotAllowed. Does this prevent DEFAULT_ADMIN_ROLE from renouncing, avoiding admin lockout? But could this create issues with OpenZeppelin's AccessControl expectations in other integrated contracts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_34793ee9-774a-418b-bf42-4bee8ccc718a",
+    "timestamp": "2025-12-02 08:21:01.329928",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [SingleAdminAccessControl inheritance, line 19] StakediTry inherits SingleAdminAccessControl which likely restricts DEFAULT_ADMIN_ROLE to a single address. If that admin is compromised, can they grant themselves REWARDER_ROLE and drain the vault by calling transferInRewards() with fake amounts without actual transfers (if safeTransferFrom() has a bug)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1dd5062d-6724-409f-8a83-aa34ee8c0a34",
+    "timestamp": "2025-12-02 08:21:33.364745",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [constructor, lines 73-86] The constructor grants DEFAULT_ADMIN_ROLE to _owner at line 85. If _owner is a multisig or governance contract with a bug, could an attacker exploit it to gain admin role and call redistributeLockedAmount() to steal funds by blacklisting users and redistributing to attacker?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a626e089-6295-4ace-849e-565a27e01585",
+    "timestamp": "2025-12-02 08:22:05.021841",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [vestingAmount state variable, line 42] The vestingAmount at line 42 can be set to any value by _updateVestingAmount(). If an attacker can call transferInRewards() with an enormous amount but doesn't actually transfer tokens (via reentrancy or front-running), could vestingAmount be set higher than actual iTRY balance, corrupting totalAssets()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_73a6e0f0-a383-47c3-beba-e3f7f02447d7",
+    "timestamp": "2025-12-02 08:22:34.408033",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [totalAssets calculation, lines 192-194] If IERC20(asset()).balanceOf(address(this)) at line 193 returns a value smaller than getUnvestedAmount() due to token transfer bug or external manipulation, would the subtraction underflow and revert? Or does Solidity 0.8.20 checked arithmetic catch this?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bfbe17f6-d2ee-43db-ba23-7314d630f4ea",
+    "timestamp": "2025-12-02 08:23:04.538915",
+    "report_generated": false
+  },
+  {
+    "question": "[File: src/token/wiTRY/StakediTry.sol] [getUnvestedAmount division, line 210] The calculation `(deltaT * vestingAmount) / vestingPeriod` uses integer division. If vestingPeriod is much larger than deltaT * vestingAmount, could rounding cause getUnvestedAmount() to return 0 prematurely, vesting rewards faster than intended?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71165c49-bfb8-4e39-96bb-739c7bd29569",
+    "timestamp": "2025-12-02 08:23:34.610970",
+    "report_generated": false
   }
 ]
