@@ -2998,5 +2998,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d4788e1-b1ef-4d4f-b1d4-79e034ca4916",
     "timestamp": "2025-12-02 05:52:14.677155",
     "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 149] Does the calculation `netAssets = assets - feeAssets` guarantee that netAssets + feeAssets exactly equals assets, or can rounding in the fee calculation cause the sum to differ, leading to accounting inconsistencies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_70a9380a-3de7-4f9d-9928-714b0f67238c",
+    "timestamp": "2025-12-02 05:53:46.220711",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 70] The return value calculation `totalAssets - feeAssets` is done outside _redeemWithFee(). Can this calculation underflow if feeAssets > totalAssets due to rounding errors, causing transaction revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47e654d3-47e6-4c79-a2a1-6fabe9630c4b",
+    "timestamp": "2025-12-02 05:53:59.728338",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 148] Can integer division in `netShares = shares - feeShares` cause precision loss where the sum of feeShares and netShares is less than shares, causing insufficient share burning and accounting errors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4da1d7ba-66b6-4532-b9e9-ba6e0cd5f576",
+    "timestamp": "2025-12-02 05:54:13.869120",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] In the calculation `feeAssets = (assets * fastRedeemFeeInBPS) / BASIS_POINTS`, for very large asset amounts near uint256 max, can the multiplication overflow before division, causing transaction revert or incorrect fee calculation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b9c3368e-2665-49bf-b8fd-8b891371df66",
+    "timestamp": "2025-12-02 05:54:28.084400",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] If fastRedeemFeeInBPS is changed via setFastRedeemFee() while a user's transaction is in the mempool, can the user end up paying a significantly different fee than expected with no protection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_013003de-7b83-42af-8603-54d2d6dfcfa2",
+    "timestamp": "2025-12-02 05:54:43.780932",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 76-90] Can an attacker front-run a user's fastWithdraw() transaction by depositing to increase share price, causing the user to burn more shares than expected for the same asset amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f051d8d1-791d-4a7b-9bbc-cbbfb82ae595",
+    "timestamp": "2025-12-02 05:55:00.948860",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57-71] Does fastRedeem() have any slippage protection parameter where users can specify minimum assets received, or can MEV bots sandwich fast redemptions by manipulating share price to extract value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7e74bc21-6620-4106-8456-7d3c6fb9bf0d",
+    "timestamp": "2025-12-02 05:55:19.142317",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem interaction with transferInRewards] If transferInRewards() is called between fastRedeem's preview at line 65 and _redeemWithFee() execution, can the increased totalAssets cause users to receive more iTRY than their shares were worth at preview time?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2475287d-4e72-4edb-83c7-dd94509252b3",
+    "timestamp": "2025-12-02 05:55:38.593202",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee interaction with redistributeLockedAmount] If redistributeLockedAmount() is called on a FULL_RESTRICTED_STAKER_ROLE user while they have an in-flight fast redemption transaction, can this cause race conditions where shares are burned but funds aren't properly redistributed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cae6cadf-2101-4c4b-a0ee-568a376bacb0",
+    "timestamp": "2025-12-02 05:56:00.655217",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw integration] If a user has an active cooldown with underlyingAmount set, and they call fastWithdraw() for the same amount, will both the cooldown and fast redemption succeed, causing double extraction of iTRY?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78c8900b-59c9-44e9-b536-91e39865ea5e",
+    "timestamp": "2025-12-02 05:56:23.389359",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem integration] Can a user call cooldownShares() to lock their shares in the silo, then in the same block call fastRedeem() on the same shares before cooldown state settles, extracting iTRY twice for the same shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c45e28d8-f804-4fee-8c67-f3c6c3f477a4",
+    "timestamp": "2025-12-02 05:56:47.369949",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 147-149] If share price is manipulated between calculating feeShares and netShares, can this cause feeShares + netShares to not equal the original shares amount, causing either excess share burning or insufficient burning?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_79624ad1-6be7-4a4d-a52e-fa872f1f0622",
+    "timestamp": "2025-12-02 05:57:11.047893",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 84] Can share price manipulation between the user's off-chain preview calculation and on-chain execution cause previewWithdraw(assets) to return fewer shares than expected, allowing the user to extract more iTRY per share than fair?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c4d4308f-c3f8-4861-80c4-03c749819b84",
+    "timestamp": "2025-12-02 05:57:36.360656",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 142] If an attacker front-runs a legitimate fast redemption by depositing large amounts of iTRY to increase totalAssets and share price, can they cause the victim's feeAssets calculation to be higher than expected, extracting more fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b591ea9-939f-470b-a96d-dd9c94b521c3",
+    "timestamp": "2025-12-02 05:58:03.111365",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 65] Can an attacker donate iTRY to the vault immediately before calling fastRedeem() to inflate the share price, causing previewRedeem(shares) to return more assets than the shares are truly worth, then extract the excess via fast redemption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_adba2b06-300a-4ca3-ba1b-ad7d577b6f2a",
+    "timestamp": "2025-12-02 05:58:30.832062",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 148] If the share price is extremely high and shares is very small, can the calculation `netShares = shares - feeShares` result in netShares being 0, causing the receiver to get 0 iTRY while paying fees?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d8f175c4-d1a2-4b82-88e4-ce4545b6c616",
+    "timestamp": "2025-12-02 05:58:58.673835",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [constructor line 49] The constructor sets fastRedeemEnabled to false, requiring admin to explicitly enable it. Can users lose funds if they initiate cooldowns expecting fast redemption to be available, but it's never enabled, forcing them to wait the full cooldown?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3cea1cf8-ef80-4c1e-ba88-326efa1b174a",
+    "timestamp": "2025-12-02 05:59:25.083892",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 82] If maxWithdraw(owner) returns a value based on totalAssets including unvested rewards, but totalAssets decreases before transaction execution due to vesting updates, will the transaction revert or succeed with incorrect amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ae827fe3-0edf-482a-ab47-7672379e41e0",
+    "timestamp": "2025-12-02 05:59:52.454835",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee line 147] If previewWithdraw(feeAssets) returns 0 shares due to very high share price, will feeShares be 0, causing netShares to equal total shares, allowing users to bypass fees entirely?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98f67315-ee73-4d79-8ee3-8b5e406119e5",
+    "timestamp": "2025-12-02 06:00:20.013583",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 63] If a user attempts to fast redeem exactly maxRedeem(owner) shares, and maxRedeem is calculated based on current share price, but share price decreases before execution, will the transaction revert with ExcessiveRedeemAmount, or can it succeed with incorrect accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_15503c6d-ad2a-4d41-9751-9099ebf5de78",
+    "timestamp": "2025-12-02 06:00:48.702877",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastWithdraw line 87] In fastWithdraw(), the event emits `assets` as the totalAssets parameter, but this is the user-requested amount, not necessarily the actual amount withdrawn. Can this mislead monitoring systems about actual iTRY flows?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_057d208a-3808-4db3-88cc-af8d8c07e61f",
+    "timestamp": "2025-12-02 06:01:19.222955",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [_redeemWithFee lines 152-155] Do the underlying _withdraw() calls emit their own events, and can this cause confusion with double event emission for the same redemption (once from FastRedeemed, once from the ERC4626 Withdraw events)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05256405-5edc-462d-91ce-6b7fefc68751",
+    "timestamp": "2025-12-02 06:01:50.726860",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 68] The FastRedeemed event emits (owner, receiver, shares, totalAssets, feeAssets), but does it emit the net assets received by the receiver, and can off-chain monitoring systems correctly track the actual iTRY flow from this event?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1a940062-9d5f-429c-a772-66f268b9f1b1",
+    "timestamp": "2025-12-02 06:02:20.902030",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [fastRedeem line 57] Can any user call fastRedeem() on behalf of any owner (with proper approval), or are there additional access controls that restrict who can initiate fast redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2e0a7905-01fe-4ed4-a7ab-2888ca03e030",
+    "timestamp": "2025-12-02 06:02:51.759880",
+    "report_generated": false
+  },
+  {
+    "question": "[File: StakediTryFastRedeem.sol] [setFastRedeemTreasury line 116] Does changing the treasury address mid-flight affect in-progress redemptions, and can this be exploited by an admin to redirect fees to a different address than users expected?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb3e5de0-9680-4d3c-a03a-61c6c4afd3c3",
+    "timestamp": "2025-12-02 06:03:23.291609",
+    "report_generated": false
   }
 ]
